@@ -66,3 +66,4 @@ except KeyboardInterrupt:
     GPIO.cleanup()
 
 # https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
+# https://create.withcode.uk/python/A3
