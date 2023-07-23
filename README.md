@@ -16,6 +16,7 @@ this repo contains scripts used in my home automation
 
 ## garage.status.api
 * runs in Docker in Portainer on Proxmox
+* TODO: docker repository somewhere (self hosted in proxmox, how?), automation scripts for deployment - github actions?
 * TODO: cloudflared tunnel, ingress via homeassistant instance
 * TODO: HA has connected RESTful sensor to monitor state
 * TODO: is updated from PiZero when garage door switch is triggered
