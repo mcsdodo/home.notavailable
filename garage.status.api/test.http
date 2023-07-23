@@ -1,0 +1,31 @@
+GET http://localhost:8080
+###
+POST http://localhost:8080
+Content-Type: application/json
+
+{
+    "state" : 1
+}
+###
+POST http://localhost:8080
+Content-Type: application/json
+
+{
+    "state" : 0
+}
+###
+POST http://localhost:8080
+Content-Type: application/json
+
+{
+    "state" : "xx"
+}
+###
+GET http://192.168.100.112:8080
+###
+POST http://192.168.100.112:8080
+Content-Type: application/json
+
+{
+    "state" : 0
+}
