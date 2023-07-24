@@ -16,12 +16,10 @@ class Api(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         if message != None:
-            self.wfile.write(json.dumps(message).encode('utf-8'))
+            self.wfile.write(json.dumps(message, default=str).encode('utf-8'))
 
     def do_GET(self):
-        self._response(200, {
-            "state": garage_state['state']
-        })
+        self._response(200, garage_state)
     
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
