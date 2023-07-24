@@ -1,10 +1,12 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+from datetime import datetime
 
 hostName = "0.0.0.0"
 serverPort = 8080
 garage_state = {
-    'state' : -1
+    'state' : -1,
+    'last_updated' : datetime.min
 }
 
 class Api(BaseHTTPRequestHandler):
@@ -26,6 +28,7 @@ class Api(BaseHTTPRequestHandler):
         post_body = json.loads(self.rfile.read(content_length))
         if post_body['state'] == 1 or post_body['state'] == 0:
             garage_state['state'] = post_body['state']
+            garage_state['last_updated'] = datetime.now()
             self._response(202)
         else:
             self._response(400)
