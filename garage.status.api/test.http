@@ -4,7 +4,7 @@ POST http://localhost:8080
 Content-Type: application/json
 
 {
-    "state" : 1
+    "state" : "OPENING"
 }
 ###
 POST http://localhost:8080

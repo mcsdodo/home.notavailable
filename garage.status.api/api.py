@@ -1,11 +1,18 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+from enum import Enum
 from datetime import datetime
 
-hostName = "0.0.0.0"
-serverPort = 8080
+class States(str,Enum):
+    UNKNOWN = 'UNKNOWN'
+    CLOSED = 'CLOSED'
+    OPENING = 'OPENING'
+    OPENED = 'OPENED'
+    ACTIVATED = 'ACTIVATED'
+states = [member.value for member in States]
+
 garage_state = {
-    'state' : -1,
+    'state' : States.UNKNOWN,
     'last_updated' : datetime.min
 }
 
@@ -24,7 +31,7 @@ class Api(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_body = json.loads(self.rfile.read(content_length))
-        if post_body['state'] == 1 or post_body['state'] == 0:
+        if post_body['state'] in states:
             garage_state['state'] = post_body['state']
             garage_state['last_updated'] = datetime.now()
             self._response(202)
@@ -32,8 +39,10 @@ class Api(BaseHTTPRequestHandler):
             self._response(400)
 
 if __name__ == "__main__":
-    webServer = HTTPServer((hostName, serverPort), Api)
-    print("Server started http://%s:%s" % (hostName, serverPort))
+    HOST_NAME = "0.0.0.0"
+    SERVER_PORT = 8080
+    webServer = HTTPServer((HOST_NAME, SERVER_PORT), Api)
+    print("Server started http://%s:%s" % (HOST_NAME, SERVER_PORT))
 
     try:
         webServer.serve_forever()
