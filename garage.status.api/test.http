@@ -27,5 +27,12 @@ POST http://192.168.100.112:8080
 Content-Type: application/json
 
 {
-    "state" : 0
+    "state" : "UNKNOWN"
+}
+###
+POST http://192.168.100.112:8080
+Content-Type: application/json
+
+{
+    "state" : "OPENING"
 }
