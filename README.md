@@ -18,5 +18,6 @@ this repo contains scripts used in my home automation
 - [x] runs in Docker in Portainer on Proxmox
 - [x] github action with push to docker.io
 - [x] cloudflared tunnel, ingress via homeassistant instance
+- [x] use containrrr/watchtower to auto recreate container when newer version is pushed
 - [ ] HA has connected RESTful sensor to monitor state
 - [ ] is updated from PiZero when garage door switch is triggered and/or state changes

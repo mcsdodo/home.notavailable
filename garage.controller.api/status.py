@@ -13,7 +13,7 @@ RELAY_PIN = 31
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-openingTriggerTime = datetime.max
+garageTriggerTime = datetime.max
 
 class PiWarning:
     def __init__(self, warning_interval):
@@ -34,32 +34,33 @@ activated_warning = PiWarning(OPENED_SECONDS_WARNING_INTERVAL)
 
 try:
     while True:
+        time.sleep(POLLING_INTERVAL)
         isDoorSensorClosed = GPIO.input(DOOR_SENSOR_PIN) is False
         now = datetime.utcnow()
-        lastTriggerDiff = (now - openingTriggerTime).total_seconds()
+        lastTriggerDiff = (now - garageTriggerTime).total_seconds()
+
+        # use relay or sensor to figure that "something is happening with the door"?
+        if GPIO.input(RELAY_PIN):
+            activated_warning.warn("Door was activated")
+            garageTriggerTime = now
+            IS_CLOSED = False
 
         if isDoorSensorClosed:
             if IS_CLOSED is False:
                 opened_warning.print("Door was just closed")
-            openingTriggerTime = datetime.max
+            garageTriggerTime = datetime.max
             IS_CLOSED = True
+            continue
 
         if isDoorSensorClosed is False and IS_CLOSED is True:
             opened_warning.print("Door started opening")
-            openingTriggerTime = now
+            garageTriggerTime = now
             IS_CLOSED = False
-
-        # na "nieco sa deje s dverami" pouzit toto alebo to predtym?
-        if GPIO.input(RELAY_PIN):
-            activated_warning.warn("Door was activated")
-            openingTriggerTime = now
-            IS_CLOSED = False
-
+            continue
+        
         if lastTriggerDiff > OPENED_SECONDS_WARNING and isDoorSensorClosed is False:
             message = "Door has been opened for " + str(int(round(lastTriggerDiff))) + " seconds"
             opened_warning.warn(message)
-
-        time.sleep(POLLING_INTERVAL)
 
 except KeyboardInterrupt:
     print("Program exited")
