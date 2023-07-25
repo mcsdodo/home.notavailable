@@ -4,21 +4,21 @@ POST http://localhost:8080
 Content-Type: application/json
 
 {
-    "state" : "OPENING"
+    "garage_state" : "OPENING"
 }
 ###
 POST http://localhost:8080
 Content-Type: application/json
 
 {
-    "state" : 0
+    "garage_state" : 0
 }
 ###
 POST http://localhost:8080
 Content-Type: application/json
 
 {
-    "state" : "xx"
+    "garage_state" : "xx"
 }
 ###
 GET http://192.168.100.112:8080
@@ -27,5 +27,5 @@ POST http://192.168.100.112:8080
 Content-Type: application/json
 
 {
-    "state" : 0
+    "garage_state" : 0
 }
