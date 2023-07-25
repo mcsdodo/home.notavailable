@@ -12,7 +12,7 @@ class States(str,Enum):
 states = [member.value for member in States]
 
 garage_state = {
-    'garage_state' : States.UNKNOWN,
+    'state' : States.UNKNOWN,
     'last_updated' : datetime.min
 }
 
@@ -31,8 +31,8 @@ class Api(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_body = json.loads(self.rfile.read(content_length))
-        if post_body['garage_state'] in states:
-            garage_state['garage_state'] = post_body['garage_state']
+        if post_body['state'] in states:
+            garage_state['state'] = post_body['state']
             garage_state['last_updated'] = datetime.now()
             self._response(202)
         else:
