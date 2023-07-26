@@ -12,11 +12,12 @@ class States(str,Enum):
     OPENED = 'OPENED'
     ACTIVATED = 'ACTIVATED'
 states = [member.value for member in States]
+UNKNOWN_STATE_GRACE_PERIOD = 150
 
 garage_state = {
     'state' : States.UNKNOWN,
     'last_updated' : datetime.min,
-    'last_health' : datetime.now()
+    'last_health' : datetime.utcnow()
 }
 
 class Api(BaseHTTPRequestHandler):
@@ -29,8 +30,8 @@ class Api(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(message, default=str).encode('utf-8'))
 
     def do_GET(self):
-        now = datetime.now()
-        if ((now - garage_state['last_health']).total_seconds() > 150):
+        now = datetime.utcnow()
+        if ((now - garage_state['last_health']).total_seconds() > UNKNOWN_STATE_GRACE_PERIOD):
             garage_state['state'] = States.UNKNOWN
         self._response(200, garage_state)
     
@@ -39,7 +40,7 @@ class Api(BaseHTTPRequestHandler):
         post_body = json.loads(self.rfile.read(content_length))
         if post_body['state'] in states:
             garage_state['state'] = post_body['state']
-            now = datetime.now()
+            now = datetime.utcnow()
             garage_state['last_updated'] = now
             garage_state['last_health'] = now
             self._response(202)
@@ -47,7 +48,7 @@ class Api(BaseHTTPRequestHandler):
             self._response(400)
     
     def do_HEAD(self):
-        garage_state['last_health'] = datetime.now()
+        garage_state['last_health'] = datetime.utcnow()
         self._response(200)
 
 if __name__ == "__main__":
