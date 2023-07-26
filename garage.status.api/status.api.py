@@ -48,6 +48,7 @@ class Api(BaseHTTPRequestHandler):
     
     def do_HEAD(self):
         garage_state['last_health'] = datetime.now()
+        self._response(200)
 
 if __name__ == "__main__":
     HOST_NAME = "0.0.0.0"
