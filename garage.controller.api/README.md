@@ -7,8 +7,11 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/usr/bin/python3 /home/dodo/garage/server.py
+ExecStart=/usr/bin/python3 /home/dodo/garage/controller.api.py
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+``sudo nano daemon-reload``
+``sudo nano enable garageserver.service``
