@@ -1,3 +1,5 @@
+# this runs on the PiZero in garage. Basic garage operation
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import RPi.GPIO as GPIO
 from time import sleep
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        GPIO.cleanup();
+        GPIO.cleanup()
 
     webServer.server_close()
     print("Server stopped.")

@@ -34,5 +34,5 @@ POST http://192.168.100.112:8080
 Content-Type: application/json
 
 {
-    "state" : "OPENING"
+    "state" : "CLOSED"
 }
