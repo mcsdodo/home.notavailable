@@ -30,7 +30,7 @@ class Api(BaseHTTPRequestHandler):
 
     def do_GET(self):
         now = datetime.now()
-        if (now - garage_state['last_health'] > 150):
+        if ((now - garage_state['last_health']).total_seconds() > 150):
             garage_state['state'] = States.UNKNOWN
         self._response(200, garage_state)
     
