@@ -31,7 +31,9 @@ class Api(BaseHTTPRequestHandler):
 
     def do_GET(self):
         now = datetime.utcnow()
-        if ((now - garage_state['last_health']).total_seconds() > UNKNOWN_STATE_GRACE_PERIOD):
+        is_past_grace_period = (now - garage_state['last_health']).total_seconds() > UNKNOWN_STATE_GRACE_PERIOD
+        is_last_known_state_closed = garage_state['state'] == States.CLOSED
+        if (is_past_grace_period and is_last_known_state_closed is False):
             garage_state['state'] = States.UNKNOWN
         self._response(200, garage_state)
     
