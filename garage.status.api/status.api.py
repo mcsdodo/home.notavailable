@@ -39,7 +39,9 @@ class Api(BaseHTTPRequestHandler):
         post_body = json.loads(self.rfile.read(content_length))
         if post_body['state'] in states:
             garage_state['state'] = post_body['state']
-            garage_state['last_updated'] = datetime.now()
+            now = datetime.now()
+            garage_state['last_updated'] = now
+            garage_state['last_health'] = now
             self._response(202)
         else:
             self._response(400)
