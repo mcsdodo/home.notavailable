@@ -16,7 +16,7 @@ states = [member.value for member in States]
 garage_state = {
     'state' : States.UNKNOWN,
     'last_updated' : datetime.min,
-    'last_health' : datetime.max
+    'last_health' : datetime.now()
 }
 
 class Api(BaseHTTPRequestHandler):
