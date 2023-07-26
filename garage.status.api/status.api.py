@@ -1,3 +1,5 @@
+# this runs on home server, remembers the state of garage
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from enum import Enum
@@ -13,7 +15,8 @@ states = [member.value for member in States]
 
 garage_state = {
     'state' : States.UNKNOWN,
-    'last_updated' : datetime.min
+    'last_updated' : datetime.min,
+    'last_health' : datetime.max
 }
 
 class Api(BaseHTTPRequestHandler):
@@ -22,10 +25,13 @@ class Api(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-        if message != None:
+        if message is not None:
             self.wfile.write(json.dumps(message, default=str).encode('utf-8'))
 
     def do_GET(self):
+        now = datetime.now()
+        if (now - garage_state['last_health'] > 150):
+            garage_state['state'] = States.UNKNOWN
         self._response(200, garage_state)
     
     def do_POST(self):
@@ -37,6 +43,9 @@ class Api(BaseHTTPRequestHandler):
             self._response(202)
         else:
             self._response(400)
+    
+    def do_HEAD(self):
+        garage_state['last_health'] = datetime.now()
 
 if __name__ == "__main__":
     HOST_NAME = "0.0.0.0"
