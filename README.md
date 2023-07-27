@@ -1,8 +1,8 @@
 # home.notavailable
 
-this repo contains scripts used in my home automation
+this repo contains scripts and apps used in my garage automation
 
-## garage.controller.api
+## PiZero apps (garage)
 
 ### controller.api.py
 - [x] runs on PiZero in the garage that has cloudflared tunnel and GSM hat
@@ -13,11 +13,14 @@ this repo contains scripts used in my home automation
 ### status.service.py
 - [x] checks status of door sensor, reports to status.api
 - [x] reports health to status.api
-- [ ] actionable notifications from HA when garage door is opened for longer than set time
+- [x] redeploy all above apps to PiZero 
+- [ ] install door sensor
+- [ ] run Docker/Compose? on PiZero, update apps on-demand remotely somehow
+- [ ] measure how much data would above solution consume per-update
 
-- [ ] redeploy all above applicable to PiZero (& install sensor)
+## Docker apps (home Proxmox)
 
-## garage.status.api
+### garage.status.api
 - [x] runs in Docker in Portainer on Proxmox
 - [x] github action with push to docker.io
 - [x] cloudflared tunnel, ingress via homeassistant instance
@@ -25,8 +28,12 @@ this repo contains scripts used in my home automation
 - [x] HA has connected RESTful sensor to monitor state
 - [x] is updated from PiZero when garage door switch is triggered and/or state changes
 - [x] report UNKNOWN after a defined period of unavailability
+
+### Home Assistant
 - [ ] figure how to convert utc time to local time in HA dashboard tile
+- [ ] actionable notifications from HA when garage door is opened for longer than set time. Basically whenever status.api gets 'OPENED' update, trigger a notification.
+- [ ] is it possible to ditch IFTT and control HA directly from Google voice assitant? https://www.makeuseof.com/home-assistant-use-with-google-home-voice-assistant/ Maybe even to ask "Is my garage closed?"
 
 
-# https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
-# https://create.withcode.uk/python/A3
+https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
+https://create.withcode.uk/python/A3
