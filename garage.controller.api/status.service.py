@@ -39,9 +39,9 @@ try:
         time.sleep(POLLING_INTERVAL)
         isDoorSensorClosed = GPIO.input(DOOR_SENSOR_PIN) == 0
         now = datetime.utcnow()
-        lastTriggerDiff = (now - garageTriggerTime).total_seconds()
+        lastGarageTriggerDiff = (now - garageTriggerTime).total_seconds()
         lastHealthReportDiff = (now - healthReportTime).total_seconds()
-        warningReportDiff = (now - warningReportTime).total_seconds()
+        lastWarningReportDiff = (now - warningReportTime).total_seconds()
 
         if isDoorSensorClosed is False and isClosed is True:
             p.print("Door started opening")
@@ -51,10 +51,10 @@ try:
             isClosed = False
             continue
         
-        if (lastTriggerDiff > OPENED_SECONDS_WARNING_AFTER 
-            and warningReportDiff > OPENED_SECONDS_WARNING_INTERVAL
+        if (lastGarageTriggerDiff > OPENED_SECONDS_WARNING_AFTER 
+            and lastWarningReportDiff > OPENED_SECONDS_WARNING_INTERVAL
             and isDoorSensorClosed is False):
-            p.print("Door has been opened for " + str(int(round(lastTriggerDiff))) + " seconds")
+            p.print("Door has been opened for " + str(int(round(lastGarageTriggerDiff))) + " seconds")
             CLIENT.set_status('OPENED')
             warningReportTime = now
             healthReportTime = now
