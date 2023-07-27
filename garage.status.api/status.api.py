@@ -12,7 +12,7 @@ class States(str,Enum):
     OPENED = 'OPENED'
     ACTIVATED = 'ACTIVATED'
 states = [member.value for member in States]
-UNKNOWN_STATE_GRACE_PERIOD = 150
+UNKNOWN_STATE_GRACE_PERIOD = 180
 
 garage_state = {
     'state' : States.UNKNOWN,
