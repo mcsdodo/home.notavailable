@@ -7,6 +7,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
+WorkingDirectory=/home/dodo/garage
 ExecStart=/usr/bin/python3 /home/dodo/garage/controller.api.py
 
 [Install]
@@ -22,8 +23,17 @@ After=multi-user.target
 
 [Service]
 Type=idle
+WorkingDirectory=/home/dodo/garage
 ExecStart=/usr/bin/python3 /home/dodo/garage/status.service.py
 
 [Install]
 WantedBy=multi-user.target
+```
+
+```
+wget -qO- http://localhost:8080 --post-data=
+```
+
+```
+wget -qO- http://localhost:8080
 ```

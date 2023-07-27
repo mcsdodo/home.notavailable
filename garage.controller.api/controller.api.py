@@ -11,6 +11,7 @@ CONFIG.read('config.ini')
 DOOR_SENSOR_PIN = int(CONFIG['common']['DoorSensorPin'])
 
 GPIO.setmode(GPIO.BOARD)
+GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN)
 hostName = "0.0.0.0"
 serverPort = 8080
 
