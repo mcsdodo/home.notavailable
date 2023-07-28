@@ -8,9 +8,7 @@ from datetime import datetime
 class States(str,Enum):
     UNKNOWN = 'UNKNOWN'
     CLOSED = 'CLOSED'
-    OPENING = 'OPENING'
     OPENED = 'OPENED'
-    ACTIVATED = 'ACTIVATED'
 states = [member.value for member in States]
 UNKNOWN_STATE_GRACE_PERIOD = 180
 

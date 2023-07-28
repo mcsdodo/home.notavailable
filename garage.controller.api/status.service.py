@@ -14,11 +14,13 @@ POLLING_INTERVAL = float(CONFIG['status.service']['PollingInterval'])
 OPENED_SECONDS_WARNING_AFTER = int(CONFIG['status.service']['OpenedSecondsWarningAfter'])
 OPENED_SECONDS_WARNING_INTERVAL = int(CONFIG['status.service']['OpenedSecondsWarningInterval'])
 HEALTH_REPORTING_INTERVAL = int(CONFIG['status.service']['HealthReportingInterval'])
-DOOR_SENSOR_PIN = int(CONFIG['common']['DoorSensorPin'])
+DOOR_CLOSED_SENSOR_PIN = int(CONFIG['common']['DoorSensorClosedPin'])
+DOOR_OPENED_SENSOR_PIN = int(CONFIG['common']['DoorSensorOpenedPin'])
 
 # setup pins
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(DOOR_CLOSED_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(DOOR_OPENED_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # state vars
 isClosed = False
@@ -26,42 +28,41 @@ garageTriggerTime = datetime.utcnow()
 healthReportTime = datetime.utcnow()
 warningReportTime = datetime.utcnow()
 
-class PrinterWithTimestamp:
-    def print(self, message):
-        print(datetime.utcnow().strftime("%H:%M:%S"), message)
+def log(message):
+    print(datetime.utcnow().strftime("%H:%M:%S"), message)
 
-p = PrinterWithTimestamp()
-
-p.print("Status service started")
+log("Status service started")
 
 try:
     while True:
         time.sleep(POLLING_INTERVAL)
-        isDoorSensorClosed = GPIO.input(DOOR_SENSOR_PIN) == 0
+        isDoorSensorClosed = GPIO.input(DOOR_CLOSED_SENSOR_PIN) == 0
+        isDoorSensorOpened = GPIO.input(DOOR_OPENED_SENSOR_PIN) == 0
         now = datetime.utcnow()
         lastGarageTriggerDiff = (now - garageTriggerTime).total_seconds()
         lastHealthReportDiff = (now - healthReportTime).total_seconds()
         lastWarningReportDiff = (now - warningReportTime).total_seconds()
 
         if isDoorSensorClosed is False and isClosed is True:
-            p.print("Door started opening")
-            CLIENT.set_status('OPENING')
+            log("Door started opening")
             garageTriggerTime = now
-            healthReportTime = now
             isClosed = False
-            continue
+        
+        if isDoorSensorOpened is False and isClosed is False:
+            log("Door started closing")
+            garageTriggerTime = now
         
         if (lastGarageTriggerDiff > OPENED_SECONDS_WARNING_AFTER 
             and lastWarningReportDiff > OPENED_SECONDS_WARNING_INTERVAL
             and isDoorSensorClosed is False):
-            p.print("Door has been opened for " + str(int(round(lastGarageTriggerDiff))) + " seconds")
+            log("Door has been opened for " + str(int(round(lastGarageTriggerDiff))) + " seconds")
             CLIENT.set_status('OPENED')
             warningReportTime = now
             healthReportTime = now
             continue
 
         if (lastHealthReportDiff > HEALTH_REPORTING_INTERVAL):
-            p.print("Reporting health.")
+            log("Reporting health.")
             healthReportTime = now
             CLIENT.report_health()
 
@@ -69,10 +70,17 @@ try:
             if isClosed is False:
                 CLIENT.set_status('CLOSED')
                 healthReportTime = now
-                p.print("Door was just closed")
+                log("Door was just closed")
             garageTriggerTime = datetime.max
             isClosed = True
-
+        
+        if isDoorSensorOpened:
+            if isClosed is True:
+                CLIENT.set_status('OPENED')
+                healthReportTime = now
+                log("DOOR was just opened")
+            garageTriggerTime = now
+            isClosed = False
 
 except KeyboardInterrupt:
     print("Program exited")

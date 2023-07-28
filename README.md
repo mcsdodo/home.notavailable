@@ -14,7 +14,7 @@ this repo contains scripts and apps used in my garage automation
 - [x] checks status of door sensor, reports to status.api
 - [x] reports health to status.api
 - [x] redeploy all above apps to PiZero 
-- [ ] install door sensor
+- [x] install door sensor
 - [ ] run Docker/Compose? on PiZero, update apps on-demand remotely somehow
 - [ ] measure how much data would above solution consume per-update
 
@@ -30,10 +30,11 @@ this repo contains scripts and apps used in my garage automation
 - [x] report UNKNOWN after a defined period of unavailability
 
 ### Home Assistant
-- [ ] figure how to convert utc time to local time in HA dashboard tile
 - [ ] actionable notifications from HA when garage door is opened for longer than set time. Basically whenever status.api gets 'OPENED' update, trigger a notification.
 - [ ] is it possible to ditch IFTT and control HA directly from Google voice assitant? https://www.makeuseof.com/home-assistant-use-with-google-home-voice-assistant/ Maybe even to ask "Is my garage closed?"
 
+## General todos
+- [ ] try out https://github.com/codenio/mock.gpio
 
 https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
 https://create.withcode.uk/python/A3
