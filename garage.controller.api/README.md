@@ -12,14 +12,15 @@ After=multi-user.target
 Type=idle
 WorkingDirectory=/home/dodo/garage
 ExecStart=/usr/bin/python3 /home/dodo/garage/controller.api.py
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 ```
 ```
-sudo nano daemon-reload
-sudo nano enable garageserver.service
-sudo nano start garageserver.service
+sudo systemctl daemon-reload
+sudo systemctl enable garageserver.service
+sudo systemctl start garageserver.service
 ```
 
 To install status service on PiZero
@@ -36,14 +37,15 @@ After=multi-user.target
 Type=idle
 WorkingDirectory=/home/dodo/garage
 ExecStart=/usr/bin/python3 /home/dodo/garage/status.service.py
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 ```
 ```
-sudo nano daemon-reload
-sudo nano enable garagestatus.service
-sudo nano start garagestatus.service
+sudo systemctl daemon-reload
+sudo systemctl enable garagestatus.service
+sudo systemctl start garagestatus.service
 ```
 
 
