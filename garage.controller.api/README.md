@@ -10,8 +10,8 @@ After=multi-user.target
 
 [Service]
 Type=idle
-WorkingDirectory=/home/dodo/garage
-ExecStart=/usr/bin/python3 /home/dodo/garage/controller.api.py
+WorkingDirectory=/home/dodo/home.notavailable/garage.controller.api
+ExecStart=/usr/bin/python3 /home/dodo/home.notavailable/garage.controller.api/controller.api.py
 Restart=on-failure
 
 [Install]
@@ -35,8 +35,8 @@ After=multi-user.target
 
 [Service]
 Type=idle
-WorkingDirectory=/home/dodo/garage
-ExecStart=/usr/bin/python3 /home/dodo/garage/status.service.py
+WorkingDirectory=/home/dodo/home.notavailable/garage.controller.api
+ExecStart=/usr/bin/python3 /home/dodo/home.notavailable/garage.controller.api/status.service.py
 Restart=on-failure
 
 [Install]
@@ -58,3 +58,13 @@ To test door sensor locally on PiZero
 ```
 wget -qO- http://localhost:8080
 ```
+
+To update
+```
+wget -qO- http://localhost:8080/update --post-data=
+```
+
+
+
+git config --list --show-origin --show-scope
+git config --global --add safe.directory /home/dodo/home.notavailable
