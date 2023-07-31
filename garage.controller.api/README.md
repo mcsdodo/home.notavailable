@@ -58,9 +58,3 @@ To test door sensor locally on PiZero
 ```
 wget -qO- http://localhost:8080
 ```
-
-Don't commit secrets to Github!
-
-```
-git update-index --skip-worktree garage.controller.api/config.ini
-```
