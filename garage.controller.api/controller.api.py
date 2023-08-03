@@ -5,7 +5,6 @@ import json
 import configparser
 import RPi.GPIO as GPIO
 from time import sleep
-import subprocess
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
@@ -43,20 +42,13 @@ class MyServer(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(message, default=str).encode('utf-8'))
         
     def do_POST(self):
-        if self.path == '/update':
-            output = subprocess.run(["/usr/bin/bash", "/home/dodo/home.notavailable/garage.controller.api/deploy.sh"], cwd='/home/dodo/home.notavailable/', capture_output=True, text=True)
-            if (output.returncode == 0):
-                self._set_headers(200, output.stdout.encode())
-            else:
-                self._set_headers(500, output.stderr.encode())
-        else:
-            r_1 = Relay()
-            r_1.on()
-            print("R1 turned on")
-            sleep(1)
-            r_1.off()
-            print("R2 turned off")
-            self._set_headers(200)
+        r_1 = Relay()
+        r_1.on()
+        print("R1 turned on")
+        sleep(1)
+        r_1.off()
+        print("R2 turned off")
+        self._set_headers(200)
     
     def do_GET(self):
         self._set_headers(200, { 'state' : getState() })

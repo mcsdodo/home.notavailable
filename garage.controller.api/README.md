@@ -10,6 +10,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
+User=dodo
 WorkingDirectory=/home/dodo/home.notavailable/garage.controller.api
 ExecStart=/usr/bin/python3 /home/dodo/home.notavailable/garage.controller.api/controller.api.py
 Restart=on-failure
@@ -35,6 +36,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
+User=dodo
 WorkingDirectory=/home/dodo/home.notavailable/garage.controller.api
 ExecStart=/usr/bin/python3 /home/dodo/home.notavailable/garage.controller.api/status.service.py
 Restart=on-failure
