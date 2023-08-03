@@ -24,6 +24,34 @@ sudo systemctl enable garageserver.service
 sudo systemctl start garageserver.service
 ```
 
+To install updater API on PiZero
+```
+sudo nano /etc/systemd/system/garageupdater.service
+```
+
+```sh
+[Unit]
+Description=Garage garageupdater python http service
+After=multi-user.target
+
+[Service]
+Type=idle
+User=dodo
+WorkingDirectory=/home/dodo/home.notavailable/garage.controller.api
+ExecStart=/usr/bin/python3 /home/dodo/home.notavailable/garage.controller.api/updater.api.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+```
+sudo systemctl daemon-reload
+sudo systemctl enable garageupdater.service
+sudo systemctl start garageupdater.service
+sudo systemctl status garageupdater.service
+```
+
+
 To install status service on PiZero
 ```
 sudo nano /etc/systemd/system/garagestatus.service
@@ -61,9 +89,10 @@ To test door sensor locally on PiZero
 wget -qO- http://localhost:8080
 ```
 
+
 To update
 ```
-wget -qO- http://localhost:8080/update --post-data=
+wget -qO- http://localhost:8081/update --post-data=
 ```
 
 
