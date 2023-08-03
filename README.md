@@ -15,8 +15,9 @@ this repo contains scripts and apps used in my garage automation
 - [x] reports health to status.api
 - [x] redeploy all above apps to PiZero 
 - [x] install door sensor
-- [ ] run Docker/Compose? on PiZero, update apps on-demand remotely somehow
-- [ ] measure how much data would above solution consume per-update
+- [ ] ~~run Docker/Compose? on PiZero, update apps on-demand remotely somehow~~
+- [ ] ~~measure how much data would above solution consume per-update~~
+- [ ] update via API call and ``git pull``
 
 ## Docker apps (home Proxmox)
 
