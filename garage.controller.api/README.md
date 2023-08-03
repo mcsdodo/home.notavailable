@@ -22,6 +22,7 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable garageserver.service
 sudo systemctl start garageserver.service
+sudo systemctl status garageserver.service
 ```
 
 To install updater API on PiZero
