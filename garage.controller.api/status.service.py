@@ -2,12 +2,15 @@
 
 import time
 from datetime import datetime
-import RPi.GPIO as GPIO
+try:
+    from garagegpio import GarageGpio
+except ImportError:
+    from garagegpio_mock import GarageGpio
 import configparser
 from statusapiclient import StatusApiClient
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read('config.ini')
+CONFIG.read(['config.ini', 'secrets.ini'])
 CLIENT = StatusApiClient(CONFIG['status.api'])
 
 POLLING_INTERVAL = float(CONFIG['status.service']['PollingInterval'])
@@ -17,27 +20,24 @@ HEALTH_REPORTING_INTERVAL = int(CONFIG['status.service']['HealthReportingInterva
 DOOR_CLOSED_SENSOR_PIN = int(CONFIG['common']['DoorSensorClosedPin'])
 DOOR_OPENED_SENSOR_PIN = int(CONFIG['common']['DoorSensorOpenedPin'])
 
-# setup pins
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(DOOR_CLOSED_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(DOOR_OPENED_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+gpio = GarageGpio(DOOR_OPENED_SENSOR_PIN, DOOR_CLOSED_SENSOR_PIN)
 
 # state vars
-isClosed = False
+isClosed = gpio.is_door_sensor_closed()
 garageTriggerTime = datetime.utcnow()
 healthReportTime = datetime.utcnow()
-warningReportTime = datetime.utcnow()
+warningReportTime = datetime.min
 
 def log(message):
     print(datetime.utcnow().strftime("%H:%M:%S"), message)
 
-log("Status service started")
+log("Status service started. Door is " + ("closed" if isClosed else "opened"))
 
 try:
     while True:
         time.sleep(POLLING_INTERVAL)
-        isDoorSensorClosed = GPIO.input(DOOR_CLOSED_SENSOR_PIN) == 0
-        isDoorSensorOpened = GPIO.input(DOOR_OPENED_SENSOR_PIN) == 0
+        isDoorSensorClosed = gpio.is_door_sensor_closed()
+        isDoorSensorOpened = gpio.is_door_sensor_opened()
         now = datetime.utcnow()
         lastGarageTriggerDiff = (now - garageTriggerTime).total_seconds()
         lastHealthReportDiff = (now - healthReportTime).total_seconds()
@@ -48,11 +48,12 @@ try:
             garageTriggerTime = now
             isClosed = False
         
-        if isDoorSensorOpened is False and isClosed is False:
-            log("Door started closing")
-            garageTriggerTime = now
+        # TBD after sensor is mounted
+        # if isDoorSensorOpened is False and isClosed is False:
+        #     log("Door started closing")
+        #     garageTriggerTime = now
         
-        if (lastGarageTriggerDiff > OPENED_SECONDS_WARNING_AFTER 
+        if (lastGarageTriggerDiff > OPENED_SECONDS_WARNING_AFTER
             and lastWarningReportDiff > OPENED_SECONDS_WARNING_INTERVAL
             and isDoorSensorClosed is False):
             log("Door has been opened for " + str(int(round(lastGarageTriggerDiff))) + " seconds")
@@ -74,14 +75,15 @@ try:
             garageTriggerTime = datetime.max
             isClosed = True
         
-        if isDoorSensorOpened:
-            if isClosed is True:
-                CLIENT.set_status('OPENED')
-                healthReportTime = now
-                log("DOOR was just opened")
-            garageTriggerTime = now
-            isClosed = False
+        # TBD after sensor is mounted
+        # if isDoorSensorOpened:
+        #     if isClosed is True:
+        #         CLIENT.set_status('OPENED')
+        #         healthReportTime = now
+        #         log("Door was just opened")
+        #     garageTriggerTime = now
+        #     isClosed = False
 
 except KeyboardInterrupt:
     print("Program exited")
-    GPIO.cleanup()
+    gpio.cleanup()
