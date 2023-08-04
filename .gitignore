@@ -152,4 +152,4 @@ cython_debug/
 #.idea/
 
 local.test.http
-**/config.ini
+**/secrets.ini

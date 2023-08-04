@@ -77,6 +77,7 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable garagestatus.service
 sudo systemctl start garagestatus.service
+sudo systemctl status garagestatus.service
 ```
 
 
