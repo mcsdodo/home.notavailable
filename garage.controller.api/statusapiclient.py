@@ -14,8 +14,7 @@ class StatusApiClient:
             pass
     def set_status(self, state):
         try:
-            r = requests.post(self.url, headers=self.headers, json ={'state': state}, timeout=15)
-            return r
+            requests.post(self.url, headers=self.headers, json ={'state': state}, timeout=15)
         finally:
             pass
     def report_health(self):

@@ -57,10 +57,11 @@ try:
             and lastWarningReportDiff > OPENED_SECONDS_WARNING_INTERVAL
             and isDoorSensorClosed is False):
             log("Door has been opened for " + str(int(round(lastGarageTriggerDiff))) + " seconds")
-            CLIENT.set_status('OPENED')
             warningReportTime = now
             healthReportTime = now
-            continue
+            if (lastGarageTriggerDiff < OPENED_SECONDS_WARNING_INTERVAL + 10):
+                CLIENT.set_status('OPENED')
+                continue
 
         if (lastHealthReportDiff > HEALTH_REPORTING_INTERVAL):
             log("Reporting health.")
