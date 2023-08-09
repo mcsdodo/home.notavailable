@@ -31,7 +31,8 @@ warningReportTime = datetime.min
 def log(message):
     print(datetime.utcnow().strftime("%H:%M:%S"), message)
 
-log("Status service started. Door is " + ("closed" if isClosed else "opened"))
+log("Status service started. Reporting door is " + ("CLOSED" if isClosed else "OPENED"))
+CLIENT.set_status('CLOSED' if isClosed else 'OPENED')
 
 try:
     while True:
