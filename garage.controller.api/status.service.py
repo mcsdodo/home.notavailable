@@ -20,6 +20,7 @@ OPENED_SECONDS_WARNING_INTERVAL = int(CONFIG['status.service']['OpenedSecondsWar
 HEALTH_REPORTING_INTERVAL = int(CONFIG['status.service']['HealthReportingInterval'])
 DOOR_CLOSED_SENSOR_PIN = int(CONFIG['common']['DoorSensorClosedPin'])
 DOOR_OPENED_SENSOR_PIN = int(CONFIG['common']['DoorSensorOpenedPin'])
+FAST_FEEDBACK = int(CONFIG['status.service']['FastFeedback'])
 
 gpio = GarageGpio(DOOR_OPENED_SENSOR_PIN, DOOR_CLOSED_SENSOR_PIN)
 
@@ -34,8 +35,9 @@ warningReportWatch = TriggerTimer(OPENED_SECONDS_WARNING_INTERVAL, True)
 def log(message):
     print(datetime.utcnow().strftime("%H:%M:%S"), message)
 
-log("Status service started. Reporting door is " + ("CLOSED" if isClosed else "OPENED"))
-CLIENT.set_status('CLOSED' if isClosed else 'OPENED')
+state = ("CLOSED" if isClosed else ("OPENED" if isOpened else "UNKNOWN"))
+log("Status service started. Reporting door is " + state)
+CLIENT.set_status(state)
 
 try:
     while True:
@@ -48,11 +50,15 @@ try:
             log("Door started opening")
             garageTriggerWatch.reset(now)
             isClosed = False
+            if (FAST_FEEDBACK == 1):
+                CLIENT.set_status('OPENING')
         
         if isDoorSensorOpened is False and isClosed is False and isOpened is True:
             log("Door started closing")
             garageTriggerWatch.reset(now)
             isOpened = False
+            if (FAST_FEEDBACK == 1):
+                CLIENT.set_status('CLOSING')
         
         if (garageTriggerWatch.hasElapsed()
             and warningReportWatch.hasElapsed()
@@ -61,7 +67,7 @@ try:
             
             warningReportWatch.reset(now)
             healthReportWatch.reset(now)
-            state = 'OPENED' if isDoorSensorOpened else 'INBETWEEN'
+            state = 'OPENED' if isDoorSensorOpened else 'UNKNOWN'
             CLIENT.set_status(state)
             log("Door has been " + state + " for " + str(int(round(triggerElapsed))) + " seconds")
             continue
