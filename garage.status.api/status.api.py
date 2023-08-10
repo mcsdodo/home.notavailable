@@ -9,6 +9,7 @@ class States(str,Enum):
     UNKNOWN = 'UNKNOWN'
     CLOSED = 'CLOSED'
     OPENED = 'OPENED'
+    INBETWEEN = 'INBETWEEN'
 states = [member.value for member in States]
 UNKNOWN_STATE_GRACE_PERIOD = 180
 

@@ -25,6 +25,7 @@ gpio = GarageGpio(DOOR_OPENED_SENSOR_PIN, DOOR_CLOSED_SENSOR_PIN)
 
 # state vars
 isClosed = gpio.is_door_sensor_closed()
+isOpened = gpio.is_door_sensor_opened()
 
 garageTriggerWatch = TriggerTimer(OPENED_SECONDS_WARNING_AFTER)
 healthReportWatch = TriggerTimer(HEALTH_REPORTING_INTERVAL)
@@ -46,12 +47,14 @@ try:
         if isDoorSensorClosed is False and isClosed is True:
             log("Door started opening")
             garageTriggerWatch.reset(now)
+            CLIENT.set_status('INBETWEEN')
             isClosed = False
         
-        # TBD after sensor is mounted
-        # if isDoorSensorOpened is False and isClosed is False:
-        #     log("Door started closing")
-        #     garageTriggerWatch.reset(now)
+        if isDoorSensorOpened is False and isClosed is False and isOpened is True:
+            log("Door started closing")
+            CLIENT.set_status('INBETWEEN')
+            garageTriggerWatch.reset(now)
+            isOpened = False
         
         if (garageTriggerWatch.hasElapsed()
             and warningReportWatch.hasElapsed()
@@ -60,7 +63,10 @@ try:
             log("Door has been opened for " + str(int(round(triggerElapsed))) + " seconds")
             warningReportWatch.reset(now)
             healthReportWatch.reset(now)
-            CLIENT.set_status('OPENED')
+            if (isDoorSensorOpened):
+                CLIENT.set_status('OPENED')
+            else:
+                CLIENT.set_status('INBETWEEN')
             continue
 
         if (healthReportWatch.hasElapsed()):
@@ -76,14 +82,13 @@ try:
             garageTriggerWatch.reset(datetime.max)
             isClosed = True
         
-        # TBD after sensor is mounted
-        # if isDoorSensorOpened:
-        #     if isClosed is True:
-        #         CLIENT.set_status('OPENED')
-        #         healthReportWatch.reset(now)
-        #         log("Door was just opened")
-        #     garageTriggerWatch.reset(now)
-        #     isClosed = False
+        if isDoorSensorOpened:
+            if isOpened is False:
+                CLIENT.set_status('OPENED')
+                healthReportWatch.reset(now)
+                log("Door was just opened")
+                garageTriggerWatch.reset(now)
+            isOpened = True
 
 except KeyboardInterrupt:
     print("Program exited")
