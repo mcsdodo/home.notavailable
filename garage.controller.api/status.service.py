@@ -44,15 +44,13 @@ try:
         isDoorSensorOpened = gpio.is_door_sensor_opened()
         now = datetime.utcnow()
 
-        if isDoorSensorClosed is False and isClosed is True:
+        if isDoorSensorClosed is False and isClosed is True and isOpened is False:
             log("Door started opening")
             garageTriggerWatch.reset(now)
-            CLIENT.set_status('INBETWEEN')
             isClosed = False
         
         if isDoorSensorOpened is False and isClosed is False and isOpened is True:
             log("Door started closing")
-            CLIENT.set_status('INBETWEEN')
             garageTriggerWatch.reset(now)
             isOpened = False
         
@@ -60,13 +58,12 @@ try:
             and warningReportWatch.hasElapsed()
             and isDoorSensorClosed is False):
             triggerElapsed =  garageTriggerWatch.elapsedSeconds()
-            log("Door has been opened for " + str(int(round(triggerElapsed))) + " seconds")
+            
             warningReportWatch.reset(now)
             healthReportWatch.reset(now)
-            if (isDoorSensorOpened):
-                CLIENT.set_status('OPENED')
-            else:
-                CLIENT.set_status('INBETWEEN')
+            state = 'OPENED' if isDoorSensorOpened else 'INBETWEEN'
+            CLIENT.set_status(state)
+            log("Door has been " + state + " for " + str(int(round(triggerElapsed))) + " seconds")
             continue
 
         if (healthReportWatch.hasElapsed()):
