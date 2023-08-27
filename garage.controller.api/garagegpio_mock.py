@@ -1,7 +1,7 @@
 
 file = 'garagestatus.tmp'
 class GarageGpio:
-    def __init__(self, _, __) -> None:
+    def __init__(self, _, __, ___) -> None:
         pass
     def is_door_sensor_closed(self):
         return self._get_closed()
@@ -23,3 +23,9 @@ class GarageGpio:
         lines = f.readlines()
         val = bool(int(lines[1].strip()))
         return val
+    
+    def relay_on(self):
+        pass
+    
+    def relay_off(self):
+        pass

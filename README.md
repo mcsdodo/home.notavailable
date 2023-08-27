@@ -17,7 +17,7 @@ this repo contains scripts and apps used in my garage automation
 - [x] install door sensor
 - [ ] ~~run Docker/Compose? on PiZero, update apps on-demand remotely somehow~~
 - [ ] ~~measure how much data would above solution consume per-update~~
-- [ ] update via API call and ``git pull``
+- [x] update via API call and ``git pull``
 
 ## Docker apps (home Proxmox)
 
@@ -35,7 +35,7 @@ this repo contains scripts and apps used in my garage automation
 - [ ] is it possible to ditch IFTT and control HA directly from Google voice assitant? https://www.makeuseof.com/home-assistant-use-with-google-home-voice-assistant/ Maybe even to ask "Is my garage closed?"
 
 ## General todos
-- [ ] try out https://github.com/codenio/mock.gpio
+- [ ] ~~try out https://github.com/codenio/mock.gpio~~
 
 https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
 https://create.withcode.uk/python/A3

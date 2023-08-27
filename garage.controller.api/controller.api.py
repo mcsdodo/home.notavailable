@@ -3,7 +3,10 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import configparser
-import RPi.GPIO as GPIO
+try:
+    from garagegpio import GarageGpio
+except ImportError:
+    from garagegpio_mock import GarageGpio
 from time import sleep
 
 CONFIG = configparser.ConfigParser()
@@ -12,26 +15,14 @@ DOOR_CLOSED_SENSOR_PIN = int(CONFIG['common']['DoorSensorClosedPin'])
 DOOR_OPENED_SENSOR_PIN = int(CONFIG['common']['DoorSensorOpenedPin'])
 RELAY_PIN = int(CONFIG['common']['RelayPin'])
 
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(DOOR_CLOSED_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(DOOR_OPENED_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+gpio = GarageGpio(DOOR_OPENED_SENSOR_PIN, DOOR_CLOSED_SENSOR_PIN, RELAY_PIN)
 
 def getState():
-    if GPIO.input(DOOR_CLOSED_SENSOR_PIN) == 0:
+    if gpio.is_door_sensor_closed():
         return 'CLOSED'
-    if GPIO.input(DOOR_OPENED_SENSOR_PIN) == 0:
+    if gpio.is_door_sensor_opened():
         return 'OPENED'
     return { 'state' : 'UNKNOWN'}
-
-class Relay:
-    def __init__(self):
-        GPIO.setup(RELAY_PIN,GPIO.OUT,initial=GPIO.LOW)
-
-    def on(self):
-        GPIO.output(RELAY_PIN,GPIO.HIGH)
-
-    def off(self):
-        GPIO.output(RELAY_PIN,GPIO.LOW)
 
 class MyServer(BaseHTTPRequestHandler):
     def _set_headers(self, status, message=None):
@@ -42,11 +33,10 @@ class MyServer(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(message, default=str).encode('utf-8'))
         
     def do_POST(self):
-        r_1 = Relay()
-        r_1.on()
+        gpio.relay_on()
         print("R1 turned on")
         sleep(1)
-        r_1.off()
+        gpio.relay_off()
         print("R2 turned off")
         self._set_headers(200)
     
@@ -67,7 +57,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        GPIO.cleanup()
+        gpio.cleanup()
 
     webServer.server_close()
     print("Server stopped.")
