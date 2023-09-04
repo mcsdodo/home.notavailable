@@ -1,0 +1,13 @@
+[Unit]
+Description=Power-OFF GSM hat on system reboot
+Conflicts=reboot.target
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+ExecStop=/usr/local/bin/toggle_hat_pwr.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
