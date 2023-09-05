@@ -53,3 +53,7 @@ def do_openRamp_POST():
     sleep(1)
     gsm.HangUp()
     return Response(status=200)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
