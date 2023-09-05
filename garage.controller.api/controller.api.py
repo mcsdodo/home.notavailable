@@ -52,8 +52,8 @@ def do_openRamp_POST():
         timeout=1
     )
     ser.write(('ATD'+RAMP_PHONE+';\r').encode())
-    ser.write('WAIT=5\r'.encode())
-    sleep(10)
+    ser.write('WAIT=10\r'.encode())
+    sleep(15)
     ser.write('ATH\r'.encode())
     ser.close()
     return Response(status=200)
