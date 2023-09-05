@@ -1,5 +1,5 @@
 from flask import Flask, Response
-from gsmHat import GSMHat
+import serial
 
 import configparser
 try:
@@ -43,12 +43,19 @@ def do_GET():
 
 @app.post('/open-ramp')
 def do_openRamp_POST():
-    gsm = GSMHat('/dev/serial0', 115200)
-    sleep(2)
-    gsm.Call(RAMP_PHONE, 2)
-    sleep(1)
-    gsm.HangUp()
-    return Response(status=200)
+    ser = serial.Serial(
+        port='/dev/serial0',
+        baudrate=115200,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        bytesize=serial.EIGHTBITS,
+        timeout=1
+    )
+    ser.write(('ATD'+RAMP_PHONE+';\r').encode())
+    ser.write('WAIT=5\r'.encode())
+    sleep(10)
+    ser.write('ATH\r'.encode())
+    ser.close()
 
 
 if __name__ == "__main__":
