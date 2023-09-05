@@ -41,10 +41,6 @@ def do_GET():
         'state' : getState()
     }
 
-@app.head('/')
-def do_HEAD():
-    return Response(status=200)
-
 @app.post('/open-ramp')
 def do_openRamp_POST():
     gsm = GSMHat('/dev/serial0', 115200)
