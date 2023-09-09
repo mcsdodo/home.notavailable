@@ -1,0 +1,41 @@
+version: "3"
+services:
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - /root/Caddyfile:/etc/caddy/Caddyfile
+      - /root/caddy/data:/data
+      - /root/caddy/config:/config
+  adguardhome-sync:
+    image: ghcr.io/bakito/adguardhome-sync:latest
+    container_name: adguardhome-sync
+    ports:
+      - 8081:8080/tcp
+    volumes:
+      - /root/.adguardhome-sync.yaml:/config/adguardhome-sync.yaml
+    network_mode: bridge
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    network_mode: bridge
+    restart: always
+    environment:
+      WATCHTOWER_CLEANUP: "true" 
+      WATCHTOWER_POLL_INTERVAL: 30
+  garage.status.api:
+    image: mcsdodo/garage.status.api:latest
+    container_name: garage.status.api
+    ports:
+     - 8080:8080/tcp
+    network_mode: bridge
+    restart: always
