@@ -1,7 +1,8 @@
 # this runs on home server, remembers the state of garage
 from flask import Flask, Response, request
 from enum import Enum
-from datetime import datetime
+from datetime import datetime,  date
+from flask.json.provider import DefaultJSONProvider
 
 class States(str,Enum):
     UNKNOWN = 'UNKNOWN'
@@ -19,6 +20,15 @@ garage_state = {
 }
 
 app = Flask(__name__)
+
+class UpdatedJSONProvider(DefaultJSONProvider):
+    def default(self, o):
+        if isinstance(o, date) or isinstance(o, datetime):
+            return o.isoformat()
+        return super().default(o)
+
+app.json = UpdatedJSONProvider(app)
+
 
 @app.post('/')
 def do_POST():
@@ -45,6 +55,7 @@ def do_GET():
     if (is_past_grace_period and is_last_known_state_closed is False):
         garage_state['state'] = States.UNKNOWN
     return garage_state
+# "2023-09-11 19:40:20.950558"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
