@@ -7,6 +7,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
+RUN pip install Flask
+
 WORKDIR /app
 COPY . /app
 
