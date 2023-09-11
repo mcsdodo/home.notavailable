@@ -1,5 +1,6 @@
 version: "3"
 services:
+  
   caddy:
     image: caddy:2
     container_name: caddy
@@ -12,6 +13,7 @@ services:
       - /root/Caddyfile:/etc/caddy/Caddyfile
       - /root/caddy/data:/data
       - /root/caddy/config:/config
+  
   adguardhome-sync:
     image: ghcr.io/bakito/adguardhome-sync:latest
     container_name: adguardhome-sync
@@ -32,6 +34,7 @@ services:
     environment:
       WATCHTOWER_CLEANUP: "true" 
       WATCHTOWER_POLL_INTERVAL: 30
+ 
   garage.status.api:
     image: mcsdodo/garage.status.api:latest
     container_name: garage.status.api
@@ -39,3 +42,20 @@ services:
      - 8080:8080/tcp
     network_mode: bridge
     restart: always
+  
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - DELUGE_LOGLEVEL=error #optional
+    volumes:
+      - /root/deluge/config:/config
+      - /mnt/downloads:/downloads
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
