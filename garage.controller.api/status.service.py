@@ -74,7 +74,12 @@ try:
 
         if (healthReportWatch.hasElapsed()):
             log("Reporting health.")
-            CLIENT.report_health()
+            if (isDoorSensorClosed):
+                CLIENT.report_health("/0")
+            elif (isDoorSensorOpened):
+                CLIENT.report_health("/1")
+            else:
+                CLIENT.report_health()
             healthReportWatch.reset(now)
         
         if isDoorSensorClosed:

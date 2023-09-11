@@ -42,9 +42,22 @@ def do_POST():
     else:
         return Response(status=400)
 
+@app.route('/0', methods=['HEAD'])
+def do_HEAD_0():
+    garage_state['last_health'] = datetime.utcnow()
+    garage_state['state'] = States.CLOSED
+    return Response(status=200)
+
+@app.route('/1', methods=['HEAD'])
+def do_HEAD_1():
+    garage_state['last_health'] = datetime.utcnow()
+    garage_state['state'] = States.OPENED
+    return Response(status=200)
+
 @app.route('/', methods=['HEAD'])
 def do_HEAD():
     garage_state['last_health'] = datetime.utcnow()
+    garage_state['state'] = States.UNKNOWN
     return Response(status=200)
 
 @app.route('/', methods=['GET'])

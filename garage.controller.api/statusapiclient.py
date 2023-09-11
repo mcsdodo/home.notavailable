@@ -17,8 +17,9 @@ class StatusApiClient:
             requests.post(self.url, headers=self.headers, json ={'state': state}, timeout=15)
         finally:
             pass
-    def report_health(self):
+    def report_health(self, state = ""):
         try:
-            requests.head(self.url, headers=self.headers, timeout=15)
+            url = self.url + state
+            requests.head(url, headers=self.headers, timeout=15)
         finally:
             pass
