@@ -31,7 +31,7 @@ this repo contains scripts and apps used in my garage automation
 - [x] report UNKNOWN after a defined period of unavailability
 
 ### Home Assistant
-- [ ] actionable notifications from HA when garage door is opened for longer than set time. Basically whenever status.api gets 'OPENED' update, trigger a notification.
+- [x] actionable notifications from HA when garage door is opened for longer than set time. Basically whenever status.api gets 'OPENED' update, trigger a notification. [See here](/homeassistant/garage.notification.yml)
 - [ ] is it possible to ditch IFTT and control HA directly from Google voice assitant? https://www.makeuseof.com/home-assistant-use-with-google-home-voice-assistant/ Maybe even to ask "Is my garage closed?"
 
 ## General todos

@@ -1,0 +1,76 @@
+alias: Send notification when garage open > 2min
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.garage_is_closed_template
+    from: "True"
+    for:
+      minutes: 2
+      seconds: 0
+condition: []
+action:
+  - alias: Variables
+    variables:
+      action_close: "{{ 'CLOSE_' ~ context.id }}"
+      open_dash: "{{ 'OPEN_DASH' ~ context.id }}"
+  - service: notify.mobile_app_s22_dodo
+    data:
+      title: Garage door is opened
+      message: ">= than 2 minutes"
+      data:
+        channel: Garage
+        importance: high
+        actions:
+          - action: "{{ action_close }}"
+            title: Close
+          - action: "{{ open_dash }}"
+            title: Open dash
+  - alias: Wait for a response
+    wait_for_trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ action_close }}"
+      - platform: event
+        event_type: mobile_app_notification_cleared
+        event_data:
+          action_2_key: "{{ action_close }}"
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ open_dash }}"
+    timeout:
+      minutes: 5
+    continue_on_timeout: false
+  - alias: Perform the action
+    choose:
+      - conditions: "{{ wait.trigger.event.data.action == open_dash }}"
+        sequence:
+          - service: notify.mobile_app_s22_dodo
+            data:
+              message: command_webview
+              data:
+                command: /lovelace/garage
+      - conditions: "{{ wait.trigger.event.data.action == action_close }}"
+        sequence:
+          - repeat:
+              sequence:
+                - service: rest_command.garage_opener
+                  data: {}
+                - delay:
+                    seconds: 20
+              until:
+                - condition: template
+                  value_template: >-
+                    {{ (is_state('sensor.garage_is_closed_template', 'True') or
+                    repeat.index == 3)}}
+      - conditions: >-
+          {{ wait.trigger.event.event_type == 'mobile_app_notification_cleared'
+          }}
+        sequence:
+          - service: persistent_notification.create
+            data:
+              title: App notification result
+              message: The notification was closed
+mode: single
