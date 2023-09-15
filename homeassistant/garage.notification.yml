@@ -54,17 +54,8 @@ action:
                 command: /lovelace/garage
       - conditions: "{{ wait.trigger.event.data.action == action_close }}"
         sequence:
-          - repeat:
-              sequence:
-                - service: rest_command.garage_opener
-                  data: {}
-                - delay:
-                    seconds: 20
-              until:
-                - condition: template
-                  value_template: >-
-                    {{ (is_state('sensor.garage_is_closed_template', 'True') or
-                    repeat.index == 3)}}
+          - service: script.try_close_garage
+            data: {}
       - conditions: >-
           {{ wait.trigger.event.event_type == 'mobile_app_notification_cleared'
           }}

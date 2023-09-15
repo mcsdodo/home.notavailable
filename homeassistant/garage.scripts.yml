@@ -1,0 +1,32 @@
+try_open_garage:
+  alias: Try open garage
+  sequence:
+    - repeat:
+        sequence:
+          - service: rest_command.garage_opener
+            data: {}
+          - delay:
+              seconds: 20
+        while:
+          - condition: template
+            value_template:
+              "{{ (is_state('sensor.garage_is_opened_template', 'False')
+              or repeat.index < 3)}}"
+  mode: single
+  icon: mdi:garage-open
+try_close_garage:
+  alias: Try close garage
+  sequence:
+    - repeat:
+        sequence:
+          - service: rest_command.garage_opener
+            data: {}
+          - delay:
+              seconds: 20
+        while:
+          - condition: template
+            value_template:
+              "{{ (is_state('sensor.garage_is_closed_template', 'False')
+              or repeat.index < 3)}}"
+  mode: single
+  icon: mdi:garage-lock
