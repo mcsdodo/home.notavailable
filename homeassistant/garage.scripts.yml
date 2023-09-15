@@ -11,7 +11,7 @@ try_open_garage:
           - condition: template
             value_template:
               "{{ (is_state('sensor.garage_is_opened_template', 'False')
-              or repeat.index < 3)}}"
+              and repeat.index < 3)}}"
   mode: single
   icon: mdi:garage-open
 try_close_garage:
@@ -27,6 +27,6 @@ try_close_garage:
           - condition: template
             value_template:
               "{{ (is_state('sensor.garage_is_closed_template', 'False')
-              or repeat.index < 3)}}"
+              and repeat.index < 3)}}"
   mode: single
   icon: mdi:garage-lock
