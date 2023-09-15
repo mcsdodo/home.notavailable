@@ -43,6 +43,7 @@ There is a ramp leading to garages in our apartment building that requires a pho
 - [x] actionable notifications from HA when garage door is opened for longer than set time. Basically whenever status.api gets 'OPENED' update, trigger a notification. [See here](/homeassistant/garage.notification.yml)
 - [ ] is it possible to ditch IFTT and control HA directly from Google voice assitant? https://www.makeuseof.com/home-assistant-use-with-google-home-voice-assistant/ Maybe even to ask "Is my garage closed?"
 - [ ] store configuration / automations / scripts on github and update automatically
+- [x] repeat 'Garage is opened' notification every 5 minutes after initial notification (only if still opened)
 
 ## General todos
 - [ ] ~~try out https://github.com/codenio/mock.gpio~~

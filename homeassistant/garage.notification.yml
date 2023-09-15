@@ -2,13 +2,37 @@ alias: Send notification when garage open > 2min
 description: ""
 trigger:
   - platform: state
-    entity_id:
-      - sensor.garage_is_closed_template
+    entity_id: sensor.garage_is_closed_template
     from: "True"
     for:
       minutes: 2
-      seconds: 0
-condition: []
+  - platform: template
+    value_template: >-
+      {% set min_opened = 2 * 60 %}
+      {% set warn_interval = 5 * 60 %}
+      {# last_change bottom round to minutes, if for testing overrides #}
+      {% if states('input_boolean.testtrigger') == 'on' -%}
+      {% set c = (states.input_boolean.testtrigger.last_changed | as_timestamp / 60) | int * 60 %}
+      {%- else -%}
+      {% set c = (states.sensor.garage_is_closed_template.last_changed | as_timestamp / 60) | int * 60 %}
+      {%- endif %}
+      {# {% set c = (as_timestamp('2023-09-15T22:30:09') / 60) | int * 60 %} #}
+      {# now from sensor (already bottom round to minutes) #}
+      {% set n = as_timestamp(states('sensor.date_time_iso')) | int %}
+      {# {% set n = as_timestamp('2023-09-15T22:34:00') | int %} #}
+      {# is opened more than X (-30s for rounding) #}
+      {% set is_min_opened = n - c - 30 >= min_opened %}
+      {# is interval #}
+      {% set is_interval = (n - c) % warn_interval == 0 %}
+      {% set is_opened = states('sensor.garage_is_closed_template') == False or states('input_boolean.testtrigger') == 'on' %}
+      {{ is_min_opened and is_interval and is_opened }}
+  - platform: state
+    entity_id: input_boolean.testtrigger
+    from: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
 action:
   - alias: Variables
     variables:
@@ -19,10 +43,11 @@ action:
       title: Garage door is opened
       message: ">= than 2 minutes"
       data:
+        tag: garage_opened_detected
         ttl: 0
-        importance: high
         priority: high
         channel: Garage
+        importance: high
         actions:
           - action: "{{ action_close }}"
             title: Close
@@ -35,15 +60,13 @@ action:
         event_data:
           action: "{{ action_close }}"
       - platform: event
-        event_type: mobile_app_notification_cleared
-        event_data:
-          action_2_key: "{{ action_close }}"
-      - platform: event
         event_type: mobile_app_notification_action
         event_data:
           action: "{{ open_dash }}"
+      - platform: event
+        event_type: mobile_app_notification_cleared
     timeout:
-      minutes: 5
+      minutes: 15
     continue_on_timeout: false
   - alias: Perform the action
     choose:
@@ -64,6 +87,7 @@ action:
         sequence:
           - service: persistent_notification.create
             data:
-              title: App notification result
+              title: Garage opened notification result
               message: The notification was closed
-mode: single
+mode: parallel
+max: 10
