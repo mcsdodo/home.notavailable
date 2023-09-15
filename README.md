@@ -1,8 +1,17 @@
 # home.notavailable
 
-this repo contains scripts and apps used in my garage automation
+this repo contains scripts and apps used in my garage automation. Current garage runs a RpiZeroW with GSM hat & relay & 4G Wifi router. 
 
-## PiZero apps (garage)
+## v1
+First version did use GSM hat for internet connection, Cloudflare for tunneling and internet access. Software-wise a [simple API](./garage.controller.api/) to trigger relay and open a garage.
+
+## v1.1
+Added a [status.service](./garage.controller.api/status.service.py) that reports health and state to [my home server](./garage.status.api/status.api.py) when garage door moves. Home server is then used for Homeassistant integration.
+
+## v2
+There is a ramp leading to garages in our apartment building that requires a phone call to operate. It is a cumbersome operation ideal for an automation (who wants to make calls when you can call an API?). Making Raspberry to use GSM hat for permanent internet connection AND to perform calls to the ramp proved time consuming (in terms of research). I'm using a cheap 4G WiFi modem for internet connection and GSM hat to make calls.
+
+## PiZero apps (garage) checklist & worklog
 
 ### controller.api.py
 - [x] runs on PiZero in the garage that has cloudflared tunnel and GSM hat
@@ -33,6 +42,7 @@ this repo contains scripts and apps used in my garage automation
 ### Home Assistant
 - [x] actionable notifications from HA when garage door is opened for longer than set time. Basically whenever status.api gets 'OPENED' update, trigger a notification. [See here](/homeassistant/garage.notification.yml)
 - [ ] is it possible to ditch IFTT and control HA directly from Google voice assitant? https://www.makeuseof.com/home-assistant-use-with-google-home-voice-assistant/ Maybe even to ask "Is my garage closed?"
+- [ ] store configuration / automations / scripts on github and update automatically
 
 ## General todos
 - [ ] ~~try out https://github.com/codenio/mock.gpio~~
