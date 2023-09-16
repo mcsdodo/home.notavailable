@@ -50,7 +50,7 @@ action:
         importance: high
         actions:
           - action: "{{ action_close }}"
-            title: Close
+            title: Try close
           - action: "{{ open_dash }}"
             title: Open dash
   - alias: Wait for a response
