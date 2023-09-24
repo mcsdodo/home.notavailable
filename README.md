@@ -44,6 +44,7 @@ There is a ramp leading to garages in our apartment building that requires a pho
 - [ ] is it possible to ditch IFTT and control HA directly from Google voice assitant? https://www.makeuseof.com/home-assistant-use-with-google-home-voice-assistant/ Maybe even to ask "Is my garage closed?"
 - [ ] store configuration / automations / scripts on github and update automatically
 - [x] repeat 'Garage is opened' notification every 5 minutes after initial notification (only if still opened)
+- [x] access Eufy security camera stream over Tailscale private network from HA instance at home <> 4G router in garage https://github.com/fuatakgun/eufy_security/issues/935
 
 ## General todos
 - [ ] ~~try out https://github.com/codenio/mock.gpio~~
