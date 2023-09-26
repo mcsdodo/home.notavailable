@@ -42,7 +42,9 @@ trigger:
 
       {% set is_interval = (n - c) % warn_interval == 0 %}
 
-      {{ is_min_opened and is_interval }}
+      {% set is_opened = states('sensor.garage_is_closed_template') == 'False' or states('input_boolean.testtrigger') == 'on' %}
+
+      {{ is_min_opened and is_interval and is_opened }}
   - platform: state
     entity_id: input_boolean.testtrigger
     from: "off"
