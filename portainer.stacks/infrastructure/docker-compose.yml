@@ -1,18 +1,47 @@
 version: "3"
 services:
-  
+  dashy:
+    image: lissy93/dashy
+    container_name: Dashy
+    volumes:
+      - /root/dashy/config.yml:/app/public/conf.yml
+    ports:
+      - 8084:80
+    # Set any environmental variables
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '/app/services/healthcheck']
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      
   caddy:
     image: caddy:2
     container_name: caddy
     restart: unless-stopped
+    command: /usr/bin/caddy run --resume
     ports:
       - 80:80
       - 443:443
       - 443:443/udp
+      - 8083:2019
     volumes:
       - /root/Caddyfile:/etc/caddy/Caddyfile
       - /root/caddy/data:/data
       - /root/caddy/config:/config
+    environment:
+      - CADDY_ADMIN=0.0.0.0:2019
+      
+  caddy-ui:
+    container_name: caddy-ui
+    image: qmcgaw/caddy-ui
+    ports:
+      - 8082:8000/tcp
+    environment:
+      - CADDY_API_ENDPOINT=http://192.168.100.112:8083
   
   adguardhome-sync:
     image: ghcr.io/bakito/adguardhome-sync:latest
@@ -43,26 +72,12 @@ services:
     network_mode: bridge
     restart: always
   
-  deluge:
-    image: lscr.io/linuxserver/deluge:latest
-    container_name: deluge
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - DELUGE_LOGLEVEL=error #optional
-    volumes:
-      - /root/deluge/config:/config
-      - /mnt/downloads:/downloads
-    ports:
-      - 8112:8112
-      - 6881:6881
-      - 6881:6881/udp
-    restart: unless-stopped
-
   chatGpt:
     image: yakgpt/yakgpt:latest
     container_name: yakgpt
     ports:
-      - 8090:8090
+      - 8090:3000
     restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_OPENAI_API_KEY: ${NEXT_PUBLIC_OPENAI_API_KEY}
+
