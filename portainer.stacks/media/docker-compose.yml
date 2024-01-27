@@ -1,0 +1,92 @@
+version: "3"
+services:
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    restart: unless-stopped
+    ports:
+      - 32400:32400/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    environment:
+      - TZ=Europe/Bratislava
+      - PLEX_CLAIM=<claimToken>
+      - ADVERTISE_IP=http://192.168.100.212:32400/
+    hostname: plex.local
+    volumes:
+      - /root/plex/database:/config
+      - /root/plex/transcode/temp:/transcode
+      - /mnt/oldmedia:/data
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    volumes:
+      - /root/sabnzbd:/config
+      - /mnt/media/downloads/sabnzbd:/downloads #optional
+    ports:
+      - 5003:8080
+    restart: unless-stopped
+    
+  komga:
+    image: gotson/komga
+    container_name: komga
+    volumes:
+      - /mnt/media/comics:/data
+      - /mnt/media/downloads/komga:/downloads
+      - /root/komga:/config
+    ports:
+      - 5002:25600
+    restart: unless-stopped
+
+  mylar3:
+    image: lscr.io/linuxserver/mylar3:latest
+    container_name: mylar3
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Bratislava
+    volumes:
+      - /root/mylar3:/config
+      - /mnt/media/comics:/comics
+      - /mnt/downloads/comics:/downloads
+      - /mnt/downloads/sabnzbd:/sabnzbddownloads
+    ports:
+      - 5001:8090
+    restart: unless-stopped
+
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Bratislava
+      - DELUGE_LOGLEVEL=error #optional
+    volumes:
+      - /root/deluge/config:/config
+      - /mnt/media/downloads/deluge:/downloads
+      - /mnt/media/movies:/movies
+      - /mnt/media/tvshows:/tvshows
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+      - 58846:58846
+    restart: unless-stopped
+
+  kavita:
+    image: jvmilazz0/kavita:latest
+    container_name: kavita
+    volumes:
+      - /mnt/media/comics:/comics
+      - /root/kavita:/kavita/config
+    ports:
+      - 5000:5000
+    restart: unless-stopped
+ 

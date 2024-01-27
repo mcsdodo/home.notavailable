@@ -1,0 +1,141 @@
+alias: NsPanel1 Configuration
+description: ""
+use_blueprint:
+  path: Blackymas/nspanel_blueprint.yaml
+  input:
+    weather_entity: weather.forecast_home
+    nspanel_name: 8e65da592d6c83dad8b9f39f03eee550
+    home_custom_button01_icon: ""
+    home_custom_button02_icon: ""
+    home_custom_button03_icon: ""
+    entitypages_enabled: false
+    language: sk
+    home_value01_icon: mdi:home-thermometer-outline
+    relay_1_local_fallback: true
+    relay_2_local_fallback: true
+    entity01: scene.vsetky_v_detskej_vypnute
+    entity01_icon: mdi:lightbulb-group-off-outline
+    entity01_icon_color:
+      - 102
+      - 107
+      - 229
+    entity02: scene.detska_spanok
+    entity02_icon: mdi:lightbulb-night
+    entity03: scene.vsetky_v_detskej_30
+    entity03_icon: mdi:lightbulb-on-30
+    entity04: scene.vsetky_v_detskej_zapnute
+    entity04_icon: mdi:lightbulb-on
+    entity01_name: Vypnúť
+    entity02_name: Spánok
+    entity03_name: 30%
+    entity04_name: 100%
+    entity05: light.spalna_1_2_3
+    entity05_name: Svetlá na skrini
+    entity06: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity06_name: Nočná lampa
+    entity05_icon: mdi:lightbulb-group
+    entity06_icon: mdi:floor-lamp
+    entity05_icon_color:
+      - 200
+      - 150
+      - 0
+    entity06_icon_color:
+      - 200
+      - 150
+      - 0
+    delay: 5
+    left_button_entity: scene.detska_spanok
+    left_button_name: Spánok
+    right_button_entity: scene.vsetky_v_detskej_vypnute
+    right_button_name: Všetko vypnúť
+    left_button_hold_select: Default
+    entity09: scene.vsetky_v_detskej_vypnute
+    entity09_icon: mdi:lightbulb-group-off-outline
+    entity09_icon_color:
+      - 102
+      - 107
+      - 229
+    entity10: scene.detska_spanok
+    entity10_icon: mdi:lightbulb-night
+    entity11: scene.vsetky_v_detskej_30
+    entity11_icon: mdi:lightbulb-on-30
+    entity12: scene.vsetky_v_detskej_zapnute
+    entity12_icon: mdi:lightbulb-on
+    entity09_name: Vypnúť
+    entity10_name: Spánok
+    entity11_name: 30%
+    entity12_name: 100%
+    entity13: light.spalna_1_2_3
+    entity13_name: Svetlá na skrini
+    entity14: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity14_name: Nočná lampa
+    entity13_icon: mdi:lightbulb-group
+    entity14_icon: mdi:floor-lamp
+    entity13_icon_color:
+      - 200
+      - 150
+      - 0
+    entity14_icon_color:
+      - 200
+      - 150
+      - 0
+    entity17: scene.vsetky_v_detskej_vypnute
+    entity17_icon: mdi:lightbulb-group-off-outline
+    entity17_icon_color:
+      - 102
+      - 107
+      - 229
+    entity18: scene.detska_spanok
+    entity18_icon: mdi:lightbulb-night
+    entity19: scene.vsetky_v_detskej_30
+    entity19_icon: mdi:lightbulb-on-30
+    entity20: scene.vsetky_v_detskej_zapnute
+    entity20_icon: mdi:lightbulb-on
+    entity17_name: Vypnúť
+    entity18_name: Spánok
+    entity19_name: 30%
+    entity20_name: 100%
+    entity21: light.spalna_1_2_3
+    entity21_name: Svetlá na skrini
+    entity22: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity22_name: Nočná lampa
+    entity21_icon: mdi:lightbulb-group
+    entity22_icon: mdi:floor-lamp
+    entity21_icon_color:
+      - 200
+      - 150
+      - 0
+    entity22_icon_color:
+      - 200
+      - 150
+      - 0
+    entity25: scene.vsetky_v_detskej_vypnute
+    entity25_icon: mdi:lightbulb-group-off-outline
+    entity25_icon_color:
+      - 102
+      - 107
+      - 229
+    entity26: scene.detska_spanok
+    entity26_icon: mdi:lightbulb-night
+    entity27: scene.vsetky_v_detskej_30
+    entity27_icon: mdi:lightbulb-on-30
+    entity28: scene.vsetky_v_detskej_zapnute
+    entity28_icon: mdi:lightbulb-on
+    entity25_name: Vypnúť
+    entity26_name: Spánok
+    entity27_name: 30%
+    entity28_name: 100%
+    entity29: light.spalna_1_2_3
+    entity29_name: Svetlá na skrini
+    entity30: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity30_name: Nočná lampa
+    entity29_icon: mdi:lightbulb-group
+    entity30_icon: mdi:floor-lamp
+    entity29_icon_color:
+      - 200
+      - 150
+      - 0
+    entity30_icon_color:
+      - 200
+      - 150
+      - 0
