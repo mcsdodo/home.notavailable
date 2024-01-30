@@ -15,7 +15,7 @@ services:
       - 32414:32414/udp
     environment:
       - TZ=Europe/Bratislava
-      - PLEX_CLAIM=<claimToken>
+      - PLEX_CLAIM=${PLEX_CLAIM}
       - ADVERTISE_IP=http://192.168.100.212:32400/
     hostname: plex.local
     volumes:
@@ -48,8 +48,8 @@ services:
     image: lscr.io/linuxserver/mylar3:latest
     container_name: mylar3
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=0
+      - PGID=0
       - TZ=Europe/Bratislava
     volumes:
       - /root/mylar3:/config
@@ -64,8 +64,8 @@ services:
     image: lscr.io/linuxserver/deluge:latest
     container_name: deluge
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=0
+      - PGID=0
       - TZ=Europe/Bratislava
       - DELUGE_LOGLEVEL=error #optional
     volumes:
@@ -80,13 +80,13 @@ services:
       - 58846:58846
     restart: unless-stopped
 
-  kavita:
-    image: jvmilazz0/kavita:latest
-    container_name: kavita
-    volumes:
-      - /mnt/media/comics:/comics
-      - /root/kavita:/kavita/config
-    ports:
-      - 5000:5000
-    restart: unless-stopped
+  # kavita:
+  #   image: jvmilazz0/kavita:latest
+  #   container_name: kavita
+  #   volumes:
+  #     - /mnt/media/comics:/comics
+  #     - /root/kavita:/kavita/config
+  #   ports:
+  #     - 5000:5000
+  #   restart: unless-stopped
  
