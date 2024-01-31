@@ -21,7 +21,8 @@ services:
     volumes:
       - /root/plex/database:/config
       - /root/plex/transcode/temp:/transcode
-      - /mnt/oldmedia:/data
+      - /mnt/oldmedia:/oldmedia
+      - /mnt/media:/media
 
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
@@ -79,14 +80,34 @@ services:
       - 6881:6881/udp
       - 58846:58846
     restart: unless-stopped
+  
+  pyload-ng:
+    image: lscr.io/linuxserver/pyload-ng:latest
+    container_name: pyload-ng
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Bratislava
+    volumes:
+      - /root/pyload-ng/config:/config
+      - /mnt/media/downloads:/downloads
+    ports:
+      - 8000:8000
+    restart: unless-stopped
 
-  # kavita:
-  #   image: jvmilazz0/kavita:latest
-  #   container_name: kavita
-  #   volumes:
-  #     - /mnt/media/comics:/comics
-  #     - /root/kavita:/kavita/config
-  #   ports:
-  #     - 5000:5000
-  #   restart: unless-stopped
- 
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Bratislava
+      - WEBUI_PORT=8085
+    volumes:
+      - /root/qbittorrent:/config
+      - /mnt/media/downloads:/downloads
+    ports:
+      - 8085:8085
+      - 6885:6881
+      - 6885:6881/udp
+    restart: unless-stopped
