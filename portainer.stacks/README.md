@@ -22,3 +22,6 @@ nano /etc/pve/lxc/118.conf
 mp0: /mnt/pve/media,mp=/mnt/media
 mp1: /mnt/pve/immich,mp=/mnt/immich
 mp2: /mnt/pve/NotAvailableCloudPublic/Media/,mp=/mnt/oldmedia
+
+# Trust caddy cert
+caddy_windows_amd64.exe trust --address 192.168.100.112:8083
