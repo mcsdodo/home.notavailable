@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  frigate:
+    container_name: frigate
+    privileged: true
+    restart: unless-stopped
+    image: ghcr.io/blakeblackshear/frigate:stable
+    shm_size: "64mb"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - /root/frigate/config:/config
+      - /mnt/media/frigate:/media/frigate #TODO: store the data locally, not on NAS
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "5000:5000"
+      - "8554:8554" # RTSP feeds
+      - "8555:8555/tcp" # WebRTC over tcp
+      - "8555:8555/udp" # WebRTC over udp
