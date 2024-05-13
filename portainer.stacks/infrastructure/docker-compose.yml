@@ -4,9 +4,9 @@ services:
     image: lissy93/dashy
     container_name: Dashy
     volumes:
-      - /root/dashy/config.yml:/app/public/conf.yml
+      - /root/dashy/:/app/user-data/
     ports:
-      - 8084:80
+      - 8084:8080
     # Set any environmental variables
     environment:
       - NODE_ENV=production
@@ -37,6 +37,7 @@ services:
       
   caddy-ui:
     container_name: caddy-ui
+    restart: unless-stopped
     image: qmcgaw/caddy-ui
     ports:
       - 8082:8000/tcp
@@ -78,8 +79,6 @@ services:
     ports:
       - 8090:3000
     restart: unless-stopped
-    env_file:
-      - stack.env
     environment:
       NEXT_PUBLIC_OPENAI_API_KEY: ${NEXT_PUBLIC_OPENAI_API_KEY}
 

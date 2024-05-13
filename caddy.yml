@@ -1,0 +1,381 @@
+apps:
+  http:
+    servers:
+      srv0:
+        automatic_https:
+          disable_redirects: false
+        listen:
+          - ':443'
+        routes:
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.100:8123'
+            match:
+              - host:
+                  - homeassistant.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        transport:
+                          protocol: http
+                          tls:
+                            insecure_skip_verify: true
+                        upstreams:
+                          - dial: '192.168.100.111:8006'
+            match:
+              - host:
+                  - proxmox.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        transport:
+                          protocol: http
+                          tls:
+                            insecure_skip_verify: true
+                        upstreams:
+                          - dial: '192.168.100.200:8006'
+            match:
+              - host:
+                  - proxmox2.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.123:8123'
+            match:
+              - host:
+                  - homeassistant-dev.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:8082'
+            match:
+              - host:
+                  - caddy-config.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:9000'
+            match:
+              - host:
+                  - portainer.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.151:80'
+            match:
+              - host:
+                  - plug-na-1.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.152:80'
+            match:
+              - host:
+                  - plug-na-2.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.153:80'
+            match:
+              - host:
+                  - plug-na-3.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.154:80'
+            match:
+              - host:
+                  - plug-na-4.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.155:80'
+            match:
+              - host:
+                  - plug-na-5.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.156:80'
+            match:
+              - host:
+                  - plug-na-6.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.122:80'
+            match:
+              - host:
+                  - adguard2.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.124:7990'
+            match:
+              - host:
+                  - heimdall.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.1:80'
+            match:
+              - host:
+                  - tplinkwifi.net
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.121:80'
+            match:
+              - host:
+                  - adguard.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.201:80'
+            match:
+              - host:
+                  - truenas.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:8090'
+            match:
+              - host:
+                  - chatgpt.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:8112'
+            match:
+              - host:
+                  - deluge.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:5000'
+            match:
+              - host:
+                  - kavita.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:8084'
+            match:
+              - host:
+                  - dashy.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:5001'
+            match:
+              - host:
+                  - mylar.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:5002'
+            match:
+              - host:
+                  - komga.local
+                  - comics.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.102:8080'
+            match:
+              - host:
+                  - kodi.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.101:80'
+            match:
+              - host:
+                  - wd.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:2283'
+            match:
+              - host:
+                  - photos.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:9000'
+            match:
+              - host:
+                  - portainer2.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:8010'
+            match:
+              - host:
+                  - documents.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:32400'
+            match:
+              - host:
+                  - plex.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:8085'
+            match:
+              - host:
+                  - qbittorrent.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:5000'
+            match:
+              - host:
+                  - frigate.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: 192.168.100.205
+            match:
+              - host:
+                  - ubuntu.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:5014'
+            match:
+              - host:
+                  - double-take.local
+            terminal: true

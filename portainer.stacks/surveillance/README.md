@@ -2,6 +2,8 @@ https://docs.frigate.video/frigate/
 
 https://community.home-assistant.io/t/google-coral-usb-frigate-proxmox/383737
 
+## Pass USB coral to LXC
+
 `nano /etc/pve/lxc/XXX.conf`
 
 ```
