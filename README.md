@@ -1,6 +1,8 @@
 # home.notavailable
 
-this repo contains scripts and apps used in my garage automation. Current garage runs a RpiZeroW with GSM hat & relay & 4G Wifi router. 
+this repo contains scripts and apps used in my garage automation and some of my home servers' setup. Current garage runs a RpiZeroW with GSM hat & relay & 4G Wifi router.
+
+[Server setup](server.md)
 
 ## v1
 First version did use GSM hat for internet connection, Cloudflare for tunneling and internet access. Software-wise a [simple API](./garage.controller.api/) to trigger relay and open a garage.
