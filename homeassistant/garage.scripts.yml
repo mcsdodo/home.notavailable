@@ -25,8 +25,8 @@ try_close_garage:
               seconds: 20
         while:
           - condition: template
-            value_template:
-              "{{ (is_state('sensor.garage_is_closed_template', 'False')
-              and repeat.index < 3)}}"
+            value_template: >-
+              {{ (not is_state('sensor.garage_is_closed_template', 'True') and
+              repeat.index < 3)}}
   mode: single
-  icon: mdi:garage-lock
+  icon: mdi:garage-variant-lock
