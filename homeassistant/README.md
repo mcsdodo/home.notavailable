@@ -1,5 +1,4 @@
-# Send notification when garage open > 2min
 
-This automation uses [Actionable Homeassistant notifications](https://companion.home-assistant.io/docs/notifications/actionable-notifications/) with timeout + notification_cleared handling.
+# Send notification when garage open > 2min v2
 
-Works on Android.
+[Node-Red HACS addon](https://github.com/hassio-addons/addon-node-red) with [flow](/homeassistant/node-red/flows.json)
