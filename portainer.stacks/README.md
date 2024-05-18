@@ -26,3 +26,15 @@ mp2: /mnt/pve/NotAvailableCloudPublic/Media/,mp=/mnt/oldmedia
 
 # Trust caddy cert
 caddy_windows_amd64.exe trust --address 192.168.100.112:8083
+
+
+# To run portainer on multiple LXCs and manage from one install portainer-agent
+```
+docker run -d \
+  -p 9001:9001 \
+  --name portainer_agent \
+  --restart=always \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /var/lib/docker/volumes:/var/lib/docker/volumes \
+  portainer/agent:2.19.5
+```
