@@ -352,7 +352,7 @@ apps:
                   - handle:
                       - handler: reverse_proxy
                         upstreams:
-                          - dial: '192.168.100.112:5000'
+                          - dial: '192.168.100.113:5000'
             match:
               - host:
                   - frigate.local
@@ -374,8 +374,30 @@ apps:
                   - handle:
                       - handler: reverse_proxy
                         upstreams:
-                          - dial: '192.168.100.112:5014'
+                          - dial: '192.168.100.113:5014'
             match:
               - host:
                   - double-take.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:3000'
+            match:
+              - host:
+                  - grafana.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:3100'
+            match:
+              - host:
+                  - loki.local
             terminal: true
