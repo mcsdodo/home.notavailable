@@ -4,9 +4,9 @@ services:
     image: lissy93/dashy
     container_name: Dashy
     volumes:
-      - /root/dashy/config.yml:/app/public/conf.yml
+      - /root/dashy/:/app/user-data/
     ports:
-      - 8084:80
+      - 8084:8080
     # Set any environmental variables
     environment:
       - NODE_ENV=production
@@ -34,9 +34,14 @@ services:
       - /root/caddy/config:/config
     environment:
       - CADDY_ADMIN=0.0.0.0:2019
-      
+    logging:
+      driver: loki
+      options:
+        loki-url: http://192.168.100.112:3100/loki/api/v1/push 
+        
   caddy-ui:
     container_name: caddy-ui
+    restart: unless-stopped
     image: qmcgaw/caddy-ui
     ports:
       - 8082:8000/tcp
@@ -52,7 +57,11 @@ services:
       - /root/.adguardhome-sync.yaml:/config/adguardhome-sync.yaml
     network_mode: bridge
     restart: unless-stopped
-
+    logging:
+      driver: loki
+      options:
+        loki-url: http://192.168.100.112:3100/loki/api/v1/push 
+        
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
@@ -63,6 +72,10 @@ services:
     environment:
       WATCHTOWER_CLEANUP: "true" 
       WATCHTOWER_POLL_INTERVAL: 30
+    logging:
+      driver: loki
+      options:
+        loki-url: http://192.168.100.112:3100/loki/api/v1/push      
  
   garage.status.api:
     image: mcsdodo/garage.status.api:latest
@@ -71,6 +84,10 @@ services:
      - 8080:8080/tcp
     network_mode: bridge
     restart: always
+    logging:
+      driver: loki
+      options:
+        loki-url: http://192.168.100.112:3100/loki/api/v1/push    
   
   chatGpt:
     image: yakgpt/yakgpt:latest
@@ -78,8 +95,7 @@ services:
     ports:
       - 8090:3000
     restart: unless-stopped
-    env_file:
-      - stack.env
     environment:
       NEXT_PUBLIC_OPENAI_API_KEY: ${NEXT_PUBLIC_OPENAI_API_KEY}
+
 
