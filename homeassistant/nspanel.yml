@@ -3,14 +3,13 @@ description: ""
 use_blueprint:
   path: Blackymas/nspanel_blueprint.yaml
   input:
-    weather_entity: weather.forecast_home
     nspanel_name: 8e65da592d6c83dad8b9f39f03eee550
-    home_custom_button01_icon: ""
-    home_custom_button02_icon: ""
+    home_custom_button01_icon: mdi:car-door-lock
+    home_custom_button02_icon: mdi:garage-lock
     home_custom_button03_icon: ""
     entitypages_enabled: false
     language: sk
-    home_value01_icon: mdi:home-thermometer-outline
+    home_value01_icon: mdi:face-man
     relay_1_local_fallback: true
     relay_2_local_fallback: true
     entity01: scene.vsetky_v_detskej_vypnute
@@ -139,3 +138,38 @@ use_blueprint:
       - 200
       - 150
       - 0
+    timezone: Europe/Vienna (CET-1CEST,M3.5.0,M10.5.0/3)
+    wake_up_sensors:
+      - binary_sensor.keep_nspanel_alive
+    screensaver_display_time: true
+    screensaver_display_time_font_size: "12"
+    utilities_enabled: false
+    button_pages_icon_size: "10"
+    home_custom_button01: lock.bt014in_lock
+    home_value01: device_tracker.s22_ble
+    home_value02: device_tracker.s22_zuz_ble
+    home_value02_icon: mdi:face-woman
+    home_custom_button02: lock.garazove_dvere
+    home_indoor_temp_visible: true
+    home_value01_label_color:
+      - 255
+      - 255
+      - 255
+    home_value01_icon_color:
+      - 255
+      - 255
+      - 255
+    home_value02_label_color:
+      - 255
+      - 255
+      - 255
+    home_value02_icon_color:
+      - 255
+      - 255
+      - 255
+    home_value03_label_color:
+      - 255
+      - 255
+      - 255
+    home_page_background_update: true
+    home_value03: sensor.s22_dodo_battery_level
