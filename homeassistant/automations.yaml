@@ -1,0 +1,24 @@
+alias: Keep NsPanel screen awake
+description: ""
+trigger:
+  - platform: time_pattern
+    seconds: "10"
+  - platform: state
+    entity_id:
+      - binary_sensor.dodo_in_office
+    to: "on"
+condition:
+  - condition: state
+    entity_id: binary_sensor.dodo_in_office
+    state: "on"
+  - alias: PC consumption > 150 (monitor ON)
+    condition: template
+    value_template: "{{ states.sensor.plug_na_1_energy_power.state | int > 150 }}"
+    enabled: false
+  - condition: time
+    after: "07:30:00"
+    before: "19:30:00"
+action:
+  - service: homeassistant.toggle
+    entity_id: input_boolean.keep_nspanel_alive
+mode: single
