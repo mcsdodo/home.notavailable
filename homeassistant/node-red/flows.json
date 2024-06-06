@@ -8,6 +8,14 @@
         "env": []
     },
     {
+        "id": "987e5a7eabcbbbd9",
+        "type": "tab",
+        "label": "Washer stopped notification",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "6dc0247c.d7210c",
         "type": "subflow",
         "name": "Actionable Notification",
@@ -971,6 +979,172 @@
             [
                 "cf77a689222d1a6f"
             ]
+        ]
+    },
+    {
+        "id": "c0326458ae2993f2",
+        "type": "server-state-changed",
+        "z": "987e5a7eabcbbbd9",
+        "name": "Washer run completed",
+        "server": "60580fe8.ace5",
+        "version": 5,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entityId": "binary_sensor.front_load_washer_run_completed",
+        "entityIdType": "exact",
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "On",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 140,
+        "y": 80,
+        "wires": [
+            [
+                "0304ac03e516c62f"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "0304ac03e516c62f",
+        "type": "subflow:6dc0247c.d7210c",
+        "z": "987e5a7eabcbbbd9",
+        "name": "Handle notification",
+        "env": [
+            {
+                "name": "title",
+                "value": "Práčka doprala",
+                "type": "str"
+            },
+            {
+                "name": "action1Title",
+                "value": "OK",
+                "type": "str"
+            },
+            {
+                "name": "group",
+                "value": "",
+                "type": "str"
+            }
+        ],
+        "x": 510,
+        "y": 240,
+        "wires": [
+            [],
+            [],
+            [],
+            [
+                "b5573f60bd4c7c24"
+            ]
+        ]
+    },
+    {
+        "id": "b5573f60bd4c7c24",
+        "type": "delay",
+        "z": "987e5a7eabcbbbd9",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 510,
+        "y": 60,
+        "wires": [
+            [
+                "0304ac03e516c62f"
+            ]
+        ]
+    },
+    {
+        "id": "22c74e53346628e0",
+        "type": "server-state-changed",
+        "z": "987e5a7eabcbbbd9",
+        "name": "Test trigger is on for 5 seconds",
+        "server": "60580fe8.ace5",
+        "version": 5,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entityId": "input_boolean.testtrigger",
+        "entityIdType": "exact",
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "on",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "5",
+        "forType": "num",
+        "forUnits": "seconds",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }   
+        ],
+        "x": 170,
+        "y": 360,
+        "wires": [
+            [
+                "0304ac03e516c62f"
+            ],
+            []
         ]
     }
 ]
