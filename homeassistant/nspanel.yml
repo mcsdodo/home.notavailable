@@ -30,7 +30,7 @@ use_blueprint:
     entity04_name: 100%
     entity05: light.spalna_1_2_3
     entity05_name: Svetlá na skrini
-    entity06: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity06: light.ikea_4
     entity06_name: Nočná lampa
     entity05_icon: mdi:lightbulb-group
     entity06_icon: mdi:floor-lamp
@@ -43,10 +43,6 @@ use_blueprint:
       - 150
       - 0
     delay: 5
-    left_button_entity: scene.detska_spanok
-    left_button_name: Spánok
-    right_button_entity: scene.vsetky_v_detskej_vypnute
-    right_button_name: Všetko vypnúť
     left_button_hold_select: Default
     entity09: scene.vsetky_v_detskej_vypnute
     entity09_icon: mdi:lightbulb-group-off-outline
@@ -66,7 +62,7 @@ use_blueprint:
     entity12_name: 100%
     entity13: light.spalna_1_2_3
     entity13_name: Svetlá na skrini
-    entity14: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity14: light.ikea_4
     entity14_name: Nočná lampa
     entity13_icon: mdi:lightbulb-group
     entity14_icon: mdi:floor-lamp
@@ -96,7 +92,7 @@ use_blueprint:
     entity20_name: 100%
     entity21: light.spalna_1_2_3
     entity21_name: Svetlá na skrini
-    entity22: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity22: light.ikea_4
     entity22_name: Nočná lampa
     entity21_icon: mdi:lightbulb-group
     entity22_icon: mdi:floor-lamp
@@ -126,7 +122,7 @@ use_blueprint:
     entity28_name: 100%
     entity29: light.spalna_1_2_3
     entity29_name: Svetlá na skrini
-    entity30: light.ikea_of_sweden_tradfri_bulb_e27_ws_opal_1000lm_light
+    entity30: light.ikea_4
     entity30_name: Nočná lampa
     entity29_icon: mdi:lightbulb-group
     entity30_icon: mdi:floor-lamp
@@ -146,10 +142,27 @@ use_blueprint:
     utilities_enabled: false
     button_pages_icon_size: "10"
     home_custom_button01: lock.bt014in_lock
-    home_value01: device_tracker.s22_ble
-    home_value02: device_tracker.s22_zuz_ble
+    home_value01: device_tracker.s22_dodo_mqtt_room
+    home_value02: device_tracker.s22_zuz_mqtt_room
     home_value02_icon: mdi:face-woman
-    home_custom_button02: lock.garazove_dvere
+    home_custom_button02: lock.garage_door
+    hw_buttons_bars_pages:
+      - "2"
+      - "61440"
+      - "3932160"
+      - "65536"
+      - "131072"
+      - "256"
+      - "134217728"
+      - "124"
+      - "8388608"
+      - "128"
+      - "2048"
+      - "4194304"
+      - "1024"
+      - "33554432"
+      - "67108864"
+      - "16777216"
     home_indoor_temp_visible: true
     home_value01_label_color:
       - 255
@@ -172,4 +185,4 @@ use_blueprint:
       - 255
       - 255
     home_page_background_update: true
-    home_value03: sensor.s22_dodo_battery_level
+    home_value03: sensor.s22_dodo_phone_battery_level
