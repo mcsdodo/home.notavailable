@@ -1,0 +1,84 @@
+{
+    "$schema": "https://raw.githubusercontent.com/house-of-abbey/GarminHomeAssistant/main/config.schema.json",
+    "title": "Home",
+    "items": [
+      {
+        "entity": "sensor.garage_is_closed_template",
+        "name": "Garáž",
+        "type": "template",
+        "content": "{% if is_state('sensor.garage_is_closed_template', 'True') %}🔒 zatvorená{% else %}🔓 otvorená{% endif %}",
+        "tap_action": {
+          "service": "rest_command.garage_opener"
+        }
+      },
+      {
+        "entity": "lock.bt014in_lock",
+        "name": "Auto",
+        "type": "template",
+        "content": "{% if is_state('lock.bt014in_lock', 'locked') %}🔒 zamknuté{% else %}🔓 odomknuté{% endif %}",
+        "tap_action": {
+          "service": "script.toggle_lock",
+          "data" : {
+            "lock_entity_id" : "lock.bt014in_lock"
+          }
+        }
+      },
+      {
+        "entity": "media_player.not_available_tv",
+        "name" : "TV",
+        "type": "tap",
+        "tap_action": {
+          "service": "media_player.toggle"
+        }
+      },
+      {
+        "name": "Svetlá v detskej",
+        "title": "Svetlá v detskej",
+        "type": "group",
+        "items": [
+          {
+            "entity": "counter.detska_scene_toggle_counter",
+            "name": "Vypnúť",
+            "type": "tap",
+            "tap_action": {
+              "service" : "counter.reset"
+            }
+          },
+          {
+            "entity": "counter.detska_scene_toggle_counter",
+            "name": "Spánok",
+            "type": "tap",
+            "tap_action": {
+              "service" : "counter.set_value",
+              "data": {
+                  "value": 1
+              }
+            }
+          },
+          {
+            "entity": "counter.detska_scene_toggle_counter",
+            "name": "30%",
+            "type": "tap",
+            "tap_action": {
+              "service" : "counter.set_value",
+              "data": {
+                  "value": 2
+              }
+            }
+          },
+          {
+            "entity": "counter.detska_scene_toggle_counter",
+            "name": "100%",
+            "type": "tap",
+            "tap_action": {
+              "service" : "counter.set_value",
+              "data": {
+                  "value": 3
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+  
