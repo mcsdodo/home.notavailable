@@ -1,0 +1,123 @@
+sonos_say_blue:
+  alias: Say to Sonos
+  use_blueprint:
+    path: Talvish/sonos_say.yaml
+    input:
+      tts_language: sk
+  mode: parallel
+  icon: mdi:alarm-light
+sonos_say:
+  alias: Say to sonos from input
+  sequence:
+    - service: script.sonos_say_blue
+      data_template:
+        volume_level: "{{ volume }}"
+        entity_id: "{{ sonos_entity }}"
+        message: "{{ message }}"
+try_close_garage:
+  alias: Try close garage
+  sequence:
+    - repeat:
+        sequence:
+          - service: rest_command.garage_opener
+            data: {}
+          - delay:
+              seconds: 20
+        while:
+          - condition: template
+            value_template:
+              "{{ (not is_state('sensor.garage_is_closed_template', 'True')
+              and repeat.index < 3)}}"
+  mode: single
+  icon: mdi:garage-variant-lock
+try_open_garage:
+  alias: Try open garage
+  sequence:
+    - repeat:
+        sequence:
+          - service: rest_command.garage_opener
+            data: {}
+          - delay:
+              seconds: 20
+        while:
+          - condition: template
+            value_template:
+              "{{ (is_state('sensor.garage_is_opened_template', 'False')
+              and repeat.index < 3)}}"
+  mode: single
+  icon: mdi:garage-open-variant
+rolling_decrease_counter:
+  alias: Rolling decrease counter
+  sequence:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template:
+                "{{ states.counter.detska_scene_toggle_counter.attributes.minimum
+                == int(states('counter.detska_scene_toggle_counter')) }}"
+              alias: value==minimum
+          sequence:
+            - service: counter.set_value
+              data:
+                value:
+                  "{{ states.counter.detska_scene_toggle_counter.attributes.maximum
+                  }}"
+              target:
+                entity_id: counter.detska_scene_toggle_counter
+      default:
+        - service: counter.decrement
+          data: {}
+          target:
+            entity_id: counter.detska_scene_toggle_counter
+  mode: single
+rolling_increase_counter:
+  alias: Rolling increase counter
+  sequence:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template:
+                "{{ states.counter.detska_scene_toggle_counter.attributes.maximum
+                == int(states('counter.detska_scene_toggle_counter')) }}"
+              alias: value==maximum
+          sequence:
+            - service: counter.set_value
+              data:
+                value:
+                  "{{ states.counter.detska_scene_toggle_counter.attributes.minimum
+                  }}"
+              target:
+                entity_id: counter.detska_scene_toggle_counter
+      default:
+        - service: counter.increment
+          data: {}
+          target:
+            entity_id: counter.detska_scene_toggle_counter
+  mode: single
+toggle_lock:
+  alias: Toggle Lock
+  fields:
+    lock_entity_id:
+      description: Lock Entity ID
+      example: lock.front_door
+      required: true
+      selector:
+        entity:
+          domain: lock
+  sequence:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: '{{ is_state(lock_entity_id, "locked") }}'
+          sequence:
+            - service: lock.unlock
+              data: {}
+              target:
+                entity_id: "{{ lock_entity_id }}"
+      default:
+        - service: lock.lock
+          data: {}
+          target:
+            entity_id: "{{ lock_entity_id }}"
+  mode: single
+  icon: mdi:lock-clock
