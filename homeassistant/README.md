@@ -8,3 +8,6 @@
 
 ## Washer stopped notification
 ![image](./node-red/washer-stopped-notification.png)
+
+## Configuration for [GarminHomeAssistant app](https://apps.garmin.com/en-US/apps/61c91d28-ec5e-438d-9f83-39e9f45b199d)
+[menu.json](./www/garmin/menu.json)  
