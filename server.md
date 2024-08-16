@@ -4,13 +4,13 @@
 * 102 - MQTT LXC
 * 103 - AdGuard LXC
 * 105 - HaOS-dev VM
-* 108 - Alpine Docker LXC
+* 108 - Alpine Docker LXC running Portainer
 
 # Big server
 * 106 - AdGuard LXC
 * 109 - Ubuntu VM
 * 111 - TrueNAS VM
-* 118 - Alpine Docker LXC
+* 118 - Alpine Docker LXC runing Portainer
 
 ## Mounts 
 ``nano /etc/fstab``

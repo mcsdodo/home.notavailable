@@ -2,16 +2,26 @@
 
 this repo contains scripts and apps used in my garage automation and some of my home servers' setup. Current garage runs a RpiZeroW with GSM hat & relay & 4G Wifi router.
 
+## General TODOs and ToTrys
+- [ ] ~~try out https://github.com/codenio/mock.gpio~~
+- [ ] BLE Triangulation https://github.com/agittins/bermuda/wiki
+- [ ] HASS Magic Areas https://github.com/jseidl/hass-magic_areas/wiki
+- [ ] AI On The Edge (read water usage) https://github.com/jomjol/AI-on-the-edge-device
+- [ ] Unmanic (file library optimizer) https://github.com/Unmanic/unmanic
+- [ ] Syncthing https://github.com/syncthing/syncthing
+- [ ] Obsidian.md - markdown based notes (to replace OneNote maybe?) https://obsidian.md/
+- [ ] Centralized metrics/tracing/logging for all services
+
 [Server setup](server.md)
 
-## v1
-First version did use GSM hat for internet connection, Cloudflare for tunneling and internet access. Software-wise a [simple API](./garage.controller.api/) to trigger relay and open a garage.
+## v2
+There is a ramp leading to garages in our apartment building that requires a phone call to operate. It is a cumbersome operation ideal for an automation (who wants to make calls when you can call an API?). Making Raspberry to use GSM hat for permanent internet connection AND to perform calls to the ramp proved time consuming (in terms of research). I'm using a cheap 4G WiFi modem for internet connection and GSM hat to make calls.
 
 ## v1.1
 Added a [status.service](./garage.controller.api/status.service.py) that reports health and state to [my home server](./garage.status.api/status.api.py) when garage door moves. Home server is then used for Homeassistant integration.
 
-## v2
-There is a ramp leading to garages in our apartment building that requires a phone call to operate. It is a cumbersome operation ideal for an automation (who wants to make calls when you can call an API?). Making Raspberry to use GSM hat for permanent internet connection AND to perform calls to the ramp proved time consuming (in terms of research). I'm using a cheap 4G WiFi modem for internet connection and GSM hat to make calls.
+## v1
+First version did use GSM hat for internet connection, Cloudflare for tunneling and internet access. Software-wise a [simple API](./garage.controller.api/) to trigger relay and open a garage.
 
 ## PiZero apps (garage) checklist & worklog
 
@@ -49,8 +59,6 @@ There is a ramp leading to garages in our apartment building that requires a pho
 - [x] repeat 'Garage is opened' notification every 5 minutes after initial notification (only if still opened)
 - [x] access Eufy security camera stream over Tailscale private network from HA instance at home <> 4G router in garage https://github.com/fuatakgun/eufy_security/issues/935
 
-## General todos
-- [ ] ~~try out https://github.com/codenio/mock.gpio~~
 
 https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
 https://create.withcode.uk/python/A3
