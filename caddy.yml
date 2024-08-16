@@ -401,3 +401,25 @@ apps:
               - host:
                   - loki.local
             terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.112:8091'
+            match:
+              - host:
+                  - gotify.local
+            terminal: true
+          - handle:
+              - handler: subroute
+                routes:
+                  - handle:
+                      - handler: reverse_proxy
+                        upstreams:
+                          - dial: '192.168.100.212:5004'
+            match:
+              - host:
+                  - pdf.local
+            terminal: true
