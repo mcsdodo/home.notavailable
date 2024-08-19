@@ -16,6 +16,14 @@
         "env": []
     },
     {
+        "id": "9d5a26b2ca1fe7c9",
+        "type": "tab",
+        "label": "Car is home",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "6dc0247c.d7210c",
         "type": "subflow",
         "name": "Actionable Notification",
@@ -333,6 +341,16 @@
                         ]
                     }
                 }
+            },
+            {
+                "name": "car_ui",
+                "type": "bool",
+                "value": "false"
+            },
+            {
+                "name": "channel",
+                "type": "str",
+                "value": ""
             }
         ],
         "meta": {},
@@ -374,7 +392,7 @@
         "type": "function",
         "z": "6dc0247c.d7210c",
         "name": "create service call",
-        "func": "msg._originalPayload = msg.payload;\nflow.set('latestMessage', msg);\n\nconst services = env.get('service');\nif(!services) {\n    node.status({\n        text: 'no services defined',\n        shape: 'ring',\n        fill: 'red'\n    });\n    return;    \n}\n\nconst actions = [1, 2, 3].reduce((acc, i) => {\n    const name = `action${i}`\n    const id = flow.get(`${name}Id`);\n    const title = getActionProperty(i, \"title\") ?? env.get(`${name}Title`);\n    const uri = getActionProperty(i, \"uri\") ?? env.get(`${name}Uri`);\n    const action = uri.length ? 'URI' : title ? id : undefined;\n\n    acc.push({ action, title, uri });\n\n    return acc;\n}, []);\n\nconst tag = flow.get('notificationTag');\nconst data = mergeDeep({\n        title: env.get('title'),\n        message: env.get('message'),\n        data: {\n            tag,\n            color: env.get(\"color\"),\n            group: env.get(\"group\"),\n            sticky: env.get(\"sticky\"),\n            timeout: env.get(\"timeout\"),\n            icon: env.get(\"icon\"),\n            ttl: 0,\n            priority: \"high\",\n            importance: \"high\"\n        },\n    },    \n    msg.actionable,    \n    {data: {actions}},\n);\n\nif(tag !== data?.data?.tag) {\n    flow.set('notificationTag', data?.data?.tag);\n}\n\nservices.trim().split(/,\\s*/).forEach(service => {\n    if(!service) return;\n    \n    msg.payload = {\n        service,\n        data,\n    };\n    node.send(msg);\n});\n\nnode.done();\n\nfunction getActionProperty(index, prop) {\n    const i = index - 1;\n\n    return msg?.actionable?.data?.actions?.[i]?.[prop];\n}\n\n/**\n * Simple object check.\n * @param item\n * @returns {boolean}\n */\nfunction isObject(item) {\n    return (item && typeof item === 'object' && !Array.isArray(item));\n}\n\n/**\n * Deep merge two objects.\n * @param target\n * @param sources\n */\nfunction mergeDeep(target, ...sources) {\n    if (!sources.length) return target;\n    const source = sources.shift();\n\n    if (isObject(target) && isObject(source)) {\n        for (const key in source) {\n            if (isObject(source[key])) {\n                if (!target[key]) Object.assign(target, { [key]: {} });\n                mergeDeep(target[key], source[key]);\n            } else {\n                Object.assign(target, { [key]: source[key] });\n            }\n        }\n    }\n\n    return mergeDeep(target, ...sources);\n}\n",
+        "func": "msg._originalPayload = msg.payload;\nflow.set('latestMessage', msg);\n\nconst services = env.get('service');\nif(!services) {\n    node.status({\n        text: 'no services defined',\n        shape: 'ring',\n        fill: 'red'\n    });\n    return;    \n}\n\nconst actions = [1, 2, 3].reduce((acc, i) => {\n    const name = `action${i}`\n    const id = flow.get(`${name}Id`);\n    const title = getActionProperty(i, \"title\") ?? env.get(`${name}Title`);\n    const uri = getActionProperty(i, \"uri\") ?? env.get(`${name}Uri`);\n    const action = uri.length ? 'URI' : title ? id : undefined;\n\n    acc.push({ action, title, uri });\n\n    return acc;\n}, []);\n\nconst tag = flow.get('notificationTag');\nconst data = mergeDeep({\n        title: env.get('title'),\n        message: env.get('message'),\n        data: {\n            tag,\n            color: env.get(\"color\"),\n            group: env.get(\"group\"),\n            sticky: env.get(\"sticky\"),\n            timeout: env.get(\"timeout\"),\n            icon: env.get(\"icon\"),\n            ttl: 0,\n            priority: \"high\",\n            importance: \"high\",\n            car_ui: env.get(\"car_ui\"),\n            channel: env.get(\"channel\")\n        },\n    },    \n    msg.actionable,    \n    {data: {actions}},\n);\n\nif(tag !== data?.data?.tag) {\n    flow.set('notificationTag', data?.data?.tag);\n}\n\nservices.trim().split(/,\\s*/).forEach(service => {\n    if(!service) return;\n    \n    msg.payload = {\n        service,\n        data,\n    };\n    node.send(msg);\n});\n\nnode.done();\n\nfunction getActionProperty(index, prop) {\n    const i = index - 1;\n\n    return msg?.actionable?.data?.actions?.[i]?.[prop];\n}\n\n/**\n * Simple object check.\n * @param item\n * @returns {boolean}\n */\nfunction isObject(item) {\n    return (item && typeof item === 'object' && !Array.isArray(item));\n}\n\n/**\n * Deep merge two objects.\n * @param target\n * @param sources\n */\nfunction mergeDeep(target, ...sources) {\n    if (!sources.length) return target;\n    const source = sources.shift();\n\n    if (isObject(target) && isObject(source)) {\n        for (const key in source) {\n            if (isObject(source[key])) {\n                if (!target[key]) Object.assign(target, { [key]: {} });\n                mergeDeep(target[key], source[key]);\n            } else {\n                Object.assign(target, { [key]: source[key] });\n            }\n        }\n    }\n\n    return mergeDeep(target, ...sources);\n}\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -703,6 +721,11 @@
         "name": "Handle notification",
         "env": [
             {
+                "name": "service",
+                "value": "mobile_app_s22_dodo_app",
+                "type": "str"
+            },
+            {
                 "name": "title",
                 "value": "Garage door is opened",
                 "type": "str"
@@ -735,6 +758,11 @@
             {
                 "name": "group",
                 "value": "",
+                "type": "str"
+            },
+            {
+                "name": "channel",
+                "value": "Garage",
                 "type": "str"
             }
         ],
@@ -807,6 +835,7 @@
         "id": "17e98cf0007ab385",
         "type": "server-state-changed",
         "z": "196ee44702dbf55a",
+        "d": true,
         "name": "Test trigger is on for 5 seconds",
         "server": "60580fe8.ace5",
         "version": 5,
@@ -994,7 +1023,7 @@
         "entityIdType": "exact",
         "outputInitially": false,
         "stateType": "str",
-        "ifState": "On",
+        "ifState": "on",
         "ifStateType": "str",
         "ifStateOperator": "is",
         "outputOnlyOnStateChange": true,
@@ -1042,6 +1071,11 @@
         "name": "Handle notification",
         "env": [
             {
+                "name": "service",
+                "value": "mobile_app_s22_dodo_app",
+                "type": "str"
+            },
+            {
                 "name": "title",
                 "value": "Práčka doprala",
                 "type": "str"
@@ -1054,6 +1088,11 @@
             {
                 "name": "group",
                 "value": "",
+                "type": "str"
+            },
+            {
+                "name": "channel",
+                "value": "Pracka",
                 "type": "str"
             }
         ],
@@ -1097,6 +1136,7 @@
         "id": "22c74e53346628e0",
         "type": "server-state-changed",
         "z": "987e5a7eabcbbbd9",
+        "d": true,
         "name": "Test trigger is on for 5 seconds",
         "server": "60580fe8.ace5",
         "version": 5,
@@ -1136,13 +1176,194 @@
                 "propertyType": "msg",
                 "value": "",
                 "valueType": "triggerId"
-            }   
+            }
         ],
         "x": 170,
         "y": 360,
         "wires": [
             [
                 "0304ac03e516c62f"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "3d96c26df0d8f5a7",
+        "type": "server-state-changed",
+        "z": "9d5a26b2ca1fe7c9",
+        "name": "Car is home",
+        "server": "60580fe8.ace5",
+        "version": 5,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entityId": "device_tracker.bt014in_device_tracker",
+        "entityIdType": "exact",
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "Home",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 190,
+        "y": 200,
+        "wires": [
+            [
+                "0dafd05be1a6f202"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "0dafd05be1a6f202",
+        "type": "subflow:6dc0247c.d7210c",
+        "z": "9d5a26b2ca1fe7c9",
+        "name": "Handle notification",
+        "env": [
+            {
+                "name": "service",
+                "value": "mobile_app_s22_dodo_app",
+                "type": "str"
+            },
+            {
+                "name": "title",
+                "value": "Otvoriť garáž?",
+                "type": "str"
+            },
+            {
+                "name": "action1Title",
+                "value": "OK",
+                "type": "str"
+            },
+            {
+                "name": "group",
+                "value": "",
+                "type": "str"
+            },
+            {
+                "name": "car_ui",
+                "value": "true",
+                "type": "bool"
+            },
+            {
+                "name": "channel",
+                "value": "Garage",
+                "type": "str"
+            }
+        ],
+        "x": 570,
+        "y": 200,
+        "wires": [
+            [
+                "a3d1c4c0cd459406"
+            ],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "a3d1c4c0cd459406",
+        "type": "api-call-service",
+        "z": "9d5a26b2ca1fe7c9",
+        "name": "Open garage",
+        "server": "60580fe8.ace5",
+        "version": 5,
+        "debugenabled": false,
+        "domain": "rest_command",
+        "service": "garage_opener",
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "x": 910,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2cdf9ac3978cca82",
+        "type": "server-state-changed",
+        "z": "9d5a26b2ca1fe7c9",
+        "name": "Test trigger is on for 5 seconds",
+        "server": "60580fe8.ace5",
+        "version": 5,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entityId": "input_boolean.testtrigger",
+        "entityIdType": "exact",
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "on",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "5",
+        "forType": "num",
+        "forUnits": "seconds",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 250,
+        "y": 360,
+        "wires": [
+            [
+                "0dafd05be1a6f202"
             ],
             []
         ]
