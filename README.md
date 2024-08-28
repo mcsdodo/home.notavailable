@@ -30,7 +30,7 @@ First version did use GSM hat for internet connection, Cloudflare for tunneling 
 - [x] triggers the garage door switch
 - [x] is called via HA REST action or IFTT action
 - [x] open garage from from Garmin watch (see https://github.com/hatl/hasscontrol)
-- [ ] abandon cloudflared on PiZero - make calls from Homelab -> PiZero via Tailscale (seems to be lot less data consuming than keeping Cloudflared tunnel open)
+- [x] abandon cloudflared on PiZero - make calls from Homelab -> PiZero via Tailscale (seems to be lot less data consuming than keeping Cloudflared tunnel open)
 
 ### status.service.py
 - [x] checks status of door sensor, reports to status.api
