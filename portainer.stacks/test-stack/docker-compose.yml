@@ -8,5 +8,6 @@ services:
       echo $ENV_FROM_PORTAINER
       '
     environment:
-      - ENV_FROM_FILE=${MY_ENV_FROM_FILE}
       - ENV_FROM_PORTAINER=${MY_ENV_FROM_PORTAINER}
+    env_file:
+      - stack.env
