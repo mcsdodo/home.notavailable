@@ -1,0 +1,22 @@
+services:
+  alloy:
+    restart: unless-stopped
+    container_name: alloy
+    image: grafana/alloy:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/shared_configs/grafana/config.alloy:/etc/alloy/config.alloy
+    ports:
+      - "12345:12345"
+    command:  run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    network_mode: bridge
+    restart: always
+    environment:
+      WATCHTOWER_CLEANUP: "true" 
+      WATCHTOWER_POLL_INTERVAL: 30
