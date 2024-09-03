@@ -2,8 +2,9 @@ version: '3'
 services:
   print-variable:
     image: alpine
-    command: sh -c "echo $$ENV_FROM_FILE $$ENV_FROM_PORTAINER"
+    command: sh -c "echo $$ENV_FROM_FILE $$ENV_FROM_PORTAINER $$COMPOSITE_ENV"
     environment:
       - ENV_FROM_PORTAINER=${MY_ENV_FROM_PORTAINER}
+      - COMPOSITE_ENV=Something ${ENV_FROM_FILE}
     env_file:
       - stack.env
