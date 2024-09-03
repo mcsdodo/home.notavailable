@@ -1,0 +1,27 @@
+services:
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    command: /usr/bin/caddy run --resume
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - /root/Caddyfile:/etc/caddy/Caddyfile
+      - /root/caddy/data:/data
+      - /root/caddy/config:/config
+    environment:
+      - CADDY_ADMIN=0.0.0.0:2019
+    labels:
+      kuma.__web: '"http://caddy:8083/reverse_proxy/upstreams"'
+
+  caddy-ui:
+    container_name: caddy-ui
+    restart: unless-stopped
+    image: qmcgaw/caddy-ui
+    ports:
+      - 8082:8000/tcp
+    environment:
+      - CADDY_API_ENDPOINT=http://caddy:2019
