@@ -1,0 +1,88 @@
+services:
+  autokuma:
+    container_name: autokuma
+    image: ghcr.io/bigboot/autokuma:latest
+    restart: unless-stopped
+    environment:
+      AUTOKUMA__KUMA__URL: http://uptime-kuma:3001
+      AUTOKUMA__KUMA__USERNAME: ${AUTOKUMA__KUMA__USERNAME}
+      AUTOKUMA__KUMA__PASSWORD: ${AUTOKUMA__KUMA__PASSWORD}
+      # AUTOKUMA__KUMA__MFA_TOKEN: <token>
+      # AUTOKUMA__KUMA__HEADERS: "<header1_key>=<header1_value>,<header2_key>=<header2_value>,..."
+      # AUTOKUMA__KUMA__CALL_TIMEOUT: 5
+      # AUTOKUMA__KUMA__CONNECT_TIMEOUT: 5
+      # AUTOKUMA__TAG_NAME: AutoKuma
+      # AUTOKUMA__TAG_COLOR: "#42C0FB"
+      # AUTOKUMA__DEFAULT_SETTINGS: |- 
+      #    docker.docker_container: {{container_name}}
+      #    http.max_redirects: 10
+      #    *.max_retries: 3
+      AUTOKUMA__SNIPPETS__WEB: |- 
+         {{container_name}}_http.http.name: {{container_name}} HTTP
+         {{container_name}}_http.http.url: {{ args[0] }}
+      #    {{container_name}}_docker.docker.name: {{container_name}} Docker
+      #    {{container_name}}_docker.docker.docker_container: {{container_name}}
+      AUTOKUMA__DOCKER__HOSTS: unix:///var/run/docker.sock
+      # AUTOKUMA__DOCKER__LABEL_PREFIX: kuma
+      
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      
+  uptime-kuma:
+    container_name: uptime-kuma
+    image: louislam/uptime-kuma:1
+    volumes:
+      - /root/kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 3101:3001
+    restart: unless-stopped
+      
+  loki:
+    container_name: loki
+    image: grafana/loki:latest
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - loki
+    labels:
+      kuma.__web: '"http://loki:3100/ready"'
+
+  grafana:
+    restart: unless-stopped
+    container_name: grafana
+    labels:
+      kuma.__web: '"http://grafana:3000/api/health"'
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy 
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - loki
+
+networks:
+  loki:
