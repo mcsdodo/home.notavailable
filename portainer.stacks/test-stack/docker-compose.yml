@@ -1,0 +1,12 @@
+version: '3'
+services:
+  print-variable:
+    image: alpine
+    command: > 
+      sh -c '
+      echo $ENV_FROM_FILE &&
+      echo $ENV_FROM_PORTAINER
+      '
+    environment:
+      - ENV_FROM_FILE=${MY_ENV_FROM_FILE}
+      - ENV_FROM_PORTAINER=${MY_ENV_FROM_PORTAINER}
