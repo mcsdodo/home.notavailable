@@ -14,3 +14,7 @@ lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,creat
 lxc.mount.entry: /dev/bus/usb/002/ dev/bus/usb/002/ none bind,optional,create=dir 0, 0
 lxc.mount.auto: cgroup:rw
 ```
+
+
+## Env vars in portainer
+FRIGATE_RTSP_PASSWORD=
