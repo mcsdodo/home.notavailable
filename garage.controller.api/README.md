@@ -101,3 +101,12 @@ wget -qO- http://localhost:8081/update --post-data=
 
 git config --list --show-origin --show-scope
 git config --global --add safe.directory /home/dodo/home.notavailable
+
+
+## Tailscale networking
+
+Run ``sudo tailscale up --accept-routes --advertise-routes=192.168.0.0/24`` on PiZero.
+
+Run ``sudo tailscale up --advertise-routes=192.168.100.112/32 --accept-routes`` on local infrastructure.
+
+Home assistant runs https://github.com/lmagyar/homeassistant-addon-tailscale addon.
