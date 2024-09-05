@@ -1,6 +1,6 @@
 services:
   deepstack:
-    container_name: deepstack
+    container_name: surveillance-deepstack
     restart: unless-stopped
     image: deepquestai/deepstack
     ports:
@@ -13,9 +13,11 @@ services:
       - /root/deepstack/models:/modelstore/detection
     networks:
       - surveillance_default
-        
+    labels:
+      kuma.__docker: ""
+
   deepstack_ui:
-    container_name: deepstack_ui
+    container_name: surveillance-deepstack_ui
     restart: unless-stopped
     image: robmarkcole/deepstack-ui:latest
     environment: 
@@ -29,7 +31,9 @@ services:
       - '5013:8501'
     networks:
       - surveillance_default
-        
+    labels:
+      kuma.__docker: ""
+
 networks:
   surveillance_default:
     external: true

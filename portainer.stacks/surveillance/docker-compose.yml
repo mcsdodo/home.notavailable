@@ -1,6 +1,6 @@
 services:
   frigate:
-    container_name: frigate
+    container_name: surveillance-frigate
     privileged: true # this may not be necessary for all setups
     restart: unless-stopped
     image: ghcr.io/blakeblackshear/frigate:0.13.2
@@ -23,16 +23,20 @@ services:
       - "8971:8971" # New restricted access port in >= v14.0
     environment:
       - FRIGATE_RTSP_PASSWORD=${FRIGATE_RTSP_PASSWORD}
-        
+    labels:
+      kuma.__docker: ""
+
   double-take:
-    container_name: double-take
+    container_name: surveillance-double-take
     image: jakowenko/double-take:1.13.1
     restart: unless-stopped
     volumes:
       - double-take:/.storage
     ports:
       - 5014:3000
-        
+    labels:
+      kuma.__docker: ""
+
 volumes:
   double-take:
 

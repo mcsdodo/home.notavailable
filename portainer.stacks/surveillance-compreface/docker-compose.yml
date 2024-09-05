@@ -3,7 +3,7 @@ services:
   compreface-postgres-db:
     image: ${registry}compreface-postgres-db:${POSTGRES_VERSION}
     restart: always
-    container_name: "compreface-postgres-db"
+    container_name: "surveillance-compreface-postgres-db"
     environment:
       - POSTGRES_USER=${postgres_username}
       - POSTGRES_PASSWORD=${postgres_password}
@@ -12,11 +12,13 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - surveillance_default
-        
+    labels:
+      kuma.__docker: ""
+
   compreface-admin:
     restart: always
     image: ${registry}compreface-admin:${ADMIN_VERSION}
-    container_name: "compreface-admin"
+    container_name: "surveillance-compreface-admin"
     environment:
       - POSTGRES_USER=${postgres_username}
       - POSTGRES_PASSWORD=${postgres_password}
@@ -35,11 +37,13 @@ services:
       - compreface-api
     networks:
       - surveillance_default
+    labels:
+      kuma.__docker: ""
 
   compreface-api:
     restart: always
     image: ${registry}compreface-api:${API_VERSION}
-    container_name: "compreface-api"
+    container_name: "surveillance-compreface-api"
     depends_on:
       - compreface-postgres-db
     environment:
@@ -55,11 +59,13 @@ services:
       - READ_TIMEOUT=${read_timeout:-60000}
     networks:
       - surveillance_default
+    labels:
+      kuma.__docker: ""
 
   compreface-fe:
     restart: always
     image: ${registry}compreface-fe:${FE_VERSION}
-    container_name: "compreface-ui"
+    container_name: "surveillance-compreface-ui"
     ports:
       - "5015:80"
     depends_on:
@@ -71,11 +77,13 @@ services:
       - PROXY_CONNECT_TIMEOUT=${connection_timeout:-10000}ms
     networks:
       - surveillance_default
+    labels:
+      kuma.__docker: ""
 
   compreface-core:
     restart: unless-stopped
     image: ${registry}compreface-core:${CORE_VERSION}
-    container_name: "compreface-core"
+    container_name: "surveillance-compreface-core"
     environment:
       - ML_PORT=3000
       - IMG_LENGTH_LIMIT=${max_detect_size}
@@ -89,6 +97,8 @@ services:
       timeout: 1s
     networks:
       - surveillance_default
+    labels:
+      kuma.__docker: ""
 
 volumes:
   postgres-data:
