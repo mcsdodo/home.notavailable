@@ -15,7 +15,6 @@ services:
     container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    network_mode: bridge
     restart: always
     environment:
       WATCHTOWER_CLEANUP: "true" 
