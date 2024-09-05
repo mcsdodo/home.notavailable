@@ -3,9 +3,6 @@ import requests
 class StatusApiClient:
     def __init__(self, section):
         self.url = section['Url']
-        client = section['CF-Access-Client-Id']
-        secret = section['CF-Access-Client-Secret']
-        self.headers = {'CF-Access-Client-Id' : client,'CF-Access-Client-Secret' : secret}
     def get_status(self):
         try:
             r = requests.get(self.url, headers=self.headers, timeout=15)
