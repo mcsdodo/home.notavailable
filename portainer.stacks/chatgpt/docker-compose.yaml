@@ -1,0 +1,7 @@
+services:
+  chatGpt:
+    image: yakgpt/yakgpt:latest
+    container_name: yakgpt
+    ports:
+      - 8090:3000
+    restart: unless-stopped
