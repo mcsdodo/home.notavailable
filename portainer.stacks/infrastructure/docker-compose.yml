@@ -1,5 +1,20 @@
 version: "3"
 services:
+  gotify:
+    image: gotify/server
+    container_name: gotify
+    ports:
+      - 8091:80
+    environment:
+      - GOTIFY_DEFAULTUSER_PASS=custom
+    restart: unless-stopped
+    volumes:
+      - /root/gotify:/app/data
+      - /root/gotify/config.yml:/etc/gotify/config.yml
+    labels:
+      kuma.__web: '"https://gotify.local/health"' 
+      kuma.__docker: ""
+      
   dashy:
     image: lissy93/dashy
     container_name: Dashy
@@ -17,37 +32,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-      
-  caddy:
-    image: caddy:2
-    container_name: caddy
-    restart: unless-stopped
-    command: /usr/bin/caddy run --resume
-    ports:
-      - 80:80
-      - 443:443
-      - 443:443/udp
-      - 8083:2019
-    volumes:
-      - /root/Caddyfile:/etc/caddy/Caddyfile
-      - /root/caddy/data:/data
-      - /root/caddy/config:/config
-    environment:
-      - CADDY_ADMIN=0.0.0.0:2019
-    logging:
-      driver: loki
-      options:
-        loki-url: http://192.168.100.112:3100/loki/api/v1/push 
+    labels:
+      kuma.__web: '"https://dashy.local"'      
+      kuma.__docker: ""
         
-  caddy-ui:
-    container_name: caddy-ui
-    restart: unless-stopped
-    image: qmcgaw/caddy-ui
-    ports:
-      - 8082:8000/tcp
-    environment:
-      - CADDY_API_ENDPOINT=http://192.168.100.112:8083
-  
+ 
   adguardhome-sync:
     image: ghcr.io/bakito/adguardhome-sync:latest
     container_name: adguardhome-sync
@@ -57,25 +46,8 @@ services:
       - /root/.adguardhome-sync.yaml:/config/adguardhome-sync.yaml
     network_mode: bridge
     restart: unless-stopped
-    logging:
-      driver: loki
-      options:
-        loki-url: http://192.168.100.112:3100/loki/api/v1/push 
-        
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    network_mode: bridge
-    restart: always
-    environment:
-      WATCHTOWER_CLEANUP: "true" 
-      WATCHTOWER_POLL_INTERVAL: 30
-    logging:
-      driver: loki
-      options:
-        loki-url: http://192.168.100.112:3100/loki/api/v1/push      
+    labels:
+      kuma.__docker: ""
  
   garage.status.api:
     image: mcsdodo/garage.status.api:latest
@@ -84,18 +56,5 @@ services:
      - 8080:8080/tcp
     network_mode: bridge
     restart: always
-    logging:
-      driver: loki
-      options:
-        loki-url: http://192.168.100.112:3100/loki/api/v1/push    
-  
-  chatGpt:
-    image: yakgpt/yakgpt:latest
-    container_name: yakgpt
-    ports:
-      - 8090:3000
-    restart: unless-stopped
-    environment:
-      NEXT_PUBLIC_OPENAI_API_KEY: ${NEXT_PUBLIC_OPENAI_API_KEY}
 
 
