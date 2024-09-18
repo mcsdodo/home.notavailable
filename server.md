@@ -37,3 +37,15 @@ lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,creat
 lxc.mount.entry: /dev/bus/usb/002/ dev/bus/usb/002/ none bind,optional,create=dir 0, 0
 lxc.mount.auto: cgroup:rw
 ```
+
+## Add ssh to Alpine LXC
+```
+apk add openssh &&
+rc-update add sshd &&
+rc-status &&
+rc-service sshd start &&
+mkdir ~/.ssh &&
+chmod 700 ~/.ssh &&
+cat /mnt/media/_tmp/id_rsa.pub >> ~/.ssh/authorized_keys &&
+chmod 600 ~/.ssh/authorized_keys
+```
