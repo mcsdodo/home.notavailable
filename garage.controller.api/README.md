@@ -107,6 +107,6 @@ git config --global --add safe.directory /home/dodo/home.notavailable
 
 Run ``sudo tailscale up --accept-routes --advertise-routes=192.168.0.0/24`` on PiZero.
 
-Run ``sudo tailscale up --advertise-routes=192.168.100.112/32 --accept-routes`` on local infrastructure.
+Run ``sudo tailscale up --advertise-routes=192.168.100.112/32,192.168.100.204/32 --accept-routes`` on local infrastructure.
 
 Home assistant runs https://github.com/lmagyar/homeassistant-addon-tailscale addon.
