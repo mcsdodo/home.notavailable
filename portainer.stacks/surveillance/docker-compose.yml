@@ -9,7 +9,7 @@ services:
       - /dev/bus/usb:/dev/bus/usb  # Passes the USB Coral, needs to be modified for other versions
     volumes:
       # - /etc/localtime:/etc/localtime:ro
-      - /root/frigate/config:/config
+      - /mnt/shared_configs/frigate:/config
       - /mnt/media/frigate:/media/frigate #TODO: store the data locally, not on NAS
       - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
         target: /tmp/cache
