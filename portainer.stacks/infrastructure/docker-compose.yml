@@ -12,7 +12,7 @@ services:
       - /root/gotify:/app/data
       - /root/gotify/config.yml:/etc/gotify/config.yml
     labels:
-      kuma.__web: '"https://gotify.local/health"' 
+      kuma.__web: '"https://gotify.lan/health"' 
       kuma.__docker: ""
       
   dashy:
@@ -33,7 +33,7 @@ services:
       retries: 3
       start_period: 40s
     labels:
-      kuma.__web: '"https://dashy.local"'      
+      kuma.__web: '"https://dashy.lan"'      
       kuma.__docker: ""
         
  
