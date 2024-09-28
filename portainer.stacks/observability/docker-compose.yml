@@ -46,13 +46,13 @@ services:
     networks:
       - loki
     labels:
-      kuma.__web: '"https://loki.local/ready"'
+      kuma.__web: '"https://loki.lan/ready"'
 
   grafana:
     restart: unless-stopped
     container_name: grafana
     labels:
-      kuma.__web: '"https://grafana.local/api/health"'
+      kuma.__web: '"https://grafana.lan/api/health"'
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true

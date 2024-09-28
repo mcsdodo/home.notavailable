@@ -17,7 +17,7 @@ services:
       - TZ=Europe/Bratislava
       - PLEX_CLAIM=${PLEX_CLAIM}
       - ADVERTISE_IP=http://192.168.100.212:32400/
-    hostname: plex.local
+    hostname: plex.lan
     volumes:
       - /root/plex/database:/config
       - /root/plex/transcode/temp:/transcode
