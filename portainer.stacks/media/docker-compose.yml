@@ -90,9 +90,9 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /root/sonarr:/config #config Folder
+      - /root/sonarr:/config # config Folder
       - /mnt/media/tvshows:/tvshows #data Folder  
-      - /mnt/media/downloads:/downloads
+      - /mnt/media/downloads:/downloads # download folder
     ports:
       - 8989:8989
     labels:
@@ -101,7 +101,6 @@ services:
   radarr:
     image: 'linuxserver/radarr:latest'
     restart: unless-stopped
-    # network_mode: host
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -137,7 +136,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - UMASK_SET=022
     volumes:
       - /root/bazarr:/config
       - /mnt/media/movies:/movies
@@ -162,9 +160,9 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
-    network_mode: 'service:gluetun'
-    depends_on:
-      - gluetun
+    network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+    depends_on:                     #comment/remove if you are not using the VPN
+      - gluetun                     #comment/remove if you are not using the VPN
       
   gluetun:
     image: qmcgaw/gluetun:latest
@@ -181,6 +179,11 @@ services:
       - "6881:6881/tcp"        # Transmission Torrent Port TCP
       - "6881:6881/udp"        # Transmission Torrent Port UDP
       - 9696:9696 #Prowlarr UI
+    networks:
+      default:
+        aliases: # aliases so we can access deluge & prowlarr from within other containers by name
+          - deluge
+          - prowlarr
     volumes:
       - /root/gluetun:/gluetun
     environment:
@@ -191,8 +194,11 @@ services:
       - VPN_TYPE=${VPN_TYPE:?err}
       - SERVER_REGIONS=${SERVER_REGIONS:?err}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - HTTPPROXY=on
-      - SHADOWSOCKS=on
+      # this will use docker DNS for containers running within gluetun (container IN gluetun network will be able to access others outside). \
+      # It also potentionally leaks all DNS queries to ISP!
+      - DNS_KEEP_NAMESERVER=on 
+      # # prowlarr is in gluetun network. It has to access radarr/sonnarr and vice versa. Should find a better way with DNS, for now using direct IP addresses.      
+      # - FIREWALL_OUTBOUND_SUBNETS=192.168.100.0/24
     labels:
       kuma.__docker: ""
       
