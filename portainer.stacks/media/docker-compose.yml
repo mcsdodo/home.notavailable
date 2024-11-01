@@ -197,8 +197,6 @@ services:
       # this will use docker DNS for containers running within gluetun (container IN gluetun network will be able to access others outside). \
       # It also potentionally leaks all DNS queries to ISP!
       - DNS_KEEP_NAMESERVER=on 
-      # # prowlarr is in gluetun network. It has to access radarr/sonnarr and vice versa. Should find a better way with DNS, for now using direct IP addresses.      
-      # - FIREWALL_OUTBOUND_SUBNETS=192.168.100.0/24
     labels:
       kuma.__docker: ""
       
