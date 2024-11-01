@@ -195,7 +195,7 @@ services:
       - SERVER_REGIONS=${SERVER_REGIONS:?err}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       # this will use docker DNS for containers running within gluetun (container IN gluetun network will be able to access others outside). \
-      # It also potentionally leaks all DNS queries to ISP!
+      # It also potentionally leaks all DNS queries to ISP! Possible workaround: https://github.com/qdm12/gluetun/issues/281 - didn't work for me.
       - DNS_KEEP_NAMESERVER=on 
     labels:
       kuma.__docker: ""
