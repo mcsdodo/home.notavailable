@@ -1,7 +1,5 @@
-version: "3"
 services:
   plex:
-    container_name: plex
     image: plexinc/pms-docker
     restart: unless-stopped
     ports:
@@ -17,26 +15,31 @@ services:
       - TZ=Europe/Bratislava
       - PLEX_CLAIM=${PLEX_CLAIM}
       - ADVERTISE_IP=http://192.168.100.212:32400/
-    hostname: plex.local
+    hostname: plex.lan
     volumes:
       - /root/plex/database:/config
       - /root/plex/transcode/temp:/transcode
       - /mnt/oldmedia:/oldmedia
       - /mnt/media:/media
-
+      - /mnt/media/movies:/movies
+      - /mnt/media/tvshows:/tvshows
+    labels:
+      kuma.__web: '"https://plex.lan/identity"'
+      kuma.__docker: ""
+      
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
-    container_name: sabnzbd
     volumes:
       - /root/sabnzbd:/config
       - /mnt/media/downloads/sabnzbd:/downloads #optional
     ports:
       - 5003:8080
     restart: unless-stopped
-    
+    labels:
+      kuma.__docker: ""
+      
   komga:
     image: gotson/komga
-    container_name: komga
     volumes:
       - /mnt/media/comics:/data
       - /mnt/media/downloads/komga:/downloads
@@ -44,10 +47,11 @@ services:
     ports:
       - 5002:25600
     restart: unless-stopped
-
+    labels:
+      kuma.__docker: ""
+      
   mylar3:
     image: lscr.io/linuxserver/mylar3:latest
-    container_name: mylar3
     environment:
       - PUID=0
       - PGID=0
@@ -60,30 +64,11 @@ services:
     ports:
       - 5001:8090
     restart: unless-stopped
-
-  deluge:
-    image: lscr.io/linuxserver/deluge:latest
-    container_name: deluge
-    environment:
-      - PUID=0
-      - PGID=0
-      - TZ=Europe/Bratislava
-      - DELUGE_LOGLEVEL=error #optional
-    volumes:
-      - /root/deluge/config:/config
-      - /mnt/media/downloads/deluge:/downloads
-      - /mnt/media/movies:/movies
-      - /mnt/media/tvshows:/tvshows
-    ports:
-      - 8112:8112
-      - 6881:6881
-      - 6881:6881/udp
-      - 58846:58846
-    restart: unless-stopped
-  
+    labels:
+      kuma.__docker: ""
+    
   pyload-ng:
     image: lscr.io/linuxserver/pyload-ng:latest
-    container_name: pyload-ng
     environment:
       - PUID=0
       - PGID=0
@@ -94,20 +79,132 @@ services:
     ports:
       - 8000:8000
     restart: unless-stopped
+    labels:
+      kuma.__docker: ""
 
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
+  sonarr:
+    image: 'linuxserver/sonarr:latest'
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /root/sonarr:/config #config Folder
+      - /mnt/media/tvshows:/tvshows #data Folder  
+      - /mnt/media/downloads:/downloads
+    ports:
+      - 8989:8989
+    labels:
+      kuma.__docker: ""
+      
+  radarr:
+    image: 'linuxserver/radarr:latest'
+    restart: unless-stopped
+    # network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /root/radarr:/config # config files
+      - /mnt/media/movies:/movies # movies folder
+      - /mnt/media/downloads:/downloads # download folder
+    ports:
+      - 7878:7878      
+    labels:
+      kuma.__docker: ""
+      
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /root/prowlarr:/config
+    restart: unless-stopped
+    network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+    depends_on:                     #comment/remove if you are not using the VPN
+      - gluetun                     #comment/remove if you are not using the VPN
+    labels:
+      kuma.__docker: ""
+      
+  bazarr:
+    image: 'linuxserver/bazarr:latest'
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      # - UMASK_SET=022
+    volumes:
+      - /root/bazarr:/config
+      - /mnt/media/movies:/movies
+      - /mnt/media/tvshows:/tvshows
+    ports:
+      - '6767:6767'
+    labels:
+      kuma.__docker: ""
+      
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
     environment:
       - PUID=0
       - PGID=0
       - TZ=Europe/Bratislava
-      - WEBUI_PORT=8085
+      - DELUGE_LOGLEVEL=error #optional
     volumes:
-      - /root/qbittorrent:/config
+      - /root/deluge/config:/config
       - /mnt/media/downloads:/downloads
-    ports:
-      - 8085:8085
-      - 6885:6881
-      - 6885:6881/udp
+      - /mnt/media/movies:/movies
+      - /mnt/media/tvshows:/tvshows
     restart: unless-stopped
+    labels:
+      kuma.__docker: ""
+    network_mode: 'service:gluetun'
+    depends_on:
+      - gluetun
+      
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "8888:8888/tcp"                         # Gluetun Local Network HTTP proxy
+      - "8388:8388/tcp"                         # Gluetun Local Network Shadowsocks
+      - "8388:8388/udp"                         # Gluetun Local Network Shadowsocks
+      - 8112:8112   # WebUI Portal: deluge
+      - "6881:6881/tcp"        # Transmission Torrent Port TCP
+      - "6881:6881/udp"        # Transmission Torrent Port UDP
+      - 9696:9696 #Prowlarr UI
+    volumes:
+      - /root/gluetun:/gluetun
+    environment:
+      - PUID=${PUID:?err}
+      - PGID=${PGID:?err}
+      - TZ=${TZ:?err}
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:?err}
+      - VPN_TYPE=${VPN_TYPE:?err}
+      - SERVER_REGIONS=${SERVER_REGIONS:?err}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - HTTPPROXY=on
+      - SHADOWSOCKS=on
+    labels:
+      kuma.__docker: ""
+      
+  overseerr:
+    image: sctx/overseerr:latest
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+    ports:
+      - 5055:5055
+    volumes:
+      - /root/overseerr/config:/app/config
+    restart: unless-stopped
+    labels:
+      kuma.__docker: ""    
