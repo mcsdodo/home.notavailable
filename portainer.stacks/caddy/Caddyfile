@@ -1,0 +1,231 @@
+{
+    admin :2019 {
+        origins 192.168.100.2, 0.0.0.0, localhost
+    }
+    layer4 {
+        mqtt.lan:8883 {
+            route {
+                proxy {
+                    upstream 192.168.100.204:8883
+                }
+            }
+        }
+        mqtt.lan:1883 {
+            route {
+                proxy {
+                    upstream 192.168.100.204:1883
+                }
+            }
+        }
+    }
+}
+
+homeassistant.lan {
+    reverse_proxy 192.168.100.100:8123
+    tls internal
+}
+
+wd.lan {
+    reverse_proxy 192.168.100.101
+    tls internal
+}
+
+kodi.lan {
+    reverse_proxy 192.168.100.102:8080
+    tls internal
+}
+
+proxmox.lan {
+    reverse_proxy {
+        to 192.168.100.111:8006
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+    tls internal
+}
+
+caddy-config.lan {
+    reverse_proxy 192.168.100.112:8082
+    tls internal
+}
+
+portainer.lan {
+    reverse_proxy 192.168.100.112:9000
+    tls internal
+}
+
+chatgpt.lan {
+    reverse_proxy 192.168.100.112:8090
+    tls internal
+}
+
+dashy.lan {
+    reverse_proxy 192.168.100.112:8084
+    tls internal
+}
+
+grafana.lan {
+    reverse_proxy 192.168.100.112:3000
+    tls internal
+}
+
+loki.lan {
+    reverse_proxy 192.168.100.112:3100
+    tls internal
+}
+
+gotify.lan {
+    reverse_proxy 192.168.100.112:8091
+    tls internal
+}
+
+uptimekuma.lan {
+    reverse_proxy 192.168.100.112:3101
+    tls internal
+}
+
+alloy.lan {
+    reverse_proxy 192.168.100.112:12345
+    tls internal
+}
+
+frigate.lan {
+    reverse_proxy 192.168.100.113:5011
+    tls internal
+}
+
+double-take.lan {
+    reverse_proxy 192.168.100.113:5014
+    tls internal
+}
+
+compreface.lan {
+    reverse_proxy 192.168.100.113:5015
+    tls internal
+}
+
+deepstack.lan {
+    reverse_proxy 192.168.100.113:5013
+    tls internal
+}
+
+plug-na-1.lan {
+    reverse_proxy 192.168.100.151
+    tls internal
+}
+
+plug-na-2.lan {
+    reverse_proxy 192.168.100.152
+    tls internal
+}
+
+plug-na-3.lan {
+    reverse_proxy 192.168.100.153
+    tls internal
+}
+
+plug-na-4.lan {
+    reverse_proxy 192.168.100.154
+    tls internal
+}
+
+plug-na-5.lan {
+    reverse_proxy 192.168.100.155
+    tls internal
+}
+
+plug-na-6.lan {
+    reverse_proxy 192.168.100.156
+    tls internal
+}
+
+adguard.lan {
+    reverse_proxy 192.168.100.121
+    tls internal
+}
+
+adguard2.lan {
+    reverse_proxy 192.168.100.122
+    tls internal
+}
+
+homeassistant-dev.lan {
+    reverse_proxy 192.168.100.123:8123
+    tls internal
+}
+
+heimdall.lan {
+    reverse_proxy 192.168.100.124:7990
+    tls internal
+}
+
+proxmox2.lan {
+    reverse_proxy {
+        to 192.168.100.200:8006
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+    tls internal
+}
+
+truenas.lan {
+    reverse_proxy 192.168.100.201
+    tls internal
+}
+
+ubuntu.lan {
+    reverse_proxy 192.168.100.205
+    tls internal
+}
+
+deluge.lan {
+    reverse_proxy 192.168.100.212:8112
+    tls internal
+}
+
+kavita.lan {
+    reverse_proxy 192.168.100.212:5000
+    tls internal
+}
+
+mylar.lan {
+    reverse_proxy 192.168.100.212:5001
+    tls internal
+}
+
+komga.lan, comics.lan {
+    reverse_proxy 192.168.100.212:5002
+    tls internal
+}
+
+photos.lan {
+    reverse_proxy 192.168.100.212:2283
+    tls internal
+}
+
+portainer2.lan {
+    reverse_proxy 192.168.100.212:9000
+    tls internal
+}
+
+documents.lan {
+    reverse_proxy 192.168.100.212:8010
+    tls internal
+}
+
+plex.lan {
+    reverse_proxy 192.168.100.212:32400
+    tls internal
+}
+
+qbittorrent.lan {
+    reverse_proxy 192.168.100.212:8085
+    tls internal
+}
+
+pdf.lan {
+    reverse_proxy 192.168.100.212:5004
+    tls internal
+}

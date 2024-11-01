@@ -18,3 +18,19 @@ lxc.mount.auto: cgroup:rw
 
 ## Env vars in portainer
 FRIGATE_RTSP_PASSWORD=
+
+
+## Frigate config
+```
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+mqtt:
+  host: mqtt.lan
+  port: 8883
+  user: frigate
+  password: frigate
+  stats_interval: 60
+cameras: []
+```
