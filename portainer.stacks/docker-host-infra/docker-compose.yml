@@ -35,3 +35,19 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges=true
+
+
+  mqdockerup:
+    image: micrib/mqdockerup:latest
+    restart: always
+    environment:
+      MAIN_INTERVAL: "5m"
+      MQTT_TOPIC: ${MQDOCKERUP_MQTT_TOPIC}
+      MQTT_CONNECTIONURI: "mqtt://mqtt.lan:8883"
+      MQTT_USERNAME: ${MQDOCKERUP_MQTT_USERNAME}
+      MQTT_PASSWORD: ${MQDOCKERUP_MQTT_PASSWORD}
+      ACCESSTOKENS_GITHUB: ""
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # This is required to access the docker API	
+      - /root/mqdockerup:/app/data/ # This is required to store the data (database.db)
+    container_name: mqdockerup         
