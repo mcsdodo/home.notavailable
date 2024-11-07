@@ -12,8 +12,25 @@ this repo contains scripts and apps used in my garage automation and some of my 
 - [ ] Obsidian.md - markdown based notes (to replace OneNote maybe?) https://obsidian.md/
 - [ ] Centralized metrics/tracing/logging for all services
 - [ ] Move all portainer stacks to github
+- [ ] Run tailscale serve as a service / on startup.
 
 [Server setup](server.md)
+
+## Garage:v3
+Added esppresence instance to garage. Now the "garage is opened" notification only fires when I'm not in the garage. The esp does not have direct access to mqtt broker, so I utilized [tailscale serve](https://tailscale.com/kb/1312/serve) with hacky configuration to forward TCP traffic.
+`cat serve.json | sudo tailscale serve set-raw`
+with serve.json:
+
+```json
+{
+  "TCP": {
+    "1883": {
+      "TCPForward": "192.168.100.204:1883"
+    }
+  }
+}
+  ```
+so basically my RPI instance serves as proxy for MQTT broker that is exposed on the tailscale network.
 
 ## Garage:v2
 There is a ramp leading to garages in our apartment building that requires a phone call to operate. It is a cumbersome operation ideal for an automation (who wants to make calls when you can call an API?). Making Raspberry to use GSM hat for permanent internet connection AND to perform calls to the ramp proved time consuming (in terms of research). I'm using a cheap 4G WiFi modem for internet connection and GSM hat to make calls.
