@@ -24,7 +24,6 @@ services:
       - /mnt/media/movies:/movies
       - /mnt/media/tvshows:/tvshows
     labels:
-      kuma.__web: '"https://plex.lan/identity"'
       kuma.__docker: ""
       
   sabnzbd:
