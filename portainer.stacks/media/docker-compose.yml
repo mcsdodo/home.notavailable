@@ -162,6 +162,26 @@ services:
     network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
     depends_on:                     #comment/remove if you are not using the VPN
       - gluetun                     #comment/remove if you are not using the VPN
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Bratislava
+      - WEBUI_PORT=8085
+    volumes:
+      - /root/qbittorrent:/config
+      - /mnt/media/downloads:/downloads
+      - /mnt/media/movies:/movies
+      - /mnt/media/tvshows:/tvshows
+    restart: unless-stopped
+    labels:
+      kuma.__docker: ""
+    network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+    depends_on:                     #comment/remove if you are not using the VPN
+      - gluetun                     #comment/remove if you are not using the VPN
       
   gluetun:
     image: qmcgaw/gluetun:latest
@@ -175,6 +195,7 @@ services:
       - "8388:8388/tcp"                         # Gluetun Local Network Shadowsocks
       - "8388:8388/udp"                         # Gluetun Local Network Shadowsocks
       - 8112:8112   # WebUI Portal: deluge
+      - 8085:8085   # WebUI qBittorrent
       - "6881:6881/tcp"        # Transmission Torrent Port TCP
       - "6881:6881/udp"        # Transmission Torrent Port UDP
       - 9696:9696 #Prowlarr UI
@@ -183,6 +204,7 @@ services:
         aliases: # aliases so we can access deluge & prowlarr from within other containers by name
           - deluge
           - prowlarr
+          - qbittorrent
     volumes:
       - /root/gluetun:/gluetun
     environment:
