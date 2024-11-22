@@ -37,18 +37,18 @@ services:
       - no-new-privileges=true
 
 
-  mqdockerup:
-    image: mcsdodo/mqdockerup:latest
-    restart: always
-    environment:
-      MAIN_INTERVAL: "10s"
-      MQTT_TOPIC: ${MQDOCKERUP_MQTT_TOPIC}
-      MQTT_CONNECTIONURI: "mqtt://mqtt.lan:8883"
-      MQTT_USERNAME: ${MQDOCKERUP_MQTT_USERNAME}
-      MQTT_PASSWORD: ${MQDOCKERUP_MQTT_PASSWORD}
-      MAIN_PREFIX: ${MQDOCKERUP_MAIN_PREFIX}
-      ACCESSTOKENS_GITHUB: ""
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # This is required to access the docker API	
-      - /root/mqdockerup:/app/data/ # This is required to store the data (database.db)
-    container_name: mqdockerup         
+  # mqdockerup:
+  #   image: mcsdodo/mqdockerup:latest
+  #   restart: always
+  #   environment:
+  #     MAIN_INTERVAL: "10s"
+  #     MQTT_TOPIC: ${MQDOCKERUP_MQTT_TOPIC}
+  #     MQTT_CONNECTIONURI: "mqtt://mqtt.lan:8883"
+  #     MQTT_USERNAME: ${MQDOCKERUP_MQTT_USERNAME}
+  #     MQTT_PASSWORD: ${MQDOCKERUP_MQTT_PASSWORD}
+  #     MAIN_PREFIX: ${MQDOCKERUP_MAIN_PREFIX}
+  #     ACCESSTOKENS_GITHUB: ""
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock # This is required to access the docker API	
+  #     - /root/mqdockerup:/app/data/ # This is required to store the data (database.db)
+  #   container_name: mqdockerup         
