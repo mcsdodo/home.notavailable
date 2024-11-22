@@ -35,7 +35,9 @@ services:
     restart: unless-stopped
     volumes:
       - redisdata:/data
-
+    labels:
+      kuma.__docker: ""
+      
   db:
     image: docker.io/library/postgres:15
     restart: unless-stopped
@@ -45,9 +47,11 @@ services:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
       POSTGRES_PASSWORD: paperless
-
+    labels:
+      kuma.__docker: ""
+      
   webserver:
-    image: ghcr.io/paperless-ngx/paperless-ngx:2.9.0
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.13.5
     restart: unless-stopped
     depends_on:
       - db
@@ -59,9 +63,10 @@ services:
       - /mnt/media/paperless/media:/usr/src/paperless/media
       - /mnt/media/paperless/export:/usr/src/paperless/export
       - /mnt/media/paperless/consume:/usr/src/paperless/consume
-    env_file:
-      - stack.env      
     environment:
+      PAPERLESS_CONSUMER_POLLING: 10
+      PAPERLESS_TASK_WORKERS: 2
+      PAPERLESS_THREADS_PER_WORKER: 3
       PAPERLESS_REDIS: redis://broker:6379
       PAPERLESS_DBHOST: db
 # The UID and GID of the user used to run paperless in the container. Set this
@@ -87,7 +92,9 @@ services:
 # documents are written in.
       #PAPERLESS_OCR_LANGUAGE: eng
       PAPERLESS_URL: https://documents.lan
-
+    labels:
+      kuma.__docker: ""
+      
 volumes:
   data:
   media:

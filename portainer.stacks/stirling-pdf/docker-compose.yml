@@ -1,6 +1,7 @@
-version: '3.3'
 services:
   stirling-pdf:
+    container_name: stirling-pdf
+    restart: unless-stopped
     image: frooodle/s-pdf:latest
     ports:
       - '5004:8080'
@@ -9,3 +10,5 @@ services:
     environment:
       - DOCKER_ENABLE_SECURITY=false
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+    labels:
+      kuma.__docker: ""

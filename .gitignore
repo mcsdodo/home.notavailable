@@ -152,3 +152,4 @@ cython_debug/
 
 local.test.http
 **/secrets.ini
+.env
