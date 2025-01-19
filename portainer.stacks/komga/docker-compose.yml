@@ -1,0 +1,12 @@
+services:
+  komga:
+    image: gotson/komga
+    volumes:
+      - /mnt/media/comics:/data
+      - /mnt/media/downloads/komga:/downloads
+      - /root/komga:/config
+    ports:
+      - 5002:25600
+    restart: unless-stopped
+    labels:
+      kuma.__docker: ""

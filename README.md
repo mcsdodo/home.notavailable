@@ -13,6 +13,7 @@ this repo contains scripts and apps used in my garage automation and some of my 
 - [ ] Centralized metrics/tracing/logging for all services
 - [ ] Move all portainer stacks to github
 - [ ] Run tailscale serve as a service / on startup.
+- [ ] Fix versions of all _latest_
 
 [Server setup](server.md)
 
