@@ -1,31 +1,4 @@
 services:
-  plex:
-    image: plexinc/pms-docker
-    restart: unless-stopped
-    ports:
-      - 32400:32400/tcp
-      - 8324:8324/tcp
-      - 32469:32469/tcp
-      - 1900:1900/udp
-      - 32410:32410/udp
-      - 32412:32412/udp
-      - 32413:32413/udp
-      - 32414:32414/udp
-    environment:
-      - TZ=Europe/Bratislava
-      - PLEX_CLAIM=${PLEX_CLAIM}
-      - ADVERTISE_IP=${PLEX_ADVERTISE_IPS}
-    hostname: plex.lan
-    volumes:
-      - /root/plex/database:/config
-      - /root/plex/transcode/temp:/transcode
-      - /mnt/oldmedia:/oldmedia
-      - /mnt/media:/media
-      - /mnt/media/movies:/movies
-      - /mnt/media/tvshows:/tvshows
-    labels:
-      kuma.__docker: ""
-      
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     volumes:
@@ -37,18 +10,7 @@ services:
     labels:
       kuma.__docker: ""
       
-  komga:
-    image: gotson/komga
-    volumes:
-      - /mnt/media/comics:/data
-      - /mnt/media/downloads/komga:/downloads
-      - /root/komga:/config
-    ports:
-      - 5002:25600
-    restart: unless-stopped
-    labels:
-      kuma.__docker: ""
-      
+     
   mylar3:
     image: lscr.io/linuxserver/mylar3:latest
     environment:
@@ -66,20 +28,20 @@ services:
     labels:
       kuma.__docker: ""
     
-  pyload-ng:
-    image: lscr.io/linuxserver/pyload-ng:latest
-    environment:
-      - PUID=0
-      - PGID=0
-      - TZ=Europe/Bratislava
-    volumes:
-      - /root/pyload-ng/config:/config
-      - /mnt/media/downloads:/downloads
-    ports:
-      - 8000:8000
-    restart: unless-stopped
-    labels:
-      kuma.__docker: ""
+  # pyload-ng:
+  #   image: lscr.io/linuxserver/pyload-ng:latest
+  #   environment:
+  #     - PUID=0
+  #     - PGID=0
+  #     - TZ=Europe/Bratislava
+  #   volumes:
+  #     - /root/pyload-ng/config:/config
+  #     - /mnt/media/downloads:/downloads
+  #   ports:
+  #     - 8000:8000
+  #   restart: unless-stopped
+  #   labels:
+  #     kuma.__docker: ""
 
   sonarr:
     image: 'linuxserver/sonarr:latest'
@@ -156,6 +118,7 @@ services:
       - /mnt/media/downloads:/downloads
       - /mnt/media/movies:/movies
       - /mnt/media/tvshows:/tvshows
+
     restart: unless-stopped
     labels:
       kuma.__docker: ""
@@ -233,3 +196,5 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""    
+
+      
