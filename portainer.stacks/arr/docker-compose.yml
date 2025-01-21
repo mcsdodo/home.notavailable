@@ -1,4 +1,5 @@
 services:
+
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     volumes:
@@ -9,7 +10,6 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
-      
      
   mylar3:
     image: lscr.io/linuxserver/mylar3:latest
@@ -101,11 +101,12 @@ services:
       - /root/bazarr:/config
       - /mnt/media/movies:/movies
       - /mnt/media/tvshows:/tvshows
-    ports:
-      - '6767:6767'
+    network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+    depends_on:                     #comment/remove if you are not using the VPN
+      - gluetun                     #comment/remove if you are not using the VPN            
     labels:
       kuma.__docker: ""
-      
+
   deluge:
     image: lscr.io/linuxserver/deluge:latest
     environment:
@@ -118,17 +119,15 @@ services:
       - /mnt/media/downloads:/downloads
       - /mnt/media/movies:/movies
       - /mnt/media/tvshows:/tvshows
-
-    restart: unless-stopped
-    labels:
-      kuma.__docker: ""
     network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
     depends_on:                     #comment/remove if you are not using the VPN
       - gluetun                     #comment/remove if you are not using the VPN
+    restart: unless-stopped
+    labels:
+      kuma.__docker: ""
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
     environment:
       - PUID=0
       - PGID=0
@@ -147,7 +146,7 @@ services:
       - gluetun                     #comment/remove if you are not using the VPN
       
   gluetun:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun:v3.40
     restart: always
     cap_add:
       - NET_ADMIN
@@ -162,12 +161,14 @@ services:
       - "6881:6881/tcp"        # Transmission Torrent Port TCP
       - "6881:6881/udp"        # Transmission Torrent Port UDP
       - 9696:9696 #Prowlarr UI
+      - 6767:6767 #Bazarr UI
     networks:
       default:
         aliases: # aliases so we can access deluge & prowlarr from within other containers by name
           - deluge
           - prowlarr
           - qbittorrent
+          - bazarr
     volumes:
       - /root/gluetun:/gluetun
     environment:
