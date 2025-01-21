@@ -12,6 +12,8 @@ Watchtower will pull down your new image, gracefully shut down your existing con
 
 https://github.com/containrrr/watchtower
 
+Setup notifications: https://github.com/Pyenb/Watchtower-telegram-notifications
+
 ## Dockerproxy
 This is a security-enhanced proxy for the Docker Socket. In this setup we have one instance of uptime-kuma that needs to monitor multiple docker hosts. It uses dockerproxy to connect to the docker socket of the remote hosts. 
 
