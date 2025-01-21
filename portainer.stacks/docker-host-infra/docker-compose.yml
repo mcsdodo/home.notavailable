@@ -19,6 +19,8 @@ services:
     environment:
       WATCHTOWER_CLEANUP: "true" 
       WATCHTOWER_POLL_INTERVAL: 30
+      WATCHTOWER_NOTIFICATIONS: "shoutrrr"
+      WATCHTOWER_NOTIFICATION_URL: "telegram://${WATCHTOWER_CHAT_TOKEN}@telegram?chats=${WATCHTOWER_CHAT_ID}"
 
   dockerproxy:
     image: ghcr.io/tecnativa/docker-socket-proxy:latest
