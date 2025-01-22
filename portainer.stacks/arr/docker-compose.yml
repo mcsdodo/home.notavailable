@@ -127,7 +127,8 @@ services:
       kuma.__docker: ""
 
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
+    # image: lscr.io/linuxserver/qbittorrent:latest
+    image: lscr.io/linuxserver/qbittorrent:libtorrentv1
     environment:
       - PUID=0
       - PGID=0
