@@ -38,6 +38,17 @@ services:
     security_opt:
       - no-new-privileges=true
 
+  autoheal:
+    container_name: autoheal
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_START_PERIOD: 30
+    image: willfarrell/autoheal:latest
+    network_mode: none
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
 
   # mqdockerup:
   #   image: mcsdodo/mqdockerup:latest

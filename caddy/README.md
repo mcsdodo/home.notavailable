@@ -8,14 +8,14 @@ I'm using layer4 to proxy mqtt traffic to my mqtt broker. Following configuratio
 		origins 192.168.100.2, 0.0.0.0, localhost
 	}
     layer4 {
-		mqtt.local:8883 {
+		mqtt.lan:8883 {
 			route {
 				proxy {
 					upstream 192.168.100.204:8883
 				}
 			}
 		}
-		mqtt.local:1883 {
+		mqtt.lan:1883 {
 			route {
 				proxy {
 					upstream 192.168.100.204:1883

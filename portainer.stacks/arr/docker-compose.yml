@@ -58,6 +58,7 @@ services:
       - 8989:8989
     labels:
       kuma.__docker: ""
+      autoheal: true
       
   radarr:
     image: 'linuxserver/radarr:latest'
@@ -74,6 +75,7 @@ services:
       - 7878:7878      
     labels:
       kuma.__docker: ""
+      autoheal: true
       
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -89,6 +91,12 @@ services:
       - gluetun                     #comment/remove if you are not using the VPN
     labels:
       kuma.__docker: ""
+      autoheal: true
+    healthcheck:
+      test: curl --fail http://localhost:9696/health || exit 1
+      interval: 30s
+      timeout: 30s
+      retries: 3      
       
   bazarr:
     image: 'linuxserver/bazarr:latest'
@@ -106,6 +114,7 @@ services:
       - gluetun                     #comment/remove if you are not using the VPN            
     labels:
       kuma.__docker: ""
+      autoheal: true
 
   deluge:
     image: lscr.io/linuxserver/deluge:latest
@@ -125,6 +134,7 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
+      autoheal: true
 
   qbittorrent:
     # image: lscr.io/linuxserver/qbittorrent:latest
@@ -142,6 +152,7 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
+      autoheal: true
     network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
     depends_on:                     #comment/remove if you are not using the VPN
       - gluetun                     #comment/remove if you are not using the VPN
@@ -185,6 +196,7 @@ services:
       - DNS_KEEP_NAMESERVER=on 
     labels:
       kuma.__docker: ""
+      autoheal: true
       
   overseerr:
     image: sctx/overseerr:latest
@@ -197,6 +209,24 @@ services:
       - /root/overseerr/config:/app/config
     restart: unless-stopped
     labels:
-      kuma.__docker: ""    
-
+      kuma.__docker: ""     
+      autoheal: true
       
+  scheduled-restarts:
+    image: docker:cli
+    restart: unless-stopped
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        while true; do
+          if [ "$$(date +'%H:%M')" = '02:00' ]; then
+            docker restart arr-deluge-1
+            docker restart arr-radarr-1
+            docker restart arr-bazarr-1
+            docker restart arr-qbittorrent-1
+            docker restart arr-prowlarr-1
+            docker restart arr-sonarr-1
+          fi
+          sleep 60
+        done
