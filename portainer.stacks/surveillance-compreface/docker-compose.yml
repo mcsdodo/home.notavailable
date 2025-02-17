@@ -10,10 +10,9 @@ services:
       - POSTGRES_DB=${postgres_db}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    networks:
-      - surveillance_default
     labels:
       kuma.__docker: ""
+      autoheal: true
 
   compreface-admin:
     restart: always
@@ -35,10 +34,9 @@ services:
     depends_on:
       - compreface-postgres-db
       - compreface-api
-    networks:
-      - surveillance_default
     labels:
       kuma.__docker: ""
+      autoheal: true
 
   compreface-api:
     restart: always
@@ -57,28 +55,28 @@ services:
       - MAX_REQUEST_SIZE=${max_request_size}B
       - CONNECTION_TIMEOUT=${connection_timeout:-10000}
       - READ_TIMEOUT=${read_timeout:-60000}
-    networks:
-      - surveillance_default
     labels:
       kuma.__docker: ""
+      autoheal: true
 
   compreface-fe:
     restart: always
     image: ${registry}compreface-fe:${FE_VERSION}
     container_name: "surveillance-compreface-ui"
-    ports:
-      - "5015:80"
+    # ports:
+      # - "5015:80"
     depends_on:
       - compreface-api
       - compreface-admin
+      - ts
     environment:
       - CLIENT_MAX_BODY_SIZE=${max_request_size}
       - PROXY_READ_TIMEOUT=${read_timeout:-60000}ms
       - PROXY_CONNECT_TIMEOUT=${connection_timeout:-10000}ms
-    networks:
-      - surveillance_default
     labels:
       kuma.__docker: ""
+      autoheal: true
+    network_mode: service:ts
 
   compreface-core:
     restart: unless-stopped
@@ -95,14 +93,41 @@ services:
       retries: 0
       start_period: 0s
       timeout: 1s
-    networks:
-      - surveillance_default
     labels:
       kuma.__docker: ""
-
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+                - compute
+                - video
+    
+  ts:
+    image: tailscale/tailscale:latest
+    hostname: ts-compreface
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - tailscale-data:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    labels:
+      autoheal: true
+    ports:
+      - "5015:80"
+      
 volumes:
+  tailscale-data:
+    driver: local
   postgres-data:
       
-networks:
-  surveillance_default:
-    external: true
