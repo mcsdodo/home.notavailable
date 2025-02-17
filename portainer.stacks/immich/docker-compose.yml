@@ -1,13 +1,3 @@
-version: "3.8"
-
-#
-# WARNING: Make sure to use the docker-compose.yml of the current release:
-#
-# https://github.com/immich-app/immich/releases/latest/download/docker-compose.yml
-#
-# The compose file on main may not be compatible with the latest release.
-#
-
 name: immich
 
 services:
@@ -25,8 +15,21 @@ services:
       - redis
       - database
     restart: always
+    healthcheck:
+      disable: false
     labels:
       kuma.__docker: ""
+      autoheal: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+                - compute
+                - video
       
   immich-machine-learning:
     container_name: immich_machine_learning
@@ -36,9 +39,20 @@ services:
     env_file:
       - stack.env
     restart: always
+    healthcheck:
+      disable: false    
     labels:
       kuma.__docker: ""
-      
+      autoheal: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+
   redis:
     container_name: immich_redis
     image: docker.io/redis:6.2-alpine
@@ -47,6 +61,7 @@ services:
     restart: always
     labels:
       kuma.__docker: ""
+      autoheal: true
       
   database:
     container_name: immich_postgres
@@ -59,16 +74,29 @@ services:
       POSTGRES_DB: ${DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: '--data-checksums'
     healthcheck:
-      test: pg_isready --dbname='${DB_DATABASE_NAME}' --username='${DB_USERNAME}' || exit 1; Chksum="$$(psql --dbname='${DB_DATABASE_NAME}' --username='${DB_USERNAME}' --tuples-only --no-align --command='SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database')"; echo "checksum failure count is $$Chksum"; [ "$$Chksum" = '0' ] || exit 1
+      test: >-
+        pg_isready --dbname="$${POSTGRES_DB}" --username="$${POSTGRES_USER}" || exit 1;
+        Chksum="$$(psql --dbname="$${POSTGRES_DB}" --username="$${POSTGRES_USER}" --tuples-only --no-align
+        --command='SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database')";
+        echo "checksum failure count is $$Chksum";
+        [ "$$Chksum" = '0' ] || exit 1
       interval: 5m
       start_interval: 30s
       start_period: 5m
-    command: ["postgres", "-c" ,"shared_preload_libraries=vectors.so", "-c", 'search_path="$$user", public, vectors', "-c", "logging_collector=on", "-c", "max_wal_size=2GB", "-c", "shared_buffers=512MB", "-c", "wal_compression=on"]      
+    command: >-
+      postgres
+      -c shared_preload_libraries=vectors.so
+      -c 'search_path="$$user", public, vectors'
+      -c logging_collector=on
+      -c max_wal_size=2GB
+      -c shared_buffers=512MB
+      -c wal_compression=on
     volumes:
       - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
     restart: always
     labels:
       kuma.__docker: ""
+      autoheal: true
       
 volumes:
   model-cache:
