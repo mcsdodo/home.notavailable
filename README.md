@@ -81,3 +81,14 @@ First version did use GSM hat for internet connection, Cloudflare for tunneling 
 
 https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
 https://create.withcode.uk/python/A3
+
+# GPU passthrough
+
+https://www.reddit.com/r/homelab/comments/b5xpua/the_ultimate_beginners_guide_to_gpu_passthrough/?rdt=42257
+
+10de:1c03
+10de:10f1
+
+
+
+echo "options vfio-pci ids=10de:1c03,10de:10f1 disable_vga=1"> /etc/modprobe.d/vfio.conf
