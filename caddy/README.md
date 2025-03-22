@@ -92,4 +92,4 @@ EOF
 
 ## Test mqtt
 
-`mosquitto_sub -h mqtt.local -t espresense/# -u **** -P ****`
+`mosquitto_sub -h mqtt.lan -t espresense/# -u **** -P ****`
