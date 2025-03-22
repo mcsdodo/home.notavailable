@@ -1,9 +1,9 @@
 ## Surveillance stack
 [Frigate](https://docs.frigate.video/frigate/) is used as NVR, uses RTSP streams from Dahua cameras and Google Coral for object detection. Writes events to MQTT that runs on a remote site - therefore [Tailscale](https://tailscale.com/blog/docker-tailscale-guide) is used.
 
-[Double-take](https://github.com/skrashevich/double-take) is used as UI for training and connecting [Compreface](https://github.com/exadel-inc/CompreFace) (on remote site - connected via Tailscale) for facial recognition.
+[Double-take](https://github.com/skrashevich/double-take) is used as UI for training and connecting [Compreface](https://github.com/exadel-inc/CompreFace) (on remote site - connected via Tailscale) for facial recognition. (see [docker-compose.yml](../surveillance-compreface/docker-compose.yml))
 
-[frigate_plate_recognizer](https://github.com/ljmerza/frigate_plate_recognizer) listens on Frigate's MQTT topic to process _car_ objects and then runs [CodeprojectAI](https://www.codeproject.com/ai/docs/install/running_in_docker.html) (on a remote site - connected via Tailscale) for recognition.
+[frigate_plate_recognizer](https://github.com/ljmerza/frigate_plate_recognizer) listens on Frigate's MQTT topic to process _car_ objects and then runs [CodeprojectAI](https://www.codeproject.com/ai/docs/install/running_in_docker.html) (on a remote site - connected via Tailscale) for recognition. (see [docker-compose.yml](../surveillance-codeprojectai/docker-compose.yml))
 
 
 https://community.home-assistant.io/t/google-coral-usb-frigate-proxmox/383737
