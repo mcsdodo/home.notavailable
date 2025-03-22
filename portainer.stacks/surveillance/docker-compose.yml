@@ -69,7 +69,7 @@ services:
     restart: unless-stopped
     volumes:
       # - double-take:/.storage
-      - /root/surveillance/double-take:/.storage # config.yml location (and other stuff created by double-take)
+      - /root/surveillance/double-take:/.storage # /config/config.yml location
     network_mode: service:ts-double-take
     depends_on:
       - ts-double-take
