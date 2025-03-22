@@ -1,0 +1,24 @@
+frigate:
+  frigate_url: http://frigate:5000
+  mqtt_server: mqtt
+  mqtt_port: 1883
+  mqtt_username: frigate_plate
+  mqtt_password: frigate_plate
+  main_topic: frigate
+  return_topic: plate_recognizer
+  frigate_plus: false
+  watched_plates:
+    - BT014IN
+  fuzzy_match: 0.8
+
+code_project:
+  api_url: http://ts-codeproject-ai:32168/v1/vision/alpr
+
+sensor:
+  - name: "License plate"
+    state_topic: "frigate/plate_recognizer"
+    value_template: "{{ value_json.plate_number }}"
+    json_attributes_topic: "frigate/plate_recognizer"
+    icon: mdi:car
+
+logger_level: DEBUG

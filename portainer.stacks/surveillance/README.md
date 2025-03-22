@@ -1,4 +1,10 @@
-https://docs.frigate.video/frigate/
+## Surveillance stack
+[Frigate](https://docs.frigate.video/frigate/) is used as NVR, uses RTSP streams from Dahua cameras and Google Coral for object detection. Writes events to MQTT that runs on a remote site - therefore [Tailscale](https://tailscale.com/blog/docker-tailscale-guide) is used.
+
+[Double-take](https://github.com/skrashevich/double-take) is used as UI for training and connecting [Compreface](https://github.com/exadel-inc/CompreFace) (on remote site - connected via Tailscale) for facial recognition.
+
+[frigate_plate_recognizer](https://github.com/ljmerza/frigate_plate_recognizer) listens on Frigate's MQTT topic to process _car_ objects and then runs [CodeprojectAI](https://www.codeproject.com/ai/docs/install/running_in_docker.html) (on a remote site - connected via Tailscale) for recognition.
+
 
 https://community.home-assistant.io/t/google-coral-usb-frigate-proxmox/383737
 
@@ -17,20 +23,12 @@ lxc.mount.auto: cgroup:rw
 
 
 ## Env vars in portainer
-FRIGATE_RTSP_PASSWORD=
+FRIGATE_MQTT_USER=
+FRIGATE_MQTT_PASSWORD=
+FRIGATE_RTSP_CREDENTIALS=
+TS_AUTHKEY= your tailscale auth key
 
 
-## Frigate config
-```
-detectors:
-  coral:
-    type: edgetpu
-    device: usb
-mqtt:
-  host: mqtt.lan
-  port: 8883
-  user: frigate
-  password: frigate
-  stats_interval: 60
-cameras: []
-```
+## TODO:
+- [ ] check https://github.com/kyle4269/frigate_alpr - it has UI
+- [ ] actually do something with the detections (notification or whatever)

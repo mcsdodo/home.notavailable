@@ -1,0 +1,165 @@
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+  # deepstack:
+  #   api_url: http://ts-codeprojectai:32168/v1/vision/detection
+  #   type: deepstack
+  #   api_timeout: 0.1 #seconds
+mqtt:
+  host: mqtt # tailscale DNS
+  port: 1883
+  user: "{FRIGATE_MQTT_USER}" # https://docs.frigate.video/configuration/#environment-variable-substitution
+  password: "{FRIGATE_MQTT_PASSWORD}"
+  stats_interval: 60
+  topic_prefix: frigate
+  client_id: frigate
+
+ffmpeg:
+  hwaccel_args: preset-vaapi
+  output_args:
+    record: preset-record-generic-audio-copy
+
+detect:
+  fps: 5
+  # height: 720
+
+# Configuration for the jpg snapshots written to the clips directory for each tracked object
+snapshots:
+  enabled: true
+  bounding_box: false
+  crop: false
+  quality: 100
+
+record:
+  enabled: true
+  retain:
+    # days: 1
+    mode: motion
+  alerts:
+    pre_capture: 10
+    post_capture: 15
+    retain:
+      days: 14
+      mode: motion
+  detections:
+    pre_capture: 10
+    post_capture: 15
+    retain:
+      days: 14
+      mode: motion
+
+objects:
+  track:
+    - person
+    - car
+    - dog
+    - cat
+    - horse
+go2rtc:
+  streams:
+    garaz-dnu:
+      - rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.14:554/cam/realmonitor?channel=1&subtype=0
+    vchod:
+      - rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.12:554/cam/realmonitor?channel=1&subtype=0
+    vzadu:
+      - rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.13:554/cam/realmonitor?channel=1&subtype=0
+    garaz-von:
+      - rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.11:554/cam/realmonitor?channel=1&subtype=0
+
+cameras:
+  garaz-dnu:
+    mqtt:
+      quality: 100
+      height: 500
+      crop: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.14:554/cam/realmonitor?channel=1&subtype=0
+          roles:
+            - record
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.14:554/cam/realmonitor?channel=1&subtype=1
+          roles:
+            - detect
+    motion:
+      mask:
+        - 0.699,0.248,0.771,0.386,1,0.406,1,0,0.714,0
+        - 0.962,0.58,0.766,1,1,1,1,0.582
+    objects: {}
+  vchod:
+    mqtt:
+      quality: 100
+      height: 1080
+      crop: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.12:554/cam/realmonitor?channel=1&subtype=2
+          roles:
+            - detect
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.12:554/cam/realmonitor?channel=1&subtype=0
+          roles:
+            - record
+    motion:
+      mask:
+        - 0.676,0.03,0.675,0.099,0.964,0.106,0.962,0.031
+        - 0.395,0,0.403,0.109,0.501,0.056,0.617,0.171,0.756,0.319,0.865,0.459,0.818,0.731,0.748,1,1,1,1,0
+        - 0.124,0.121,0.139,0.245,0.223,0.176,0.213,0.059
+        - 0.412,0.335,0.552,0.23,0.502,0.191,0.406,0.25
+    objects:
+      mask:
+        - 0.395,0,0.401,0.112,0.5,0.055,0.617,0.171,0.756,0.319,0.865,0.459,0.818,0.731,0.748,1,1,1,1,0
+        - 0.124,0.121,0.136,0.234,0.223,0.176,0.21,0.062
+  vzadu:
+    mqtt:
+      quality: 100
+      height: 720
+      crop: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.13:554/cam/realmonitor?channel=1&subtype=2
+          roles:
+            - detect
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.13:554/cam/realmonitor?channel=1&subtype=0
+          roles:
+            - record
+    objects:
+      mask: -0.001,0.001,0,0.123,0.15,0.002
+    motion:
+      mask:
+        - 0.673,0,0.675,0.105,0.968,0.1,1,0
+        - 0,0.327,0.105,0.312,0.301,1,0,1
+        - -0.001,0.001,0,0.123,0.15,0.002
+      threshold: 50
+      contour_area: 20
+      improve_contrast: true
+  garaz-von:
+    mqtt:
+      quality: 100
+      height: 720
+      crop: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.11:554/cam/realmonitor?channel=1&subtype=2
+          roles:
+            - detect
+        - path: rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.11:554/cam/realmonitor?channel=1&subtype=0
+          roles:
+            - record
+    objects:
+      mask:
+        - 0.678,0.037,0.677,0.096,0.961,0.094,0.959,0.034
+        - 0,0.396,0.168,0.285,0.341,0.2,0.503,0.153,0.678,0.125,0.829,0.13,1,0.127,1,0,0,0
+    motion:
+      mask:
+        - 0.678,0.037,0.677,0.096,0.961,0.094,0.959,0.034
+        - 0,0.396,0.168,0.285,0.341,0.2,0.503,0.153,0.678,0.125,0.829,0.13,1,0.127,1,0,0,0
+        - 0.549,0.308,0.602,0.259,0.837,0.448,0.83,0.545
+version: 0.15-1
+semantic_search:
+  enabled: true
+  reindex: false
+  model_size: small
+
+telemetry:
+  stats:
+    network_bandwidth: true

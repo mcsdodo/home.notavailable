@@ -1,0 +1,1 @@
+For this setup you only need _License Plate Reader_ module installed. My instance has GPU passed through, but the module uses CPU anyway so no need to go through the PITA process of installing nvidia drivers.

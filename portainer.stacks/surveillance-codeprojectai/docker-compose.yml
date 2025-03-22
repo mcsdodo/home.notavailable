@@ -1,0 +1,50 @@
+services:
+  CodeProjectAI:
+    # image: codeproject/ai-server:cuda11_7
+    image: codeproject/ai-server:cuda12_2
+    container_name: codeproject-ai-server-cuda
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Bratislava
+    volumes:
+      - codeproject_ai_data:/etc/codeproject/ai
+      - codeproject_ai_modules:/app/modules      
+    network_mode: service:ts-codeproject-ai
+    depends_on:
+      - ts-codeproject-ai      
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ts-codeproject-ai:
+    image: tailscale/tailscale:latest
+    hostname: ts-codeproject-ai
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - tailscale-data:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    labels:
+      autoheal: true
+    ports:
+      - "32168:32168"
+      
+volumes:
+  codeproject_ai_data:
+  codeproject_ai_modules:              
+  tailscale-data:
+    driver: local
+
+
+
