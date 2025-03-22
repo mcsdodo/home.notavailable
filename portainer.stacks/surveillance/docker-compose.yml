@@ -1,42 +1,101 @@
 services:
+  frigate_plate_recognizer:
+    image: lmerza/frigate_plate_recognizer:latest
+    container_name: frigate_plate_recognizer
+    volumes:
+      - /root/surveillance/frigate_plate_recognizer/config:/config # config.yml location
+      - /mnt/frigate/license-plates:/plates:rw
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Bratislava
+
   frigate:
     container_name: surveillance-frigate
     privileged: true # this may not be necessary for all setups
     restart: unless-stopped
-    image: ghcr.io/blakeblackshear/frigate:0.13.2
-    shm_size: "64mb" # update for your cameras based on calculation above
+    image: ghcr.io/blakeblackshear/frigate:0.15.0
+    shm_size: "580mb" # update for your cameras based on calculation above
     devices:
       - /dev/bus/usb:/dev/bus/usb  # Passes the USB Coral, needs to be modified for other versions
+      - /dev/dri/renderD128 
     volumes:
       # - /etc/localtime:/etc/localtime:ro
-      - /mnt/shared_configs/frigate:/config
-      - /mnt/media/frigate:/media/frigate #TODO: store the data locally, not on NAS
+      - /root/surveillance/frigate:/config # config.yml location
+      # - /mnt/frigate:/media/frigate # NAS - remote
+      - /mnt/frigate-usb:/media/frigate # local usb disk
       - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
         target: /tmp/cache
         tmpfs:
           size: 1000000000
+    environment:
+      - FRIGATE_RTSP_CREDENTIALS=${FRIGATE_RTSP_CREDENTIALS}
+      - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER}
+      - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD}
+    network_mode: service:ts-frigate
+    depends_on:
+      - ts-frigate
+
+    labels:
+      autoheal: true
+      
+  ts-frigate:
+    image: tailscale/tailscale:latest
+    hostname: ts-frigate
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - tailscale-data-1:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    labels:
+      autoheal: true
     ports:
-      - "5011:5000"
       - "8554:8554" # RTSP feeds
       - "8555:8555/tcp" # WebRTC over tcp
       - "8555:8555/udp" # WebRTC over udp
-      - "8971:8971" # New restricted access port in >= v14.0
-    environment:
-      - FRIGATE_RTSP_PASSWORD=${FRIGATE_RTSP_PASSWORD}
-    labels:
-      kuma.__docker: ""
+      - "8971:8971" # New restricted access port in >= v14.0     
+      - "5011:5000"
 
   double-take:
     container_name: surveillance-double-take
-    image: jakowenko/double-take:1.13.1
+    # image: jakowenko/double-take:1.13.1
+    image: skrashevich/double-take:v1.13.11.8
     restart: unless-stopped
     volumes:
-      - double-take:/.storage
-    ports:
-      - 5014:3000
+      # - double-take:/.storage
+      - /root/surveillance/double-take:/.storage # config.yml location (and other stuff created by double-take)
+    network_mode: service:ts-double-take
+    depends_on:
+      - ts-double-take
+
+  ts-double-take:
+    image: tailscale/tailscale:latest
+    hostname: ts-double-take
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - tailscale-data-2:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
     labels:
-      kuma.__docker: ""
+      autoheal: true
+    ports:
+      - "5014:3000" 
 
 volumes:
-  double-take:
-
+  tailscale-data-1:
+    driver: local
+  tailscale-data-2:
+    driver: local    
