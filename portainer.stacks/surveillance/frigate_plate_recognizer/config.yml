@@ -1,5 +1,5 @@
 frigate:
-  frigate_url: http://frigate:5000
+  frigate_url: http://ts-frigate:5000
   mqtt_server: mqtt
   mqtt_port: 1883
   mqtt_username: frigate_plate

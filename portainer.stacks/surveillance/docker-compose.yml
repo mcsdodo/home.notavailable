@@ -21,8 +21,8 @@ services:
     volumes:
       # - /etc/localtime:/etc/localtime:ro
       - /root/surveillance/frigate:/config # config.yml location
-      # - /mnt/frigate:/media/frigate # NAS - remote
-      - /mnt/frigate-usb:/media/frigate # local usb disk
+      - /mnt/frigate:/media/frigate # NAS - remote
+      # - /mnt/frigate-usb:/media/frigate # local usb disk
       - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
         target: /tmp/cache
         tmpfs:
