@@ -73,6 +73,10 @@ lxc.mount.entry: /dev/nvidia-caps/nvidia-cap2 dev/nvidia-caps/nvidia-cap2 none b
 ```
 
 ### LXC setup
-1. install guest drivers in LXC. Same as in #1 of host setup, but run with `--no-kernel-module` argument.
-2. `nvidia-smi` in LXC should work now.
-3. run `docker run --rm -ti --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all ubuntu:22.04 nvidia-smi -l` to verify if it works in docker
+
+sudo apt-get install gnupg
+
+1. install container toolkit in LXC. Follow [the instructions here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+2. install guest drivers in LXC. Same as in #1 of host setup, but run with `--no-kernel-module` argument.
+3. `nvidia-smi` in LXC should work now.
+4. run `docker run --rm -ti --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all ubuntu:22.04 nvidia-smi -l` to verify if it works in docker
