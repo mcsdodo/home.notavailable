@@ -56,7 +56,7 @@ portainer.lan {
 }
 
 chatgpt.lan {
-    reverse_proxy 192.168.100.112:8090
+    reverse_proxy 192.168.100.112:8092
     tls internal
 }
 
@@ -70,7 +70,7 @@ grafana.lan {
     tls internal
 }
 
-loki.lan {
+loki.lan:80 {
     reverse_proxy 192.168.100.112:3100
     tls internal
 }
@@ -230,8 +230,18 @@ pdf.lan {
     tls internal
 }
 
+movies.lan {
+    reverse_proxy 192.168.100.212:7878
+    tls internal
+}
+
 radarr.lan {
     reverse_proxy 192.168.100.212:7878
+    tls internal
+}
+
+series.lan {
+    reverse_proxy 192.168.100.212:8989
     tls internal
 }
 
@@ -250,7 +260,22 @@ bazarr.lan {
     tls internal       
 }
 
+subtitles.lan {
+    reverse_proxy 192.168.100.212:6767
+    tls internal
+}
+
 overseerr.lan {
     reverse_proxy 192.168.100.212:5055
+    tls internal
+}
+
+audiobooks.lan {
+    reverse_proxy 192.168.100.212:13378
+    tls internal
+}
+
+zigbee2mqtt.lan {
+    reverse_proxy 192.168.100.114:8080
     tls internal
 }
