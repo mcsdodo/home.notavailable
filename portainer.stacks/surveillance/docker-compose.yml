@@ -31,6 +31,7 @@ services:
       - FRIGATE_RTSP_CREDENTIALS=${FRIGATE_RTSP_CREDENTIALS}
       - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER}
       - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD}
+      - TZ=Europe/Bratislava
     network_mode: service:ts-frigate
     depends_on:
       - ts-frigate
