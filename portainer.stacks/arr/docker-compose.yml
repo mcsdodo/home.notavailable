@@ -1,5 +1,4 @@
 services:
-
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     volumes:
@@ -32,6 +31,7 @@ services:
       caddy.reverse_proxy: "{{upstreams 8090}}"
     networks:
       - caddy
+      - default
 
   sonarr:
     image: 'linuxserver/sonarr:latest'
@@ -49,11 +49,12 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://series.lan, http://sonarr.lan
-      caddy.reverse_proxy: "{{upstreams 8989}}"
+      caddy_0: http://series.lan, http://sonarr.lan
+      caddy_0.reverse_proxy: "{{upstreams 8989}}"
+
     networks:
       - caddy
-
+      - default
       
   radarr:
     image: 'linuxserver/radarr:latest'
@@ -71,10 +72,11 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://movies.lan, http://radarr.lan
-      caddy.reverse_proxy: "{{upstreams 7878}}"
+      caddy_0: http://movies.lan, http://radarr.lan
+      caddy_0.reverse_proxy: "{{upstreams 7878}}"
     networks:
       - caddy
+      - default
       
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -199,7 +201,7 @@ services:
       autoheal: true
       caddy_0: http://qbittorrent.lan
       caddy_0.reverse_proxy: "{{upstreams 8085}}"
-      caddy_1: http://bazarr.lan,http://subtitles.lan
+      caddy_1: http://bazarr.lan, http://subtitles.lan
       caddy_1.reverse_proxy: "{{upstreams 6767}}"
       caddy_2: http://prowlarr.lan
       caddy_2.reverse_proxy: "{{upstreams 9696}}"
@@ -219,10 +221,11 @@ services:
     labels:
       kuma.__docker: ""     
       autoheal: true
-      caddy: http://overseerr.lan,http://requests.lan
-      caddy.reverse_proxy: "{{upstreams 5055}}"
+      caddy_0: http://overseerr.lan, http://requests.lan
+      caddy_0.reverse_proxy: "{{upstreams 5055}}"
     networks:
       - caddy
+      - default
       
   scheduled-restarts:
     image: docker:cli
