@@ -1,34 +1,3 @@
-# Docker Compose file for running paperless from the Docker Hub.
-# This file contains everything paperless needs to run.
-# Paperless supports amd64, arm and arm64 hardware.
-#
-# All compose files of paperless configure paperless in the following way:
-#
-# - Paperless is (re)started on system boot, if it was running before shutdown.
-# - Docker volumes for storing data are managed by Docker.
-# - Folders for importing and exporting files are created in the same directory
-#   as this file and mounted to the correct folders inside the container.
-# - Paperless listens on port 8010.
-#
-# In addition to that, this Docker Compose file adds the following optional
-# configurations:
-#
-# - Instead of SQLite (default), PostgreSQL is used as the database server.
-#
-# To install and update paperless with this file, do the following:
-#
-# - Open portainer Stacks list and click 'Add stack'
-# - Paste the contents of this file and assign a name, e.g. 'Paperless'
-# - Click 'Deploy the stack' and wait for it to be deployed
-# - Open the list of containers, select paperless_webserver_1
-# - Click 'Console' and then 'Connect' to open the command line inside the container
-# - Run 'python3 manage.py createsuperuser' to create a user
-# - Exit the console
-#
-# For more extensive installation and update instructions, refer to the
-# documentation.
-
-version: "3.4"
 services:
   broker:
     image: docker.io/library/redis:7
@@ -63,10 +32,9 @@ services:
       - /mnt/media/paperless/media:/usr/src/paperless/media
       - /mnt/media/paperless/export:/usr/src/paperless/export
       - /mnt/media/paperless/consume:/usr/src/paperless/consume
+    env_file:
+      - stack.env      
     environment:
-      PAPERLESS_CONSUMER_POLLING: 10
-      PAPERLESS_TASK_WORKERS: 2
-      PAPERLESS_THREADS_PER_WORKER: 3
       PAPERLESS_REDIS: redis://broker:6379
       PAPERLESS_DBHOST: db
 # The UID and GID of the user used to run paperless in the container. Set this
@@ -94,9 +62,18 @@ services:
       PAPERLESS_URL: https://documents.lan
     labels:
       kuma.__docker: ""
+      autoheal: true
+      caddy: http://documents.lan
+      caddy.reverse_proxy: "{{upstreams 8000}}"
+    networks:
+      - caddy
+      - default
       
 volumes:
   data:
   media:
   pgdata:
   redisdata:
+networks:
+  caddy:
+    external: true

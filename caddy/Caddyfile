@@ -45,11 +45,6 @@ proxmox.lan {
     tls internal
 }
 
-caddy-config.lan {
-    reverse_proxy 192.168.100.112:8082
-    tls internal
-}
-
 portainer.lan {
     reverse_proxy 192.168.100.112:9000
     tls internal
@@ -87,12 +82,6 @@ uptimekuma.lan {
 
 alloy.lan {
     reverse_proxy 192.168.100.112:12345
-    tls internal
-}
-
-
-compreface.lan {
-    reverse_proxy 192.168.100.212:5015
     tls internal
 }
 
@@ -161,33 +150,13 @@ ubuntu.lan {
     tls internal
 }
 
-photos.lan {
-    reverse_proxy 192.168.100.212:2283
-    tls internal
-}
-
 portainer2.lan {
     reverse_proxy 192.168.100.212:9000
     tls internal
 }
 
-documents.lan {
-    reverse_proxy 192.168.100.212:8010
-    tls internal
-}
-
-pdf.lan {
-    reverse_proxy 192.168.100.212:5004
-    tls internal
-}
-
 zigbee2mqtt.lan {
     reverse_proxy 192.168.100.114:8080
-    tls internal
-}
-
-jellyfin.lan {
-    reverse_proxy 192.168.100.212:8096
     tls internal
 }
 

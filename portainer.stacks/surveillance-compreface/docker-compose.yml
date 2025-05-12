@@ -123,11 +123,19 @@ services:
     restart: unless-stopped
     labels:
       autoheal: true
+      caddy: http://compreface.lan
+      caddy.reverse_proxy: "{{upstreams 80}}"
     ports:
       - "5015:80"
+    networks:
+      - caddy
+      - default
       
 volumes:
   tailscale-data:
     driver: local
   postgres-data:
-      
+
+networks:
+  caddy:
+    external: true
