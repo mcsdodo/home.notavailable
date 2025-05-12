@@ -215,11 +215,6 @@ documents.lan {
     tls internal
 }
 
-plex.lan {
-    reverse_proxy 192.168.100.212:32400
-    tls internal
-}
-
 qbittorrent.lan {
     reverse_proxy 192.168.100.212:8085
     tls internal
@@ -270,12 +265,21 @@ overseerr.lan {
     tls internal
 }
 
-audiobooks.lan {
-    reverse_proxy 192.168.100.212:13378
-    tls internal
-}
-
 zigbee2mqtt.lan {
     reverse_proxy 192.168.100.114:8080
     tls internal
+}
+
+jellyfin.lan {
+    reverse_proxy 192.168.100.212:8096
+    tls internal
+}
+
+# Docker big server caddy
+*.lan {
+    tls internal
+    reverse_proxy 192.168.100.212:80 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
 }
