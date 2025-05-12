@@ -90,23 +90,9 @@ alloy.lan {
     tls internal
 }
 
-frigate.lan {
-    reverse_proxy 192.168.100.113:5011
-    tls internal
-}
-
-double-take.lan {
-    reverse_proxy 192.168.100.113:5014
-    tls internal
-}
 
 compreface.lan {
-    reverse_proxy 192.168.100.113:5015
-    tls internal
-}
-
-deepstack.lan {
-    reverse_proxy 192.168.100.113:5013
+    reverse_proxy 192.168.100.212:5015
     tls internal
 }
 
@@ -155,11 +141,6 @@ homeassistant-dev.lan {
     tls internal
 }
 
-heimdall.lan {
-    reverse_proxy 192.168.100.124:7990
-    tls internal
-}
-
 proxmox2.lan {
     reverse_proxy {
         to 192.168.100.200:8006
@@ -180,26 +161,6 @@ ubuntu.lan {
     tls internal
 }
 
-deluge.lan {
-    reverse_proxy 192.168.100.212:8112
-    tls internal
-}
-
-kavita.lan {
-    reverse_proxy 192.168.100.212:5000
-    tls internal
-}
-
-mylar.lan {
-    reverse_proxy 192.168.100.212:5001
-    tls internal
-}
-
-komga.lan, comics.lan {
-    reverse_proxy 192.168.100.212:5002
-    tls internal
-}
-
 photos.lan {
     reverse_proxy 192.168.100.212:2283
     tls internal
@@ -215,53 +176,8 @@ documents.lan {
     tls internal
 }
 
-qbittorrent.lan {
-    reverse_proxy 192.168.100.212:8085
-    tls internal
-}
-
 pdf.lan {
     reverse_proxy 192.168.100.212:5004
-    tls internal
-}
-
-movies.lan {
-    reverse_proxy 192.168.100.212:7878
-    tls internal
-}
-
-radarr.lan {
-    reverse_proxy 192.168.100.212:7878
-    tls internal
-}
-
-series.lan {
-    reverse_proxy 192.168.100.212:8989
-    tls internal
-}
-
-sonarr.lan {
-    reverse_proxy 192.168.100.212:8989
-    tls internal
-}
-
-prowlarr.lan {
-    reverse_proxy 192.168.100.212:9696
-    tls internal   
-}
-
-bazarr.lan {
-    reverse_proxy 192.168.100.212:6767
-    tls internal       
-}
-
-subtitles.lan {
-    reverse_proxy 192.168.100.212:6767
-    tls internal
-}
-
-overseerr.lan {
-    reverse_proxy 192.168.100.212:5055
     tls internal
 }
 

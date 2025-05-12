@@ -10,3 +10,11 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
+      autoheal: true
+      caddy: http://comics.lan, http://komga.lan
+      caddy.reverse_proxy: "{{upstreams 25600}}"
+    networks:
+      - caddy
+networks:
+  caddy:
+    external: true
