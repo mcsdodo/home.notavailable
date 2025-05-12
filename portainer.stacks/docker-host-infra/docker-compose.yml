@@ -49,3 +49,27 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
+
+  caddy:
+    container_name: caddy
+    image: lucaslorentz/caddy-docker-proxy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=Europe/Bratislava
+      - CADDY_INGRESS_NETWORKS=caddy
+    networks:
+      - caddy
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  caddy:
+    name: caddy
