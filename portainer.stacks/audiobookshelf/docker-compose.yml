@@ -10,18 +10,13 @@ services:
     environment:
       - TZ=Europe/Bratislava
     restart: unless-stopped
+    networks:
+      - caddy     
     labels:
       autoheal: true
-
-  # libation:
-  #   image: rmcrackan/libation:latest
-  #   user: 0:0
-  #   volumes:
-  #     - /root/libation/config:/config
-  #     - /mnt/media/audiobooks:/data
-  #     - /root/libation/db:/db
-  #   restart: always
-  #   environment:
-  #     - SLEEP_TIME=10
-  #     - PUID=1001 
-  #     - PGID=1001 
+      caddy: http://audiobooks.lan
+      caddy.reverse_proxy: "{{upstreams 80}}"      
+      
+networks:
+  caddy:
+    external: true

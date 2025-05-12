@@ -1,0 +1,38 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    ports:
+      - 8096:8096/tcp
+    volumes:
+      - /root/jellyfin/config:/config
+      - /root/jellyfin/cache:/cache
+      - /mnt/media/movies:/movies:ro
+      - /mnt/media/tvshows:/tvshows:ro
+    restart: 'unless-stopped'
+    # Optional - alternative address used for autodiscovery
+    environment:
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PublishedServerUrl}
+      - TZ=Europe/Bratislava
+    labels:
+      kuma.__docker: ""
+      autoheal: true      
+      caddy: http://jellyfin.lan
+      caddy.reverse_proxy: "{{upstreams 8096}}"   
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]    
+    networks:
+      - arr_default
+      - caddy
+
+networks:
+  arr_default:
+    external: true
+  caddy:
+    external: true        
