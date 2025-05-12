@@ -12,3 +12,12 @@ services:
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
     labels:
       kuma.__docker: ""
+      autoheal: true
+      caddy: pdf.lan
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+    networks:
+      - caddy
+
+networks:
+  caddy:
+    external: true

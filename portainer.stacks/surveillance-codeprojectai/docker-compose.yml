@@ -1,9 +1,10 @@
 services:
   CodeProjectAI:
-    # image: codeproject/ai-server:cuda11_7
     image: codeproject/ai-server:cuda12_2
     container_name: codeproject-ai-server-cuda
     restart: unless-stopped
+    # ports:
+      # - "32168:32168"
     environment:
       - TZ=Europe/Bratislava
     volumes:
@@ -37,14 +38,23 @@ services:
     restart: unless-stopped
     labels:
       autoheal: true
+      caddy: http://codeprojectai.lan
+      caddy.reverse_proxy: "{{upstreams 32168}}"
     ports:
-      - "32168:32168"
+      - "32168:32168"    
+    networks: 
+      - caddy
+      - default
       
 volumes:
   codeproject_ai_data:
   codeproject_ai_modules:              
   tailscale-data:
     driver: local
+
+networks:
+  caddy:
+    external: true
 
 
 
