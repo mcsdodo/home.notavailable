@@ -27,21 +27,11 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
-    
-  # pyload-ng:
-  #   image: lscr.io/linuxserver/pyload-ng:latest
-  #   environment:
-  #     - PUID=0
-  #     - PGID=0
-  #     - TZ=Europe/Bratislava
-  #   volumes:
-  #     - /root/pyload-ng/config:/config
-  #     - /mnt/media/downloads:/downloads
-  #   ports:
-  #     - 8000:8000
-  #   restart: unless-stopped
-  #   labels:
-  #     kuma.__docker: ""
+      autoheal: true
+      caddy: http://mylar.lan
+      caddy.reverse_proxy: "{{upstreams 8090}}"
+    networks:
+      - caddy
 
   sonarr:
     image: 'linuxserver/sonarr:latest'
@@ -59,6 +49,11 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
+      caddy: http://series.lan, http://sonarr.lan
+      caddy.reverse_proxy: "{{upstreams 8989}}"
+    networks:
+      - caddy
+
       
   radarr:
     image: 'linuxserver/radarr:latest'
@@ -76,6 +71,10 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
+      caddy: http://movies.lan, http://radarr.lan
+      caddy.reverse_proxy: "{{upstreams 7878}}"
+    networks:
+      - caddy
       
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -175,6 +174,7 @@ services:
       - 9696:9696 #Prowlarr UI
       - 6767:6767 #Bazarr UI
     networks:
+      caddy:
       default:
         aliases: # aliases so we can access deluge & prowlarr from within other containers by name
           - deluge
@@ -197,6 +197,14 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
+      caddy_0: http://qbittorrent.lan
+      caddy_0.reverse_proxy: "{{upstreams 8085}}"
+      caddy_1: http://bazarr.lan,http://subtitles.lan
+      caddy_1.reverse_proxy: "{{upstreams 6767}}"
+      caddy_2: http://prowlarr.lan
+      caddy_2.reverse_proxy: "{{upstreams 9696}}"
+      caddy_3: http://deluge.lan
+      caddy_3.reverse_proxy: "{{upstreams 8112}}"
       
   overseerr:
     image: sctx/overseerr:latest
@@ -211,6 +219,10 @@ services:
     labels:
       kuma.__docker: ""     
       autoheal: true
+      caddy: http://overseerr.lan,http://requests.lan
+      caddy.reverse_proxy: "{{upstreams 5055}}"
+    networks:
+      - caddy
       
   scheduled-restarts:
     image: docker:cli
@@ -230,3 +242,7 @@ services:
           fi
           sleep 60
         done
+
+networks:
+  caddy:
+    external: true
