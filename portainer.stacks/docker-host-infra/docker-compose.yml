@@ -59,7 +59,7 @@ services:
     container_name: webserver
     image: webserver:dodo
     environment:
-      - RESPONSE_VALUE=${TEST_WEBSERVER_RESPONSE:-webserver}
+      - RESPONSE_VALUE=${WEBSERVER_RESPONSE:-webserver}
     ports:
       - 8889:80
     networks:
