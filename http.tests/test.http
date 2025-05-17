@@ -21,7 +21,7 @@ Content-Type: application/json
     "state" : "xx"
 }
 ###
-GET http://192.168.100.112:8080
+GET https://garage-status.lan
 ###
 POST http://192.168.100.112:8080
 Content-Type: application/json

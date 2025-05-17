@@ -1,40 +1,40 @@
 services:
-  autokuma:
-    container_name: autokuma
-    image: ghcr.io/bigboot/autokuma:latest
-    restart: unless-stopped
-    environment:
-      AUTOKUMA__KUMA__URL: http://uptime-kuma:3001
-      AUTOKUMA__KUMA__USERNAME: ${AUTOKUMA__KUMA__USERNAME}
-      AUTOKUMA__KUMA__PASSWORD: ${AUTOKUMA__KUMA__PASSWORD}
-      AUTOKUMA__DOCKER__TLS__VERIFY: "false"
+  # autokuma:
+  #   container_name: autokuma
+  #   image: ghcr.io/bigboot/autokuma:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     AUTOKUMA__KUMA__URL: http://uptime-kuma:3001
+  #     AUTOKUMA__KUMA__USERNAME: ${AUTOKUMA__KUMA__USERNAME}
+  #     AUTOKUMA__KUMA__PASSWORD: ${AUTOKUMA__KUMA__PASSWORD}
+  #     AUTOKUMA__DOCKER__TLS__VERIFY: "false"
 
-      AUTOKUMA__SNIPPETS__WEB: |- 
-         {{container_name}}_http.http.name: {{container_name}} HTTP
-         {{container_name}}_http.http.url: {{ args[0] }}
-         {{container_name}}_http.http.ignore_tls: true
+  #     AUTOKUMA__SNIPPETS__WEB: |- 
+  #        {{container_name}}_http.http.name: {{container_name}} HTTP
+  #        {{container_name}}_http.http.url: {{ args[0] }}
+  #        {{container_name}}_http.http.ignore_tls: true
          
-      AUTOKUMA__SNIPPETS__DOCKER: |- 
-         {{container_name}}_docker.docker.name: {{container_name}} Docker
-         {{container_name}}_docker.docker.docker_container: {{container_name}}
+  #     AUTOKUMA__SNIPPETS__DOCKER: |- 
+  #        {{container_name}}_docker.docker.name: {{container_name}} Docker
+  #        {{container_name}}_docker.docker.docker_container: {{container_name}}
          
-      AUTOKUMA__DOCKER__HOSTS: ${AUTOKUMA__DOCKER__HOSTS}
-      AUTOKUMA__DOCKER__LABEL_PREFIX: kuma
+  #     AUTOKUMA__DOCKER__HOSTS: ${AUTOKUMA__DOCKER__HOSTS}
+  #     AUTOKUMA__DOCKER__LABEL_PREFIX: kuma
       
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - 'uptime-kuma'
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   depends_on:
+  #     - 'uptime-kuma'
       
-  uptime-kuma:
-    container_name: uptime-kuma
-    image: louislam/uptime-kuma:1
-    volumes:
-      - /root/kuma:/app/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - 3101:3001
-    restart: unless-stopped
+  # uptime-kuma:
+  #   container_name: uptime-kuma
+  #   image: louislam/uptime-kuma:1
+  #   volumes:
+  #     - /root/kuma:/app/data
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   ports:
+  #     - 3101:3001
+  #   restart: unless-stopped
       
   loki:
     container_name: loki
@@ -45,14 +45,19 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - loki
+      - caddy
     labels:
       kuma.__docker: ""
+      caddy: http://loki.lan
+      caddy.reverse_proxy: "{{upstreams 3100}}" 
 
   grafana:
     restart: unless-stopped
     container_name: grafana
     labels:
       kuma.__docker: ""
+      caddy: http://grafana.lan
+      caddy.reverse_proxy: "{{upstreams 3000}}"      
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
@@ -81,6 +86,9 @@ services:
       - "3000:3000"
     networks:
       - loki
+      - caddy
 
 networks:
   loki:
+  caddy:
+    external: true  

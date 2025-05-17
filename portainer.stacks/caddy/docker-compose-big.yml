@@ -1,0 +1,46 @@
+services:
+  caddy:
+    container_name: caddy
+    image: lucaslorentz/caddy-docker-proxy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"      
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=Europe/Bratislava
+      - CADDY_INGRESS_NETWORKS=caddy
+    networks:
+      caddy:
+      macvlan0:
+        ipv4_address: ${MACVLAN_IP}
+  
+  webserver:
+    container_name: webserver
+    image: hashicorp/http-echo
+    environment:
+      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
+    command: [
+      "-listen=:80",
+      "-text=${ECHO_TEXT}"
+    ]      
+    labels: 
+      caddy: ${WEBSERVER_DOMAIN:-http://webserver.lan}
+      caddy.reverse_proxy: "{{upstreams 80}}"
+    networks:
+      - caddy
+  
+networks:
+  caddy:
+    name: caddy
+  macvlan0:
+    name: macvlan0
+    driver: macvlan
+    driver_opts:
+      parent: eth0
+    ipam:
+      config:
+        - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
+          gateway: ${MACVLAN_GATEWAY:-192.168.0.1/24}
