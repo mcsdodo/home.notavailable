@@ -24,6 +24,7 @@ services:
       caddy.reverse_proxy: "{{upstreams 2283}}"
     networks:
       - caddy
+      - default
     deploy:
       resources:
         reservations:

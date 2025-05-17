@@ -1,0 +1,47 @@
+services:
+  # nut-upsd-upshift:
+  #   privileged: true
+  #   # user: "189:110"
+  #   image: upshift/nut-upsd
+  #   container_name: nut-upsd-upshift
+  #   devices:
+  #     - /dev/bus/usb
+  #   environment:
+  #     - UPS_DRIVER=nutdrv_qx
+    
+  # nut-upsd:
+  #   privileged: true
+  #   image: instantlinux/nut-upsd
+  #   # user: "0:0"
+  #   # privileged: true
+  #   container_name: nut-upsd
+  #   devices:
+  #     - /dev/bus/usb/001/031
+  #   restart: unless-stopped
+  #   environment:
+  #     - DRIVER=nutdrv_qx
+  #     # - SERIAL=D00F06103A84
+  #     # - DRIVER=usbhid-ups
+  #     - VENDORID=0665
+  #     - MAXAGE=60
+  #     - POLLINTERVAL=15
+
+  peanut:
+    image: brandawg93/peanut:latest
+    container_name: PeaNUT
+    ports:
+      - 18081:8080
+    restart: unless-stopped
+    volumes:
+      - /root/nut:/config
+    environment:
+      - WEB_PORT=8080
+    networks:
+      - caddy
+    labels:
+      caddy: http://peanut.lan
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+    
+networks:
+  caddy:
+    external: true

@@ -2,8 +2,6 @@ services:
   emby:
     image: emby/embyserver
     container_name: embyserver
-    runtime: nvidia # Expose NVIDIA GPUs
-    # network_mode: host # Enable DLNA and Wake-on-Lan
     environment:
       - TZ=Europe/Bratislava
       - GIDLIST=44,993 # A comma-separated list of additional GIDs to run emby as (default: 2)
@@ -25,6 +23,16 @@ services:
     networks:
       - arr_default
       - caddy
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+      
 networks:
   arr_default:
     external: true      

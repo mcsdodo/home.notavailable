@@ -1,9 +1,23 @@
 services:
-  chatGpt:
-    image: yakgpt/yakgpt:latest
-    container_name: yakgpt
-    ports:
-      - 8090:3000
+
+  openwebui:
+    container_name: openwebui
+    image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
+    ports:
+      - "8092:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - caddy
     labels:
-      kuma.__docker: ""     
+      caddy: http://chatgpt.lan
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+      
+volumes:
+  open-webui:      
+networks:
+  caddy:
+    external: true  

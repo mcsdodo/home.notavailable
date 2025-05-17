@@ -1,4 +1,3 @@
-version: "3"
 services:
   gotify:
     image: gotify/server
@@ -13,6 +12,10 @@ services:
       - /root/gotify/config.yml:/etc/gotify/config.yml
     labels:
       kuma.__docker: ""
+      caddy: http://gotify.lan
+      caddy.reverse_proxy: "{{upstreams 80}}"
+    networks:
+      - caddy  
       
   dashy:
     image: lissy93/dashy
@@ -33,8 +36,11 @@ services:
       start_period: 40s
     labels:
       kuma.__docker: ""
+      caddy: http://dashy.lan
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+    networks:
+      - caddy
         
- 
   adguardhome-sync:
     image: ghcr.io/bakito/adguardhome-sync:latest
     container_name: adguardhome-sync
@@ -46,3 +52,7 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
+
+networks:
+  caddy:
+    external: true      
