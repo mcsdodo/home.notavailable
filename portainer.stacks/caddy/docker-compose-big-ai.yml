@@ -6,7 +6,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "443:443/udp"
+      - "443:443/udp"      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
@@ -16,12 +16,9 @@ services:
       caddy:
       macvlan0:
         ipv4_address: ${MACVLAN_IP}
-      
     labels:
-      caddy: "http://*.lan"
-      caddy.reverse_proxy: "192.168.100.213:80"
       autoheal: true
-      
+  
   webserver:
     container_name: webserver
     image: hashicorp/http-echo
@@ -36,7 +33,7 @@ services:
       caddy.reverse_proxy: "{{upstreams 80}}"
     networks:
       - caddy
-    
+  
 networks:
   caddy:
     name: caddy

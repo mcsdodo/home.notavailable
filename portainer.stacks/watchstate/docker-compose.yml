@@ -13,6 +13,7 @@ services:
       - arr_default
       - caddy
     labels:
+      autoheal: true
       caddy: http://watchstate.lan
       caddy.reverse_proxy: "{{upstreams 8080}}"
         
