@@ -13,8 +13,8 @@ services:
   mylar3:
     image: lscr.io/linuxserver/mylar3:latest
     environment:
-      - PUID=0
-      - PGID=0
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=Europe/Bratislava
     volumes:
       - /root/mylar3:/config
