@@ -5,11 +5,13 @@ services:
     ports:
       - 8096:8096/tcp
     volumes:
-      - /root/jellyfin/config:/config
-      - /root/jellyfin/cache:/cache
+      - /mnt/shared_configs/jellyfin/config:/config
+      - /mnt/shared_configs/jellyfin/cache:/cache
       - /mnt/media/movies:/movies:ro
       - /mnt/media/tvshows:/tvshows:ro
     restart: 'unless-stopped'
+    devices:
+      - /dev/dri:/dev/dri # VAAPI/NVDEC/NVENC render nodes
     # Optional - alternative address used for autodiscovery
     environment:
       - JELLYFIN_PublishedServerUrl=${JELLYFIN_PublishedServerUrl}

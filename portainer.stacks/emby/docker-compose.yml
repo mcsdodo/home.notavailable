@@ -6,7 +6,7 @@ services:
       - TZ=Europe/Bratislava
       - GIDLIST=44,993 # A comma-separated list of additional GIDs to run emby as (default: 2)
     volumes:
-      - /root/emby/programdata:/config # Configuration directory
+      - /mnt/shared_configs/emby/programdata:/config # Configuration directory
       - /mnt/media/tvshows:/mnt/tvshows # Media directory
       - /mnt/media/movies:/mnt/movies # Media directory
     ports:

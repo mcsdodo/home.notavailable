@@ -33,7 +33,7 @@ services:
       - 18081:8080
     restart: unless-stopped
     volumes:
-      - /root/nut:/config
+      - /mnt/shared_configs/nut:/config
     environment:
       - WEB_PORT=8080
     networks:

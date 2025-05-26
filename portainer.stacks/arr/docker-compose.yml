@@ -2,7 +2,7 @@ services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     volumes:
-      - /root/sabnzbd:/config
+      - /mnt/shared_configs/sabnzbd:/config
       - /mnt/media/downloads/sabnzbd:/downloads #optional
     ports:
       - 5003:8080
@@ -17,7 +17,7 @@ services:
       - PGID=${PGID}
       - TZ=Europe/Bratislava
     volumes:
-      - /root/mylar3:/config
+      - /mnt/shared_configs/mylar3:/config
       - /mnt/media/comics:/comics
       - /mnt/downloads/comics:/downloads
       - /mnt/downloads/sabnzbd:/sabnzbddownloads
@@ -41,7 +41,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /root/sonarr:/config # config Folder
+      - /mnt/shared_configs/sonarr:/config # config Folder
       - /mnt/media/tvshows:/tvshows #data Folder  
       - /mnt/media/downloads:/downloads # download folder
     ports:
@@ -64,7 +64,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /root/radarr:/config # config files
+      - /mnt/shared_configs/radarr:/config # config files
       - /mnt/media/movies:/movies # movies folder
       - /mnt/media/downloads:/downloads # download folder
     ports:
@@ -85,7 +85,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /root/prowlarr:/config
+      - /mnt/shared_configs/prowlarr:/config
     restart: unless-stopped
     network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
     depends_on:                     #comment/remove if you are not using the VPN
@@ -107,7 +107,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /root/bazarr:/config
+      - /mnt/shared_configs/bazarr:/config
       - /mnt/media/movies:/movies
       - /mnt/media/tvshows:/tvshows
     network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
@@ -125,7 +125,7 @@ services:
       - TZ=Europe/Bratislava
       - DELUGE_LOGLEVEL=error #optional
     volumes:
-      - /root/deluge/config:/config
+      - /mnt/shared_configs/deluge/config:/config
       - /mnt/media/downloads:/downloads
       - /mnt/media/movies:/movies
       - /mnt/media/tvshows:/tvshows
@@ -146,7 +146,7 @@ services:
       - TZ=Europe/Bratislava
       - WEBUI_PORT=8085
     volumes:
-      - /root/qbittorrent:/config
+      - /mnt/shared_configs/qbittorrent:/config
       - /mnt/media/downloads:/downloads
       - /mnt/media/movies:/movies
       - /mnt/media/tvshows:/tvshows
@@ -184,7 +184,7 @@ services:
           - qbittorrent
           - bazarr
     volumes:
-      - /root/gluetun:/gluetun
+      - /mnt/shared_configs/gluetun:/gluetun
     environment:
       - PUID=${PUID:?err}
       - PGID=${PGID:?err}
@@ -216,7 +216,7 @@ services:
     ports:
       - 5055:5055
     volumes:
-      - /root/overseerr/config:/app/config
+      - /mnt/shared_configs/overseerr/config:/app/config
     restart: unless-stopped
     labels:
       kuma.__docker: ""     
