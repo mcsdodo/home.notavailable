@@ -135,7 +135,7 @@ services:
 volumes:
   tailscale-data:
     driver: local
-  postgres-data:
+    name: surveillance-compreface_tailscale-data
 
 networks:
   caddy:
