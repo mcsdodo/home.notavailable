@@ -6,7 +6,7 @@ services:
     ports:
       - '5004:8080'
     volumes:
-      - /root/stirlingpdf/configs:/configs
+      - /mnt/shared_configs/stirlingpdf/configs:/configs
     environment:
       - DOCKER_ENABLE_SECURITY=false
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
