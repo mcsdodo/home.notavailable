@@ -8,8 +8,8 @@ services:
     environment:
       - TZ=Europe/Bratislava
     volumes:
-      - codeproject_ai_data:/etc/codeproject/ai
-      - codeproject_ai_modules:/app/modules      
+      - /mnt/shared_configs/codeprojectai/codeproject_ai_data:/etc/codeproject/ai
+      - /mnt/shared_configs/codeprojectai/codeproject_ai_modules:/app/modules      
     network_mode: service:ts-codeproject-ai
     depends_on:
       - ts-codeproject-ai      
@@ -20,7 +20,9 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
+    labels:
+      autoheal: true
+      
   ts-codeproject-ai:
     image: tailscale/tailscale:latest
     hostname: ts-codeproject-ai
@@ -47,10 +49,9 @@ services:
       - default
       
 volumes:
-  codeproject_ai_data:
-  codeproject_ai_modules:              
   tailscale-data:
     driver: local
+    name: surveillance-codeprojectai_tailscale-data
 
 networks:
   caddy:
