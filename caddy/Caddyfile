@@ -30,11 +30,6 @@ wd.lan {
     tls internal
 }
 
-kodi.lan {
-    reverse_proxy 192.168.100.102:8080
-    tls internal
-}
-
 proxmox.lan {
     reverse_proxy {
         to 192.168.100.111:8006
@@ -50,28 +45,8 @@ portainer.lan {
     tls internal
 }
 
-chatgpt.lan {
-    reverse_proxy 192.168.100.112:8092
-    tls internal
-}
-
-dashy.lan {
-    reverse_proxy 192.168.100.112:8084
-    tls internal
-}
-
-grafana.lan {
-    reverse_proxy 192.168.100.112:3000
-    tls internal
-}
-
 loki.lan:80 {
     reverse_proxy 192.168.100.112:3100
-    tls internal
-}
-
-gotify.lan {
-    reverse_proxy 192.168.100.112:8091
     tls internal
 }
 
@@ -160,11 +135,22 @@ zigbee2mqtt.lan {
     tls internal
 }
 
-# Docker big server caddy
+garage-status.lan {
+    reverse_proxy 192.168.100.112:8080
+    tls internal
+}
+
+# Docker small server caddy
+http://*.lan {
+    reverse_proxy 192.168.100.113:80
+}
+
 *.lan {
     tls internal
-    reverse_proxy 192.168.100.212:80 {
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-Host {host}
-    }
+    reverse_proxy 192.168.100.113:80
+}
+
+http://*.testlan {
+#  tls internal
+  reverse_proxy 192.168.100.113:80
 }
