@@ -226,6 +226,23 @@ services:
     networks:
       - caddy
       - default
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+    volumes:
+      - /mnt/shared_configs/jellyseerr/config:/app/config
+    restart: unless-stopped
+    networks:
+      - caddy
+      - default
+    labels:
+      autoheal: true
+      caddy_0: http://jellyseerr.lan
+      caddy_0.reverse_proxy: "{{upstreams 5055}}"      
       
   scheduled-restarts:
     image: docker:cli
