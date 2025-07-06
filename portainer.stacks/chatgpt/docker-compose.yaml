@@ -7,7 +7,7 @@ services:
     ports:
       - "8092:8080"
     volumes:
-      - open-webui:/app/backend/data
+      - /root/chatgpt/open-webui:/app/backend/data
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     networks:
@@ -15,6 +15,7 @@ services:
     labels:
       caddy: http://chatgpt.lan
       caddy.reverse_proxy: "{{upstreams 8080}}"
+      autoheal: true
       
 volumes:
   open-webui:      
