@@ -5,26 +5,31 @@ I'm using layer4 to proxy mqtt traffic to my mqtt broker. Following configuratio
 ```
 {
     admin :2019 {
-		origins 192.168.100.2, 0.0.0.0, localhost
+		origins 192.168.0.2, 0.0.0.0, localhost
 	}
     layer4 {
 		mqtt.lan:8883 {
 			route {
 				proxy {
-					upstream 192.168.100.204:8883
+					upstream 192.168.0.204:8883
 				}
 			}
 		}
 		mqtt.lan:1883 {
 			route {
 				proxy {
-					upstream 192.168.100.204:1883
+					upstream 192.168.0.204:1883
 				}
 			}
 		}
 	}
 }
 ```
+
+## /etc/resolv.conf
+search local
+nameserver 192.168.0.121
+nameserver 192.168.0.122
 
 ## Install Go
 ```shell
@@ -88,7 +93,7 @@ EOF
 ```
 
 ## Trust caddy cert
-`caddy_windows_amd64.exe trust --address 192.168.100.2:2019`
+`caddy_windows_amd64.exe trust --address 192.168.0.2:2019`
 
 ## Test mqtt
 

@@ -15,8 +15,8 @@
 ## Mounts 
 ``nano /etc/fstab``
 
-192.168.100.101:/mnt/HD/HD_a2/Photos /mnt/pve/NotAvailableCldPhotos nfs nfsvers=3 0 0
-192.168.100.101:/mnt/HD/HD_a2/Public /mnt/pve/NotAvailableCldPublic nfs nfsvers=3 0 0
+192.168.0.101:/mnt/HD/HD_a2/Photos /mnt/pve/NotAvailableCldPhotos nfs nfsvers=3 0 0
+192.168.0.101:/mnt/HD/HD_a2/Public /mnt/pve/NotAvailableCldPublic nfs nfsvers=3 0 0
 
 https://community.home-assistant.io/t/google-coral-usb-frigate-proxmox/383737
 

@@ -26,7 +26,7 @@ with serve.json:
 {
   "TCP": {
     "1883": {
-      "TCPForward": "192.168.100.204:1883"
+      "TCPForward": "192.168.0.204:1883"
     }
   }
 }
