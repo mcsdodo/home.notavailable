@@ -1,7 +1,8 @@
 services:
   caddy:
     container_name: caddy
-    image: lucaslorentz/caddy-docker-proxy:latest
+    # image: lucaslorentz/caddy-docker-proxy:latest
+    image: dodo/caddy:cloudflare_w_docker_proxy
     restart: unless-stopped
     ports:
       - "80:80"
@@ -19,7 +20,7 @@ services:
       
     labels:
       caddy: "http://*.lan"
-      caddy.reverse_proxy: "192.168.100.213:80"
+      caddy.reverse_proxy: "192.168.0.213:80"
       autoheal: true
       
   webserver:
@@ -36,7 +37,53 @@ services:
       caddy.reverse_proxy: "{{upstreams 80}}"
     networks:
       - caddy
-    
+      
+  caddy-config:
+    container_name: caddy-config
+    image: traefik/whoami:latest
+    networks:
+      - caddy
+    restart: always
+    labels:
+      #### Global Settings ####
+      caddy_0.email: "${EMAIL}"
+      caddy_0.auto_https: prefer_wildcard
+
+      #### Snippets ####
+      # Get wildcard certificate
+      caddy_1: (wildcard)
+      caddy_1.tls.dns: "cloudflare ${CF_API_TOKEN}"
+      caddy_1.tls.resolvers: 1.1.1.1 1.0.0.1
+      caddy_1.handle.abort: ""
+
+      # Secure a site with Authelia
+      # caddy_2: (authelia)
+      # caddy_2.forward_auth: "{$$AUTH_HOST_INTERNAL}"
+      # caddy_2.forward_auth.uri: /api/verify?rd=https://{$$AUTH_HOST_EXTERNAL}
+      # caddy_2.forward_auth.copy_headers : Remote-User Remote-Groups Remote-Name Remote-Email
+
+      # Skip TLS verify for backend with self-signed HTTPS
+      caddy_3: (https)
+      caddy_3.transport: http
+      caddy_3.transport.tls: ""
+      caddy_3.transport.tls_insecure_skip_verify: ""
+
+      # Secure a site with Authentik
+      caddy_4: (authentik)
+      caddy_4.forward_auth: "authentik.lan"
+      caddy_4.forward_auth.uri: /outpost.goauthentik.io/auth/caddy
+      caddy_4.forward_auth.copy_headers : X-Authentik-Username X-Authentik-Groups X-Authentik-Entitlements X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
+      caddy_4.forward_auth.trusted_proxies: private_ranges
+
+      ## Setup wildcard sites
+      caddy_10: "*.${DOMAIN}"   #👈 Change to your domain
+      caddy_10.import: wildcard
+
+      # Add our first site, which this container itself
+      caddy_99: "whoami.${DOMAIN}"                       #👈 Subdomain using wildcard cert
+      caddy_99.reverse_proxy: "{{upstreams 80}}"         #👈 Container port
+      # caddy_99.import: auth                              #👈 Enable protection by Authelia
+  
 networks:
   caddy:
     name: caddy
@@ -48,4 +95,4 @@ networks:
     ipam:
       config:
         - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
-          gateway: ${MACVLAN_GATEWAY:-192.168.0.1/24}
+          gateway: ${MACVLAN_GATEWAY:-192.168.0.1}

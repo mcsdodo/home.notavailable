@@ -18,7 +18,7 @@ services:
         ipv4_address: ${MACVLAN_IP}
     labels:
       caddy: "http://*.lan"
-      caddy.reverse_proxy: "192.168.100.214:80"
+      caddy.reverse_proxy: "192.168.0.214:80"
       autoheal: true
   
   webserver:
@@ -47,4 +47,4 @@ networks:
     ipam:
       config:
         - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
-          gateway: ${MACVLAN_GATEWAY:-192.168.0.1/24}
+          gateway: ${MACVLAN_GATEWAY:-192.168.0.1}

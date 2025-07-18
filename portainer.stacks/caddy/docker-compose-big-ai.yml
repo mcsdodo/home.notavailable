@@ -45,4 +45,4 @@ networks:
     ipam:
       config:
         - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
-          gateway: ${MACVLAN_GATEWAY:-192.168.0.1/24}
+          gateway: ${MACVLAN_GATEWAY:-192.168.0.1}

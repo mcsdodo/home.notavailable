@@ -1,19 +1,19 @@
 {
     admin :2019 {
-        origins 192.168.100.2, 0.0.0.0, localhost
+        origins 192.168.0.2, 0.0.0.0, localhost
     }
     layer4 {
         mqtt.lan:8883 {
             route {
                 proxy {
-                    upstream 192.168.100.204:8883
+                    upstream 192.168.0.204:8883
                 }
             }
         }
         mqtt.lan:1883 {
             route {
                 proxy {
-                    upstream 192.168.100.204:1883
+                    upstream 192.168.0.204:1883
                 }
             }
         }
@@ -21,18 +21,18 @@
 }
 
 homeassistant.lan {
-    reverse_proxy 192.168.100.100:8123
+    reverse_proxy 192.168.0.100:8123
     tls internal
 }
 
 wd.lan {
-    reverse_proxy 192.168.100.101
+    reverse_proxy 192.168.0.101
     tls internal
 }
 
 proxmox.lan {
     reverse_proxy {
-        to 192.168.100.111:8006
+        to 192.168.0.111:8006
         transport http {
             tls_insecure_skip_verify
         }
@@ -41,22 +41,22 @@ proxmox.lan {
 }
 
 portainer.lan {
-    reverse_proxy 192.168.100.112:9000
+    reverse_proxy 192.168.0.112:9000
     tls internal
 }
 
 loki.lan:80 {
-    reverse_proxy 192.168.100.112:3100
+    reverse_proxy 192.168.0.112:3100
     tls internal
 }
 
 uptimekuma.lan {
-    reverse_proxy 192.168.100.112:3101
+    reverse_proxy 192.168.0.112:3101
     tls internal
 }
 
 alloy.lan {
-    reverse_proxy 192.168.100.112:12345
+    reverse_proxy 192.168.0.112:12345
     tls internal
 }
 
@@ -91,23 +91,23 @@ plug-na-6.lan {
 }
 
 adguard.lan {
-    reverse_proxy 192.168.100.121
+    reverse_proxy 192.168.0.121
     tls internal
 }
 
 adguard2.lan {
-    reverse_proxy 192.168.100.122
+    reverse_proxy 192.168.0.122
     tls internal
 }
 
 homeassistant-dev.lan {
-    reverse_proxy 192.168.100.123:8123
+    reverse_proxy 192.168.0.123:8123
     tls internal
 }
 
 proxmox2.lan {
     reverse_proxy {
-        to 192.168.100.200:8006
+        to 192.168.0.200:8006
         transport http {
             tls_insecure_skip_verify
         }
@@ -116,41 +116,41 @@ proxmox2.lan {
 }
 
 truenas.lan {
-    reverse_proxy 192.168.100.201
+    reverse_proxy 192.168.0.201
     tls internal
 }
 
 ubuntu.lan {
-    reverse_proxy 192.168.100.205
+    reverse_proxy 192.168.0.205
     tls internal
 }
 
 portainer2.lan {
-    reverse_proxy 192.168.100.212:9000
+    reverse_proxy 192.168.0.212:9000
     tls internal
 }
 
 zigbee2mqtt.lan {
-    reverse_proxy 192.168.100.114:8080
+    reverse_proxy 192.168.0.114:8080
     tls internal
 }
 
 garage-status.lan {
-    reverse_proxy 192.168.100.112:8080
+    reverse_proxy 192.168.0.112:8080
     tls internal
 }
 
 # Docker small server caddy
 http://*.lan {
-    reverse_proxy 192.168.100.113:80
+    reverse_proxy 192.168.0.113:80
 }
 
 *.lan {
     tls internal
-    reverse_proxy 192.168.100.113:80
+    reverse_proxy 192.168.0.113:80
 }
 
 http://*.testlan {
 #  tls internal
-  reverse_proxy 192.168.100.113:80
+  reverse_proxy 192.168.0.113:80
 }

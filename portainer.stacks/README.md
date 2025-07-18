@@ -5,8 +5,8 @@ docker run -d -p 9000:9000 --name portainer --restart=always -v /var/run/docker.
 # Proxmox mounts
 ``nano /etc/fstab``
 
-192.168.100.101:/mnt/HD/HD_a2/Photos /mnt/pve/NotAvailableCldPhotos nfs nfsvers=3 0 0
-192.168.100.101:/mnt/HD/HD_a2/Public /mnt/pve/NotAvailableCldPublic nfs nfsvers=3 0 0
+192.168.0.101:/mnt/HD/HD_a2/Photos /mnt/pve/NotAvailableCldPhotos nfs nfsvers=3 0 0
+192.168.0.101:/mnt/HD/HD_a2/Public /mnt/pve/NotAvailableCldPublic nfs nfsvers=3 0 0
 
 # LXC MPs
 
@@ -25,7 +25,7 @@ mp1: /mnt/pve/immich,mp=/mnt/immich
 mp2: /mnt/pve/NotAvailableCloudPublic/Media/,mp=/mnt/oldmedia
 
 # Trust caddy cert
-caddy_windows_amd64.exe trust --address 192.168.100.2:2019
+caddy_windows_amd64.exe trust --address 192.168.0.2:2019
 
 
 # To run portainer on multiple LXCs and manage from one install portainer-agent
