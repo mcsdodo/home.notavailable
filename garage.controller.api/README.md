@@ -110,6 +110,23 @@ a LXC runnig tailscale needs to have following mount:
 
 Run ``sudo tailscale up --accept-routes --advertise-routes=192.168.0.0/24`` on PiZero.
 
-Run ``sudo tailscale up --advertise-routes=192.168.0.112/32,192.168.204/32 --accept-routes`` on local infrastructure.
+
+Caddy chain:
+1. 192.168.0.2 - LXC
+2. 192.168.0.113 - Proxmox1 (small)
+3. 192.168.0.213 - Proxmox2 (media)
+4. 192.168.0.214 - Proxmox3 (ai)
+
+### Main all proxmox servers
+``tailscale up --accept-dns=false --reset``
+
+### Small server
+
+Run ``sudo tailscale up --advertise-routes=192.168.0.2/32,192.168.0.121/32,192.168.0.204/32,192.168.0.112/32,192.168.0.113/32,192.168.0.10/32,192.168.0.11/32,192.168.0.12/32,192.168.0.13/32,192.168.0.14/32 --accept-routes --accept-dns=false`` on local infrastructure.
+
+### Big server
+```sudo tailscale up --advertise-routes=192.168.0.115/32,192.168.0.208/32,192.168.0.122/32,192.168.0.212/32,192.168.0.201/32,192.168.0.213/32,192.168.0.214/32,,192.168.0.235/32 --accept-routes --accept-dns=false```
 
 Home assistant runs https://github.com/lmagyar/homeassistant-addon-tailscale addon.
+
+

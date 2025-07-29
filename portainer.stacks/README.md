@@ -36,5 +36,5 @@ docker run -d \
   --restart=always \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /var/lib/docker/volumes:/var/lib/docker/volumes \
-  portainer/agent:2.27.1
+  portainer/agent:2.27.9
 ```

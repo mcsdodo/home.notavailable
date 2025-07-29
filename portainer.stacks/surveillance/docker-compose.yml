@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     environment:
       - TZ=Europe/Bratislava
+
     labels:
       autoheal: true
 
@@ -15,7 +16,7 @@ services:
     container_name: surveillance-frigate
     privileged: true # this may not be necessary for all setups
     restart: unless-stopped
-    image: ghcr.io/blakeblackshear/frigate:0.16.0-beta2
+    image: ghcr.io/blakeblackshear/frigate:0.16.0-beta4
     shm_size: "580mb" # update for your cameras based on calculation above
     devices:
       - /dev/bus/usb:/dev/bus/usb  # Passes the USB Coral, needs to be modified for other versions
@@ -48,6 +49,7 @@ services:
       autoheal: true
       
   ts-frigate:
+    container_name: surveillance-ts-frigate
     image: tailscale/tailscale:latest
     hostname: ts-frigate
     environment:
@@ -86,6 +88,7 @@ services:
       autoheal: true
 
   ts-double-take:
+    container_name: surveillance-ts-double-take
     image: tailscale/tailscale:latest
     hostname: ts-double-take
     environment:
@@ -104,6 +107,21 @@ services:
       autoheal: true
     ports:
       - "5014:3000" 
+
+  scheduled-restarts:
+    image: docker:cli
+    restart: unless-stopped
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        while true; do
+          if [ "$$(date +'%H:%M')" = '02:00' ]; then
+            docker restart surveillance-frigate
+            docker restart surveillance-ts-frigate
+          fi
+          sleep 60
+        done
 
 volumes:
   tailscale-data-1:
