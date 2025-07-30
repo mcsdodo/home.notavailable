@@ -52,6 +52,11 @@ services:
     restart: unless-stopped
     labels:
       kuma.__docker: ""
+    environment:
+      ORIGIN_USERNAME: ${ORIGIN_USERNAME}
+      ORIGIN_PASSWORD: ${ORIGIN_PASSWORD}
+      REPLICA1_USERNAME: ${REPLICA1_USERNAME}
+      REPLICA1_PASSWORD: ${REPLICA1_PASSWORD}
 
 networks:
   caddy:
