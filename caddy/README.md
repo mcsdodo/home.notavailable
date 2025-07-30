@@ -5,7 +5,7 @@ I'm using layer4 to proxy mqtt traffic to my mqtt broker. Following configuratio
 ```
 {
     admin :2019 {
-		origins 192.168.0.2, 0.0.0.0, localhost
+		origins 192.168.0.20, 0.0.0.0, localhost
 	}
     layer4 {
 		mqtt.lan:8883 {
@@ -93,8 +93,15 @@ EOF
 ```
 
 ## Trust caddy cert
-`caddy_windows_amd64.exe trust --address 192.168.0.2:2019`
+`caddy_windows_amd64.exe trust --address 192.168.0.20:2019`
 
 ## Test mqtt
 
 `mosquitto_sub -h mqtt.lan -t espresense/# -u **** -P ****`
+
+
+## Caddy chain:
+1. 192.168.0.20 - LXC
+2. 192.168.0.21 - Proxmox1 (small)
+3. 192.168.0.22 - Proxmox2 (media)
+4. 192.168.0.23 - Proxmox3 (ai)

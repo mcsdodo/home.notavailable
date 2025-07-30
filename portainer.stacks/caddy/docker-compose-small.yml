@@ -16,11 +16,11 @@ services:
     networks:
       caddy:
       macvlan0:
-        ipv4_address: ${MACVLAN_IP}
+        ipv4_address: 192.168.0.21
       
     labels:
       caddy: "http://*.lan"
-      caddy.reverse_proxy: "192.168.0.213:80"
+      caddy.reverse_proxy: "192.168.0.22:80" #213 in big-media
       autoheal: true
       
   webserver:

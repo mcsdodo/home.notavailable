@@ -15,10 +15,10 @@ services:
     networks:
       caddy:
       macvlan0:
-        ipv4_address: ${MACVLAN_IP}
+        ipv4_address: 192.168.0.22
     labels:
       caddy: "http://*.lan"
-      caddy.reverse_proxy: "192.168.0.214:80"
+      caddy.reverse_proxy: "192.168.0.23:80" #214 in big-ai
       autoheal: true
   
   webserver:
