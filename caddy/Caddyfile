@@ -1,6 +1,6 @@
 {
     admin :2019 {
-        origins 192.168.0.2, 0.0.0.0, localhost
+        origins 192.168.0.20, 0.0.0.0, localhost
     }
     layer4 {
         mqtt.lan:8883 {
