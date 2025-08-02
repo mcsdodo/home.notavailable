@@ -45,21 +45,6 @@ portainer.lan {
     tls internal
 }
 
-loki.lan:80 {
-    reverse_proxy 192.168.0.112:3100
-    tls internal
-}
-
-uptimekuma.lan {
-    reverse_proxy 192.168.0.112:3101
-    tls internal
-}
-
-alloy.lan {
-    reverse_proxy 192.168.0.112:12345
-    tls internal
-}
-
 plug-na-1.lan {
     reverse_proxy 192.168.100.151
     tls internal
@@ -122,11 +107,6 @@ truenas.lan {
 
 ubuntu.lan {
     reverse_proxy 192.168.0.205
-    tls internal
-}
-
-portainer2.lan {
-    reverse_proxy 192.168.0.212:9000
     tls internal
 }
 
