@@ -8,7 +8,7 @@ services:
       kuma.__docker: ""
       
   db:
-    image: docker.io/library/postgres:15
+    image: docker.io/library/postgres:17
     restart: unless-stopped
     volumes:
       - /mnt/shared_configs/paperless/pgdata:/var/lib/postgresql/data
@@ -20,7 +20,7 @@ services:
       kuma.__docker: ""
       
   webserver:
-    image: ghcr.io/paperless-ngx/paperless-ngx:2.13.5
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.17.1
     restart: unless-stopped
     depends_on:
       - db
@@ -70,11 +70,6 @@ services:
       - caddy
       - default
       
-volumes:
-  data:
-  media:
-  pgdata:
-  redisdata:
 networks:
   caddy:
     external: true
