@@ -80,7 +80,7 @@ First version did use GSM hat for internet connection, Cloudflare for tunneling 
 
 
 https://raspi.tv/2013/rpi-gpio-basics-7-rpi-gpio-cheat-sheet-and-pointers-to-rpi-gpio-advanced-tutorials#top
-https://create.withcode.uk/python/A3
+https://create.withcode.uk/python/A3a
 
 # GPU passthrough
 
@@ -92,3 +92,22 @@ https://www.reddit.com/r/homelab/comments/b5xpua/the_ultimate_beginners_guide_to
 
 
 echo "options vfio-pci ids=10de:1c03,10de:10f1 disable_vga=1"> /etc/modprobe.d/vfio.conf
+
+## Tailscale networking
+
+a LXC runnig tailscale needs to have following mount:
+``lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file``
+
+Run ``sudo tailscale up --accept-routes --advertise-routes=192.168.0.0/24`` on PiZero.
+
+### Main all proxmox servers
+``tailscale up --accept-dns=false --reset``
+
+### Small server
+
+Run ``sudo tailscale up --advertise-routes=192.168.0.20/32,192.168.0.21/32,192.168.0.121/32,192.168.0.204/32,192.168.0.112/32,192.168.0.113/32,192.168.0.10/32,192.168.0.11/32,192.168.0.12/32,192.168.0.13/32,192.168.0.14/32,192.168.0.15/32,192.168.0.2/32 --accept-routes --accept-dns=false --advertise-exit-node`` on local infrastructure.
+
+Run ``sudo tailscale up --advertise-routes=192.168.0.20/32,192.168.0.121/32,192.168.0.204/32,192.168.0.112/32,192.168.0.113/32,192.168.0.10/32,192.168.0.11/32,192.168.0.12/32,192.168.0.13/32,192.168.0.14/32,192.168.0.15/32,192.168.0.2/32 --accept-routes --accept-dns=false --advertise-exit-node``
+
+### Big server
+```sudo tailscale up --advertise-routes=192.168.0.115/32,192.168.0.208/32,192.168.0.122/32,192.168.0.212/32,192.168.0.201/32,192.168.0.213/32,192.168.0.214/32,,192.168.0.235/32 --accept-routes --accept-dns=false```
