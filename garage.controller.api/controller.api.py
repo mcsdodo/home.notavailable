@@ -38,7 +38,7 @@ def do_POST():
 @app.get('/')
 def do_GET():
     return {
-        'state' : getState()
+        'state': getState()
     }
 
 @app.post('/open-ramp')

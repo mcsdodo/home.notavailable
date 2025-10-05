@@ -21,18 +21,32 @@ services:
       autoheal: true      
       caddy: http://jellyfin.lan
       caddy.reverse_proxy: "{{upstreams 8096}}"   
-    runtime: nvidia
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]    
+    # runtime: nvidia
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]    
     networks:
       - arr_default
       - caddy
-
+      
+  scheduled-restarts:
+    image: docker:cli
+    restart: unless-stopped
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        while true; do
+          if [ "$$(date +'%H:%M')" = '04:00' ]; then
+            docker restart jellyfin
+          fi
+          sleep 60
+        done
+        
 networks:
   arr_default:
     external: true

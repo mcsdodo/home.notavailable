@@ -28,7 +28,8 @@ services:
       kuma.__docker: ""
       autoheal: true
       caddy: http://plex.lan
-      caddy.reverse_proxy: "{{upstreams 32400}}"        
+      caddy.reverse_proxy: "{{upstreams 32400}}"
+      caddy.reverse_proxy.header_up: -X-Forwarded-For
     networks:
       - arr_default
       - caddy
