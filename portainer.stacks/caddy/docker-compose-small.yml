@@ -13,14 +13,15 @@ services:
     environment:
       - TZ=Europe/Bratislava
       - CADDY_INGRESS_NETWORKS=caddy
+      # - CF_API_TOKEN=${CF_API_TOKEN}
     networks:
       caddy:
       macvlan0:
         ipv4_address: 192.168.0.21
       
     labels:
-      caddy: "http://*.lan"
-      caddy.reverse_proxy: "192.168.0.22:80" #213 in big-media
+      caddy: http://*.lan
+      caddy.reverse_proxy: "192.168.0.22:80"
       autoheal: true
       
   webserver:
@@ -44,6 +45,8 @@ services:
     networks:
       - caddy
     restart: always
+    ports: 
+      - "8121:80"
     labels:
       #### Global Settings ####
       caddy_0.email: "${EMAIL}"
@@ -83,6 +86,24 @@ services:
       caddy_99: "whoami.${DOMAIN}"                       #👈 Subdomain using wildcard cert
       caddy_99.reverse_proxy: "{{upstreams 80}}"         #👈 Container port
       # caddy_99.import: auth                              #👈 Enable protection by Authelia
+
+      caddy_111: http://zigbee2mqtt.lan
+      caddy_111.reverse_proxy: 192.168.0.114:8080
+
+      caddy_112: http://zwave-js-ui.lan
+      caddy_112.reverse_proxy: 192.168.0.237:8091
+
+      caddy_113: http://nvr.lan
+      caddy_113.reverse_proxy: 192.168.0.10
+
+      caddy_114: http://nvo.lan
+      caddy_114.reverse_proxy: 192.168.0.15
+
+      caddy_115: http://frigate.lan
+      caddy_115.reverse_proxy: 192.168.0.235:5011
+
+      caddy_116: http://frigate-gpu.lan
+      caddy_116.reverse_proxy: 192.168.0.115:5012
   
 networks:
   caddy:
