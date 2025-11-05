@@ -93,6 +93,10 @@ services:
       autoheal: true
       caddy_0: http://overseerr.lan, http://requests.lan
       caddy_0.reverse_proxy: "{{upstreams 5055}}"
+      dockflare.enable: true
+      dockflare.hostname: requests.notavailable.uk
+      dockflare.service: http://requests.lan
+      dockflare.httpHostHeader: requests.lan
     networks:
       - caddy
       - default
