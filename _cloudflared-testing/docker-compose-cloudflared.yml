@@ -1,0 +1,129 @@
+services:
+  webserver:
+    image: hashicorp/http-echo
+    environment:
+      - ECHO_TEXT=WEBSERVER
+    command: [
+      "-listen=:80",
+      "-text=${ECHO_TEXT}"
+    ]      
+    labels: 
+      caddy: http://webserver.lan
+      caddy.reverse_proxy: "{{upstreams 80}}"
+      dockflare.enable: "true"
+      dockflare.hostname: test2.173591.xyz
+      dockflare.service: http://webserver:80
+    networks:
+      - dockflare-internal
+
+  webserver2:
+    image: hashicorp/http-echo
+    environment:
+      - ECHO_TEXT=WEBSERVER
+    command: [
+      "-listen=:80",
+      "-text=${ECHO_TEXT}"
+    ]      
+    labels: 
+      caddy: http://another.lan
+      caddy.reverse_proxy: "{{upstreams 80}}"      
+      dockflare.enable: true
+      dockflare.hostname: test.173591.xyz
+      dockflare.service: http://webserver2:80
+    networks:
+      - dockflare-internal
+
+  my-service:
+    image: nginx:latest
+    labels:
+      - "dockflare.enable=true"
+      - "dockflare.hostname=my-service.173591.xyz"
+      - "dockflare.service=http://my-service:80"
+    networks:
+      - dockflare-internal
+
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    hostname: cloudflare-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    healthcheck:
+      test: ["CMD", "cloudflared", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - dockflare-internal
+
+  dockflare:
+    image: alplat/dockflare:stable
+    container_name: dockflare
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - dockflare_data:/app/data
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_DB_INDEX=0  # Optional: specify Redis database index (0-15) for isolation from other containers
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+      - LOG_LEVEL=ERROR
+      - USE_EXTERNAL_CLOUDFLARED=true
+      - EXTERNAL_TUNNEL_ID=${EXTERNAL_TUNNEL_ID}
+      - CF_API_TOKEN=${CF_API_TOKEN}
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_ZONE_ID=${CF_ZONE_ID}
+    depends_on:
+      redis:
+        condition: service_started
+      docker-socket-proxy:
+        condition: service_started 
+      cloudflare-tunnel:
+        condition: service_started       
+    networks:
+      - dockflare-internal   
+
+  redis:
+    image: redis:7-alpine
+    container_name: dockflare-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    volumes:
+      - dockflare_redis:/data
+    networks:
+      - dockflare-internal
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.4.1
+    logging:
+      driver: "none"  # Minimize the logs, remove for verbose
+    container_name: docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - CONTAINERS=1
+      - EVENTS=1
+      - NETWORKS=1
+      - IMAGES=1
+      - POST=1
+      - PING=1
+      - INFO=1
+      - EXEC=1
+      - VOLUMES=1
+      - SERVICES=1
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - dockflare-internal
+
+volumes:
+  dockflare_data:
+  dockflare_redis:
+
+networks:
+  dockflare-internal:
+    name: dockflare-internal  
