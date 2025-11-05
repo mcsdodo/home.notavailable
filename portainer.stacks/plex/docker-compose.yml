@@ -30,6 +30,10 @@ services:
       caddy: http://plex.lan
       caddy.reverse_proxy: "{{upstreams 32400}}"
       caddy.reverse_proxy.header_up: -X-Forwarded-For
+      dockflare.enable: true
+      dockflare.hostname: plex.notavailable.uk
+      dockflare.service: http://plex.lan
+      dockflare.httpHostHeader: plex.lan      
     networks:
       - arr_default
       - caddy

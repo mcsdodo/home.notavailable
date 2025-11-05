@@ -20,6 +20,10 @@ services:
       autoheal: true
       caddy: http://emby.lan
       caddy.reverse_proxy: "{{upstreams 8096}}"
+      dockflare.enable: true
+      dockflare.hostname: emby.notavailable.uk
+      dockflare.service: http://emby.lan
+      dockflare.httpHostHeader: emby.lan
     networks:
       - arr_default
       - caddy
