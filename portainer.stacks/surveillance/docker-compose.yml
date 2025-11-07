@@ -1,31 +1,19 @@
 services:
-  frigate_plate_recognizer:
-    image: lmerza/frigate_plate_recognizer:latest
-    container_name: frigate_plate_recognizer
-    volumes:
-      - /root/surveillance/frigate_plate_recognizer/config:/config # config.yml location
-      - /mnt/frigate/license-plates:/plates:rw
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/Bratislava
-
-    labels:
-      autoheal: true
-
   frigate:
     container_name: surveillance-frigate
     privileged: true # this may not be necessary for all setups
     restart: unless-stopped
-    image: ghcr.io/blakeblackshear/frigate:0.16.0-beta4
+    image: ghcr.io/blakeblackshear/frigate:0.16.1
     shm_size: "580mb" # update for your cameras based on calculation above
     devices:
       - /dev/bus/usb:/dev/bus/usb  # Passes the USB Coral, needs to be modified for other versions
       - /dev/dri/renderD128 
+      - /dev/dri
+      - /dev/kfd
     volumes:
-      # - /etc/localtime:/etc/localtime:ro
       - /root/surveillance/frigate:/config # config.yml location
-      - /mnt/frigate:/media/frigate # NAS - remote
-      # - /mnt/frigate-usb:/media/frigate # local usb disk
+      # - /mnt/frigate:/media/frigate # NAS - remote
+      - /mnt/frigate-local:/media/frigate # local HDD
       - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
         target: /tmp/cache
         tmpfs:
@@ -36,34 +24,18 @@ services:
       - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD}
       - TZ=Europe/Bratislava
       - LIBVA_DRIVER_NAME=radeonsi
-    network_mode: service:ts-frigate
-    depends_on:
-      - ts-frigate
-    healthcheck:
-      test: curl --fail http://localhost:5000/api/version || exit 1
-      interval: 30s
-      retries: 3
-      start_period: 30s
-      timeout: 1s
-    labels:
-      autoheal: true
-      
-  ts-frigate:
-    container_name: surveillance-ts-frigate
-    image: tailscale/tailscale:latest
-    hostname: ts-frigate
-    environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-    volumes:
-      - tailscale-data-1:/var/lib/tailscale
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    restart: unless-stopped
+    # healthcheck:
+    #   test: curl --fail http://localhost:5000/api/version || exit 1
+    #   interval: 30s
+    #   retries: 3
+    #   start_period: 30s
+    #   timeout: 1s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://frigate:5011/api/stats"]
+    #   interval: 1m
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s    
     labels:
       autoheal: true
     ports:
@@ -72,42 +44,8 @@ services:
       - "8555:8555/udp" # WebRTC over udp
       - "8971:8971" # New restricted access port in >= v14.0     
       - "5011:5000"
-
-  double-take:
-    container_name: surveillance-double-take
-    # image: jakowenko/double-take:1.13.1
-    image: skrashevich/double-take:v1.13.11.8
-    restart: unless-stopped
-    volumes:
-      # - double-take:/.storage
-      - /root/surveillance/double-take:/.storage # /config/config.yml location
-    network_mode: service:ts-double-take
-    depends_on:
-      - ts-double-take
-    labels:
-      autoheal: true
-
-  ts-double-take:
-    container_name: surveillance-ts-double-take
-    image: tailscale/tailscale:latest
-    hostname: ts-double-take
-    environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-    volumes:
-      - tailscale-data-2:/var/lib/tailscale
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    restart: unless-stopped
-    labels:
-      autoheal: true
-    ports:
-      - "5014:3000" 
-
+      - "1984:1984"
+      
   scheduled-restarts:
     image: docker:cli
     restart: unless-stopped
@@ -118,13 +56,16 @@ services:
         while true; do
           if [ "$$(date +'%H:%M')" = '02:00' ]; then
             docker restart surveillance-frigate
-            docker restart surveillance-ts-frigate
           fi
           sleep 60
         done
 
-volumes:
-  tailscale-data-1:
-    driver: local
-  tailscale-data-2:
-    driver: local    
+  # rtsp-camera:
+  #   container_name: rtsp-camera
+  #   image: kerberos/virtual-rtsp:1.0.6
+  #   volumes:
+  #     - /mnt/frigate/recordings:/recordings # NAS - remote
+  #   ports:
+  #     - "554:8554"
+  #   environment:
+  #     - SOURCE_URL=file:///recordings/2025-03-24/14/garaz-von/30.09.mp4 
