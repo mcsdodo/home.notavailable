@@ -17,6 +17,11 @@ this repo contains scripts and apps used in my garage automation and some of my 
 
 [Server setup](server.md)
 
+## Garage:v4
+Used this ![this setup](https://simplyexplained.com/uploads/2020-06-smart-garage-door-shelly-home-assistant/shelly-schematic-dc.webp) from [simplyexplained.com](https://simplyexplained.com/blog/make-garage-door-opener-smart-shelly-esphome-home-assistant/) to wire the garage door sensor to Shelly 1 powered by garage motor 24V DC supply.
+
+All code moved to [_archive/](/_archive/) folder.
+
 ## Garage:v3
 Added esppresence instance to garage. Now the "garage is opened" notification only fires when I'm not in the garage. The esp does not have direct access to mqtt broker, so I utilized [tailscale serve](https://tailscale.com/kb/1312/serve) with hacky configuration to forward TCP traffic.
 `cat serve.json | sudo tailscale serve set-raw`
