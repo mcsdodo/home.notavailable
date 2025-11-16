@@ -153,3 +153,4 @@ cython_debug/
 local.test.http
 **/secrets.ini
 .env
+caddy-agent.tar.gz

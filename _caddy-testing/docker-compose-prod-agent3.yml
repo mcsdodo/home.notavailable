@@ -1,0 +1,27 @@
+services:
+  caddy-agent:
+    image: caddy-agent:latest
+    container_name: caddy-agent-remote3
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - AGENT_MODE=agent
+      - AGENT_ID=host3-remote
+      - CADDY_SERVER_URL=http://192.168.0.96:2019
+      - HOST_IP=192.168.0.99
+      - DOCKER_LABEL_PREFIX=caddy
+    network_mode: host
+
+  # Test service - remote container on host3
+  test-host3:
+    image: hashicorp/http-echo
+    container_name: test-host3
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9000
+      - -text=Hello from host3
+    labels:
+      caddy: test-host3.lan
+      caddy.reverse_proxy: 192.168.0.99:9000
