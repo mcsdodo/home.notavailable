@@ -3,25 +3,31 @@ services:
     image: caddy:2
     container_name: caddy-server
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2019:2019"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - caddy
 
   caddy-agent:
     image: caddy-agent:latest
     container_name: caddy-agent-server
     restart: unless-stopped
-    network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - AGENT_MODE=server
       - AGENT_ID=host1-server
-      - CADDY_API_URL=http://localhost:2019
+      - CADDY_API_URL=http://caddy:2019
       - DOCKER_LABEL_PREFIX=caddy
     depends_on:
+      - caddy
+    networks:
       - caddy
 
   # Test service - local container
@@ -29,13 +35,14 @@ services:
     image: hashicorp/http-echo
     container_name: test-local
     restart: unless-stopped
-    network_mode: host
     command:
       - -listen=:8081
       - -text=Hello from host1
     labels:
       caddy: test-local.lan
-      caddy.reverse_proxy: localhost:8081
+      caddy.reverse_proxy: test-local:8081
+    networks:
+      - caddy
 
 volumes:
   caddy_data:
