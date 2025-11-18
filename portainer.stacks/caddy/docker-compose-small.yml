@@ -13,7 +13,8 @@ services:
     environment:
       - TZ=Europe/Bratislava
       - CADDY_INGRESS_NETWORKS=caddy
-      # - CF_API_TOKEN=${CF_API_TOKEN}
+      - CLOUDFLARE_ZONE_TOKEN=${CF_API_TOKEN}
+      - CF_ZONE_ID_LACNY_ME=${CF_ZONE_ID_LACNY_ME}
     networks:
       caddy:
       macvlan0:
@@ -22,6 +23,8 @@ services:
     labels:
       caddy: http://*.lan
       caddy.reverse_proxy: "192.168.0.22:80"
+      caddy_1: "*.lacny.me"
+      caddy_1.reverse_proxy: "192.168.0.22:80"
       autoheal: true
       
   webserver:
@@ -34,8 +37,8 @@ services:
       "-text=${ECHO_TEXT}"
     ]      
     labels: 
-      caddy: ${WEBSERVER_DOMAIN:-http://webserver.lan}
-      caddy.reverse_proxy: "{{upstreams 80}}"
+      caddy_0: ${WEBSERVER_DOMAIN:-http://webserver.lan}, app.lacny.me
+      caddy_0.reverse_proxy: "{{upstreams 80}}"
     networks:
       - caddy
       
@@ -59,41 +62,26 @@ services:
       caddy_1.tls.resolvers: 1.1.1.1 1.0.0.1
       caddy_1.handle.abort: ""
 
-      # Secure a site with Authelia
-      # caddy_2: (authelia)
-      # caddy_2.forward_auth: "{$$AUTH_HOST_INTERNAL}"
-      # caddy_2.forward_auth.uri: /api/verify?rd=https://{$$AUTH_HOST_EXTERNAL}
-      # caddy_2.forward_auth.copy_headers : Remote-User Remote-Groups Remote-Name Remote-Email
-
       # Skip TLS verify for backend with self-signed HTTPS
       caddy_3: (https)
       caddy_3.transport: http
       caddy_3.transport.tls: ""
       caddy_3.transport.tls_insecure_skip_verify: ""
 
-      # Secure a site with Authentik
-      caddy_4: (authentik)
-      caddy_4.forward_auth: "authentik.lan"
-      caddy_4.forward_auth.uri: /outpost.goauthentik.io/auth/caddy
-      caddy_4.forward_auth.copy_headers : X-Authentik-Username X-Authentik-Groups X-Authentik-Entitlements X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-      caddy_4.forward_auth.trusted_proxies: private_ranges
-
       ## Setup wildcard sites
-      caddy_10: "*.${DOMAIN}"   #👈 Change to your domain
+      caddy_10: "*.lacny.me"
       caddy_10.import: wildcard
+      
+      caddy_11: "*.notavailable.uk"
+      caddy_11.import: wildcard
 
-      # Add our first site, which this container itself
-      caddy_99: "whoami.${DOMAIN}"                       #👈 Subdomain using wildcard cert
-      caddy_99.reverse_proxy: "{{upstreams 80}}"         #👈 Container port
-      # caddy_99.import: auth                              #👈 Enable protection by Authelia
-
-      caddy_111: http://zigbee2mqtt.lan
+      caddy_111: http://zigbee2mqtt.lan, zigbee2mqtt.lacny.me
       caddy_111.reverse_proxy: 192.168.0.114:8080
 
-      caddy_112: http://zwave-js-ui.lan
+      caddy_112: http://zwave-js-ui.lan, zwave-js-ui.lacny.me
       caddy_112.reverse_proxy: 192.168.0.237:8091
 
-      caddy_113: http://nvr.lan
+      caddy_113: http://nvr.lan, nvr.lacny.me
       caddy_113.reverse_proxy: 192.168.0.10
 
       caddy_114: http://nvo.lan
@@ -102,7 +90,7 @@ services:
       caddy_115: http://frigate.lan
       caddy_115.reverse_proxy: 192.168.0.235:5011
 
-      caddy_116: http://frigate-gpu.lan
+      caddy_116: http://frigate-gpu.lan, frigate-gpu.lacny.me
       caddy_116.reverse_proxy: 192.168.0.115:5012
   
 networks:
