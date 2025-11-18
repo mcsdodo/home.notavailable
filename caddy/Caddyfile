@@ -3,6 +3,7 @@
         origins 192.168.0.20, 0.0.0.0, localhost
     }
     layer4 {
+        # MQTT proxies
         mqtt.lan:8883 {
             route {
                 proxy {
@@ -14,6 +15,16 @@
             route {
                 proxy {
                     upstream 192.168.0.204:1883
+                }
+            }
+        }
+
+        # SNI routing for lacny.me - pass through to small caddy
+        :443 {
+            @lacny tls sni *.lacny.me
+            route @lacny {
+                proxy {
+                    upstream 192.168.0.21:443
                 }
             }
         }
@@ -122,15 +133,20 @@ garage-status.lan {
 
 # Docker small server caddy
 http://*.lan {
-    reverse_proxy 192.168.0.113:80
+    reverse_proxy 192.168.0.21:80
 }
 
 *.lan {
     tls internal
-    reverse_proxy 192.168.0.113:80
+    reverse_proxy 192.168.0.21:80
 }
 
 http://*.testlan {
 #  tls internal
   reverse_proxy 192.168.0.113:80
+}
+
+# HTTP (port 80) requests for lacny.me - redirect or proxy to small caddy
+http://*.lacny.me {
+    reverse_proxy 192.168.0.21:80
 }
