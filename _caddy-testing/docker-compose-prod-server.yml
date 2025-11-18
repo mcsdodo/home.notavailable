@@ -3,52 +3,84 @@ services:
     image: caddy:2
     container_name: caddy-server
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "2019:2019"
+    network_mode: host
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
-    networks:
-      - caddy
 
   caddy-agent:
-    image: caddy-agent:latest
+    image: caddy-agent:phase2
     container_name: caddy-agent-server
     restart: unless-stopped
+    network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - AGENT_MODE=server
       - AGENT_ID=host1-server
-      - CADDY_API_URL=http://caddy:2019
+      - CADDY_API_URL=http://localhost:2019
       - DOCKER_LABEL_PREFIX=caddy
     depends_on:
       - caddy
-    networks:
-      - caddy
 
-  # Test service - local container
+  # Test service - backward compatibility (simple labels)
   test-local:
     image: hashicorp/http-echo
     container_name: test-local
     restart: unless-stopped
+    network_mode: host
     command:
       - -listen=:8081
-      - -text=Hello from host1
+      - -text=Hello from host1 - simple label
     labels:
       caddy: test-local.lan
-      caddy.reverse_proxy: test-local:8081
-    networks:
-      - caddy
+      caddy.reverse_proxy: 192.168.0.96:8081
+
+  # Phase 1 test - numbered labels
+  test-numbered:
+    image: hashicorp/http-echo
+    container_name: test-numbered
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:8082
+      - -text=Route 0 from host1
+    labels:
+      caddy_0: test-numbered-0.lan
+      caddy_0.reverse_proxy: 192.168.0.96:8082
+      caddy_1: test-numbered-1.lan
+      caddy_1.reverse_proxy: 192.168.0.96:8082
+
+  # Phase 1 test - multiple domains
+  test-multi-domain:
+    image: hashicorp/http-echo
+    container_name: test-multi-domain
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:8083
+      - -text=Multi-domain service on host1
+    labels:
+      caddy: test-multi-a.lan, test-multi-b.lan, test-multi-c.lan
+      caddy.reverse_proxy: 192.168.0.96:8083
+
+  # Phase 2 test - global settings + snippet definition
+  test-globals-snippet:
+    image: hashicorp/http-echo
+    container_name: test-globals-snippet
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:8084
+      - -text=Phase 2 - Global settings and snippets on host1
+    labels:
+      caddy_0.email: admin@example.local
+      caddy_0.auto_https: prefer_wildcard
+      caddy_1: (test_snippet)
+      caddy_1.handle.abort: ""
+      caddy_10: phase2-globals.lan
+      caddy_10.reverse_proxy: 192.168.0.96:8084
 
 volumes:
   caddy_data:
   caddy_config:
-
-networks:
-  caddy:
-    name: caddy
-    driver: bridge
