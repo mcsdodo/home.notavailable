@@ -69,8 +69,12 @@ def get_target_caddy_url():
 def get_caddy_routes():
     """Get routes from Docker containers based on labels"""
     routes = []
+    global_settings = {}
+    snippets = {}
     host_ip = HOST_IP or detect_host_ip() if AGENT_MODE == "agent" else None
 
+    # First pass: collect snippets and global settings
+    containers = []
     for container in client.containers.list():
         labels = container.attrs['Config']['Labels']
         if not labels:
@@ -81,66 +85,349 @@ def get_caddy_routes():
             filter_key, filter_value = AGENT_FILTER_LABEL.split("=", 1) if "=" in AGENT_FILTER_LABEL else (AGENT_FILTER_LABEL, None)
             container_filter_value = labels.get(filter_key)
             if not container_filter_value:
-                continue  # Container doesn't have the filter label
+                continue
             if filter_value and container_filter_value != filter_value:
-                continue  # Container has the label but wrong value
+                continue
             logger.debug(f"Container {container.name} matches filter {AGENT_FILTER_LABEL}")
 
-        domain = labels.get(f"{DOCKER_LABEL_PREFIX}")
-        proxy_target = labels.get(f"{DOCKER_LABEL_PREFIX}.reverse_proxy")
+        containers.append(container)
 
-        # Support for {{upstreams PORT}} syntax
-        import re
-        upstreams_match = re.match(r"\{\{upstreams (\d+)}}", proxy_target.strip()) if proxy_target else None
-        if upstreams_match:
-            port = upstreams_match.group(1)
-            try:
-                # Agent mode: use host IP + published port
-                if AGENT_MODE == "agent":
-                    published_port = get_published_port(container, port)
-                    if published_port and host_ip:
-                        proxy_target = f"{host_ip}:{published_port}"
-                        logger.info(f"[AGENT] Resolved {{upstreams {port}}} for domain '{domain}': {proxy_target}")
-                    else:
-                        logger.error(f"[AGENT] Cannot resolve upstream for {container.name}: port not published or host IP unavailable")
-                        continue
-                # Standalone/server mode: use container IP
-                else:
-                    network_settings = container.attrs.get('NetworkSettings', {})
-                    networks = network_settings.get('Networks', {})
-                    # Use the first network found
-                    if networks:
-                        ip = list(networks.values())[0].get('IPAddress')
-                        if ip:
-                            logger.info(f"Resolved {{upstreams {port}}} for domain '{domain}': {ip}:{port}")
-                            proxy_target = f"{ip}:{port}"
-                    if not proxy_target or proxy_target == labels.get(f"{DOCKER_LABEL_PREFIX}.reverse_proxy"):
-                        logger.error(f"Failed to resolve {{upstreams {port}}} for {container.name}")
-                        continue
-            except Exception as e:
-                logger.error(f"Failed to resolve {{upstreams {port}}} for {container.name}: {e}")
-                continue
+        # Extract global settings and snippets
+        container_globals, container_snippets = parse_globals_and_snippets(labels)
+        global_settings.update(container_globals)
+        snippets.update(container_snippets)
 
-        if domain and proxy_target:
-            logger.info(f"Route: domain '{domain}' will use upstream '{proxy_target}'")
+    # Log discovered snippets
+    if snippets:
+        logger.info(f"Discovered {len(snippets)} snippet(s): {list(snippets.keys())}")
+    if global_settings:
+        logger.info(f"Global settings: {list(global_settings.keys())}")
 
-            # Build route with agent metadata
-            route = {
-                "@id": f"{AGENT_ID}_{container.name}",
-                "handle": [{
-                    "handler": "reverse_proxy",
-                    "upstreams": [{"dial": proxy_target}]
-                }],
-                "match": [{
-                    "host": [domain]
-                }]
-            }
-            routes.append(route)
+    # Second pass: build routes with imports applied
+    for container in containers:
+        labels = container.attrs['Config']['Labels']
+        container_routes = parse_container_labels(container, labels, host_ip, snippets)
+        routes.extend(container_routes)
+
+    return routes, global_settings
+
+def parse_globals_and_snippets(labels):
+    """Extract global settings and snippet definitions from labels.
+    Global settings: caddy_N.email, caddy_N.auto_https (without domain)
+    Snippets: caddy_N: (snippet_name)
+    """
+    import re
+
+    global_settings = {}
+    snippets = {}
+    route_configs = {}
+
+    # First, collect all label configurations
+    for label_key, label_value in labels.items():
+        if not label_key.startswith(DOCKER_LABEL_PREFIX):
+            continue
+
+        match = re.match(f"^{re.escape(DOCKER_LABEL_PREFIX)}(?:_(\\d+))?(?:\\.(.+))?$", label_key)
+        if not match:
+            continue
+
+        route_num = match.group(1) or "0"
+        directive = match.group(2) or ""
+
+        if route_num not in route_configs:
+            route_configs[route_num] = {}
+
+        if not directive:
+            route_configs[route_num]['domain'] = label_value
+        else:
+            route_configs[route_num][directive] = label_value
+
+    # Now identify snippets and global settings
+    for route_num, config in route_configs.items():
+        domain = config.get('domain', '')
+
+        # Check if this is a snippet definition: (snippet_name)
+        if domain.startswith('(') and domain.endswith(')'):
+            snippet_name = domain[1:-1]
+            # Remove 'domain' from config
+            snippet_config = {k: v for k, v in config.items() if k != 'domain'}
+            snippets[snippet_name] = snippet_config
+            logger.info(f"Snippet defined: '{snippet_name}' with {len(snippet_config)} directive(s)")
+            continue
+
+        # Check if this is a global setting (no domain, only directives)
+        if not domain and config:
+            # This is a global setting
+            for directive, value in config.items():
+                global_settings[directive] = value
+                logger.info(f"Global setting: {directive} = {value}")
+
+    return global_settings, snippets
+
+def parse_container_labels(container, labels, host_ip, snippets=None):
+    """Parse container labels to extract route configurations.
+    Supports both simple labels (caddy) and numbered labels (caddy_0, caddy_1).
+    Phase 2: Applies snippet imports.
+    """
+    import re
+
+    if snippets is None:
+        snippets = {}
+
+    route_configs = {}
+
+    # Find all numbered and non-numbered caddy labels
+    for label_key, label_value in labels.items():
+        if not label_key.startswith(DOCKER_LABEL_PREFIX):
+            continue
+
+        # Match: caddy_N or caddy_N.directive or caddy or caddy.directive
+        match = re.match(f"^{re.escape(DOCKER_LABEL_PREFIX)}(?:_(\\d+))?(?:\\.(.+))?$", label_key)
+        if not match:
+            continue
+
+        route_num = match.group(1) or "0"  # Default to "0" for simple labels
+        directive = match.group(2) or ""  # Empty string for base domain label
+
+        if route_num not in route_configs:
+            route_configs[route_num] = {}
+
+        if not directive:
+            # Base label: caddy or caddy_N
+            route_configs[route_num]['domain'] = label_value
+        else:
+            # Directive label: caddy.reverse_proxy or caddy_N.reverse_proxy
+            route_configs[route_num][directive] = label_value
+
+    # Generate routes from parsed configurations
+    routes = []
+    for route_num, config in sorted(route_configs.items()):
+        domain = config.get('domain')
+
+        # Skip snippets and global settings (no domain or snippet pattern)
+        if not domain or (domain.startswith('(') and domain.endswith(')')):
+            continue
+
+        # Phase 2: Apply imports from snippets
+        if 'import' in config:
+            snippet_name = config['import']
+            if snippet_name in snippets:
+                logger.info(f"Applying snippet '{snippet_name}' to route {route_num}")
+                # Merge snippet config into this route (snippet directives come first, then route overrides)
+                merged_config = {**snippets[snippet_name], **config}
+                config = merged_config
+            else:
+                logger.warning(f"Snippet '{snippet_name}' not found for route {route_num}")
+
+        proxy_target = config.get('reverse_proxy')
+        if not proxy_target:
+            # Check if this is a wildcard/TLS-only route without reverse_proxy
+            # For now, skip routes without reverse_proxy
+            continue
+
+        # Resolve {{upstreams PORT}} syntax
+        proxy_target = resolve_upstreams(container, proxy_target, domain, host_ip)
+        if not proxy_target:
+            continue
+
+        # Parse multiple domains (comma-separated)
+        domains = [d.strip() for d in domain.split(',')]
+
+        logger.info(f"Route: domain(s) {domains} will use upstream '{proxy_target}'")
+
+        # Build route with agent metadata
+        route_id = f"{AGENT_ID}_{container.name}"
+        if route_num != "0":
+            route_id += f"_{route_num}"
+
+        # Build handle section with reverse_proxy
+        handle = [{
+            "handler": "reverse_proxy",
+            "upstreams": [{"dial": proxy_target}]
+        }]
+
+        # Phase 2: Add TLS configuration if present
+        tls_config = parse_tls_config(config)
+        transport_config = parse_transport_config(config)
+
+        if transport_config:
+            # Apply transport config to reverse_proxy handler
+            handle[0].update(transport_config)
+
+        # Phase 2: Add handle directives (handle.abort, etc.)
+        handle_directives = parse_handle_directives(config)
+        if handle_directives:
+            # Insert handle directives before reverse_proxy
+            handle = handle_directives + handle
+
+        route = {
+            "@id": route_id,
+            "handle": handle,
+            "match": [{
+                "host": domains
+            }]
+        }
+
+        # Add TLS config if present (for wildcard certificates, etc.)
+        if tls_config:
+            route["terminal"] = True  # Mark as terminal for TLS-specific routes
+            # TLS automation policies are applied at server level, not route level
+            # Store them for later application
+            route["_tls_config"] = tls_config
+
+        routes.append(route)
+
     return routes
 
-def push_to_caddy(routes):
-    """Push routes to Caddy server based on mode"""
+def parse_tls_config(config):
+    """Parse TLS configuration directives.
+    Supports: tls.dns, tls.resolvers
+    """
+    tls_config = {}
+
+    for key, value in config.items():
+        if key.startswith('tls.'):
+            directive = key[4:]  # Remove 'tls.' prefix
+
+            if directive == 'dns':
+                # Parse: "cloudflare ${CF_API_TOKEN}" or "cloudflare {env.CF_API_TOKEN}"
+                parts = value.split()
+                if len(parts) >= 2:
+                    provider = parts[0]
+                    # Extract token (handle both ${VAR} and {env.VAR} formats)
+                    token = parts[1]
+                    tls_config['dns_provider'] = provider
+                    tls_config['dns_token'] = token
+                    logger.info(f"TLS DNS challenge: provider={provider}")
+
+            elif directive == 'resolvers':
+                # Parse space-separated list of DNS resolvers
+                tls_config['resolvers'] = value.split()
+                logger.info(f"TLS resolvers: {tls_config['resolvers']}")
+
+    return tls_config
+
+def parse_transport_config(config):
+    """Parse transport configuration directives.
+    Supports: transport, transport.tls, transport.tls_insecure_skip_verify
+    """
+    transport_config = {}
+
+    # Check if transport configuration exists
+    has_transport = any(key.startswith('transport') for key in config.keys())
+    if not has_transport:
+        return transport_config
+
+    for key, value in config.items():
+        if key == 'transport':
+            # transport: http
+            transport_config['transport'] = {'protocol': value}
+
+        elif key.startswith('transport.'):
+            directive = key[10:]  # Remove 'transport.' prefix
+
+            if 'transport' not in transport_config:
+                transport_config['transport'] = {}
+
+            if directive == 'tls':
+                # Enable TLS for backend
+                transport_config['transport']['tls'] = {}
+
+            elif directive == 'tls_insecure_skip_verify':
+                # Skip TLS verification
+                if 'tls' not in transport_config['transport']:
+                    transport_config['transport']['tls'] = {}
+                transport_config['transport']['tls']['insecure_skip_verify'] = True
+                logger.info("Transport: TLS insecure skip verify enabled")
+
+    return transport_config
+
+def parse_handle_directives(config):
+    """Parse handle directives.
+    Supports: handle.abort
+    """
+    handle_directives = []
+
+    for key, value in config.items():
+        if key.startswith('handle.'):
+            directive = key[7:]  # Remove 'handle.' prefix
+
+            if directive == 'abort':
+                # Abort handler (terminates request without forwarding)
+                handle_directives.append({
+                    "handler": "static_response",
+                    "close": True
+                })
+                logger.info("Handle: abort directive added")
+
+    return handle_directives
+
+def resolve_upstreams(container, proxy_target, domain, host_ip):
+    """Resolve {{upstreams PORT}} template to actual upstream address"""
+    import re
+
+    upstreams_match = re.match(r"\{\{upstreams (\d+)}}", proxy_target.strip())
+    if not upstreams_match:
+        return proxy_target  # Already resolved or static address
+
+    port = upstreams_match.group(1)
+
+    try:
+        # Check if container is using host networking
+        network_mode = container.attrs.get('HostConfig', {}).get('NetworkMode', '')
+        is_host_network = network_mode == 'host'
+
+        # Agent mode: use host IP + published port (or direct port for host networking)
+        if AGENT_MODE == "agent":
+            if is_host_network:
+                # Host networking: use host IP + internal port directly
+                resolved = f"{host_ip}:{port}"
+                logger.info(f"[AGENT] Resolved {{{{upstreams {port}}}}} for domain '{domain}' (host network): {resolved}")
+                return resolved
+            else:
+                # Bridge networking: need published port
+                published_port = get_published_port(container, port)
+                if published_port and host_ip:
+                    resolved = f"{host_ip}:{published_port}"
+                    logger.info(f"[AGENT] Resolved {{{{upstreams {port}}}}} for domain '{domain}': {resolved}")
+                    return resolved
+                else:
+                    logger.error(f"[AGENT] Cannot resolve upstream for {container.name}: port not published or host IP unavailable")
+                    return None
+        # Standalone/server mode: use container IP (or host IP for host networking)
+        else:
+            if is_host_network:
+                # Host networking: containers share host network, use localhost
+                network_settings = container.attrs.get('NetworkSettings', {})
+                # In host mode, try to get the host's internal IP or use localhost
+                resolved = f"localhost:{port}"
+                logger.info(f"Resolved {{{{upstreams {port}}}}} for domain '{domain}' (host network): {resolved}")
+                return resolved
+            else:
+                # Bridge networking: use container IP
+                network_settings = container.attrs.get('NetworkSettings', {})
+                networks = network_settings.get('Networks', {})
+                # Use the first network found
+                if networks:
+                    ip = list(networks.values())[0].get('IPAddress')
+                    if ip:
+                        resolved = f"{ip}:{port}"
+                        logger.info(f"Resolved {{{{upstreams {port}}}}} for domain '{domain}': {resolved}")
+                        return resolved
+            logger.error(f"Failed to resolve {{{{upstreams {port}}}}} for {container.name}")
+            return None
+    except Exception as e:
+        logger.error(f"Failed to resolve {{{{upstreams {port}}}}} for {container.name}: {e}")
+        return None
+
+def push_to_caddy(routes, global_settings=None):
+    """Push routes to Caddy server based on mode.
+    Phase 2: Apply global settings if provided.
+    """
     target_url = get_target_caddy_url()
+
+    if global_settings is None:
+        global_settings = {}
 
     # Build headers
     headers = {"Content-Type": "application/json"}
@@ -162,16 +449,31 @@ def push_to_caddy(routes):
         config["apps"]["http"] = {}
     if "servers" not in config["apps"]["http"]:
         config["apps"]["http"]["servers"] = {}
-    if "reverse_proxy" not in config["apps"]["http"]["servers"]:
-        config["apps"]["http"]["servers"]["reverse_proxy"] = {
+
+    # Use the first server if it exists, otherwise create reverse_proxy server
+    servers = config["apps"]["http"]["servers"]
+    if servers:
+        # Use first existing server
+        server_name = list(servers.keys())[0]
+        if "routes" not in servers[server_name]:
+            servers[server_name]["routes"] = []
+        local_routes = servers[server_name].get("routes", [])
+    else:
+        # Create new server
+        servers["reverse_proxy"] = {
             "listen": [":80"],
             "routes": []
         }
+        server_name = "reverse_proxy"
+        local_routes = []
+
+    # Phase 2: Apply global settings to server config
+    if global_settings:
+        apply_global_settings(config, server_name, global_settings)
 
     # Merge routes
-    local_routes = config["apps"]["http"]["servers"]["reverse_proxy"].get("routes", [])
     merged_routes = merge_routes(local_routes, routes)
-    config["apps"]["http"]["servers"]["reverse_proxy"]["routes"] = merged_routes
+    config["apps"]["http"]["servers"][server_name]["routes"] = merged_routes
     # Save updated config
     save_local_config(config)
 
@@ -187,6 +489,54 @@ def push_to_caddy(routes):
 
     # Add a short delay to avoid hammering the Caddy API
     time.sleep(2)
+
+def apply_global_settings(config, server_name, global_settings):
+    """Apply global settings to Caddy server configuration.
+    Supports: email, auto_https
+    """
+    server_config = config["apps"]["http"]["servers"][server_name]
+
+    for setting, value in global_settings.items():
+        if setting == 'email':
+            # Apply email to TLS automation
+            if 'tls_connection_policies' not in server_config:
+                server_config['automatic_https'] = {}
+            # Email goes in apps.tls.automation.policies
+            if 'tls' not in config['apps']:
+                config['apps']['tls'] = {}
+            if 'automation' not in config['apps']['tls']:
+                config['apps']['tls']['automation'] = {}
+            if 'policies' not in config['apps']['tls']['automation']:
+                config['apps']['tls']['automation']['policies'] = []
+
+            # Check if email policy exists, update or add
+            email_policy_exists = False
+            for policy in config['apps']['tls']['automation']['policies']:
+                if 'issuers' in policy:
+                    for issuer in policy['issuers']:
+                        if 'module' in issuer and issuer['module'] == 'acme':
+                            issuer['email'] = value
+                            email_policy_exists = True
+                            logger.info(f"Updated ACME email: {value}")
+                            break
+
+            if not email_policy_exists:
+                # Add new policy with email
+                config['apps']['tls']['automation']['policies'].append({
+                    'issuers': [{
+                        'module': 'acme',
+                        'email': value
+                    }]
+                })
+                logger.info(f"Added ACME email: {value}")
+
+        elif setting == 'auto_https':
+            # Apply auto_https setting
+            if 'automatic_https' not in server_config:
+                server_config['automatic_https'] = {}
+            if value == 'prefer_wildcard':
+                server_config['automatic_https']['prefer_wildcard'] = True
+                logger.info("Automatic HTTPS: prefer_wildcard enabled")
 
 def load_local_config():
     """Load local config or fetch from Caddy server"""
@@ -293,8 +643,8 @@ def merge_routes(local_routes, new_routes):
 
 def sync_config():
     logger.info("🔄 Syncing config...")
-    routes = get_caddy_routes()
-    push_to_caddy(routes)
+    routes, global_settings = get_caddy_routes()
+    push_to_caddy(routes, global_settings)
 
 last_update = 0
 debounce_seconds = 5  # Increased debounce to 5 seconds

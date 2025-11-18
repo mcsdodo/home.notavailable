@@ -9,33 +9,52 @@ IMPORTANT: Developed on Windows, must work on Linux.
 
 ---
 
-# Markdown file naming
+# **IMPORTANT**  Markdown file naming
 When creating new files in this directory, use XX-[FILE_NAME].md format (e.g. 01-TASK.md) for easy sorting. Increment XX as needed.
 
 # Caddy Multi-Host Agent System
 
 > Python-based agent system for multi-host Docker reverse proxying without orchestration.
 
-## Status: ✅ Deployed & Tested
+## Status: ✅ Phase 2 Complete & Tested
 
-**Last Updated**: 2025-11-16
-**Deployment**: 3 hosts operational
-**Docs**: [03-README-MULTIHOST.md](03-README-MULTIHOST.md) | [02-IMPLEMENTATION-PLAN.md](02-IMPLEMENTATION-PLAN.md)
+**Last Updated**: 2025-11-18
+**Deployment**: 3 hosts operational with Phase 1 + Phase 2 features
+**Docs**:
+- [07-FEATURE-PARITY-PLAN.md](07-FEATURE-PARITY-PLAN.md) - Full roadmap (4 phases)
+- [13-PHASE2-TEST-RESULTS.md](13-PHASE2-TEST-RESULTS.md) - Phase 2 test results
+- [11-PHASE1-TEST-RESULTS.md](11-PHASE1-TEST-RESULTS.md) - Phase 1 test results
+- [10-PHASE1-SUMMARY.md](10-PHASE1-SUMMARY.md) - Phase 1 summary
+- [12-NETWORK-MODE-ANALYSIS.md](12-NETWORK-MODE-ANALYSIS.md) - Bridge vs host networking
+- [03-README-MULTIHOST.md](03-README-MULTIHOST.md) - Original MVP docs
 
-## Current Deployment
+## Current Deployment (Phase 2 Testing)
 
-| Host | IP | Role | Services |
-|------|------|------|----------|
-| host1 | 192.168.0.96 | Server | Caddy, Agent (server mode), test-local |
-| host2 | 192.168.0.98 | Agent | Agent, test-remote |
-| host3 | 192.168.0.99 | Agent | Agent, test-host3 |
+| Host | IP | Role | Agent ID | Test Containers |
+|------|------|------|----------|-----------------|
+| host1 | 192.168.0.96 | Server | host1-server | Caddy + 4 test services (3 Phase 1 + 1 Phase 2) |
+| host2 | 192.168.0.98 | Agent | host2-remote | 4 test services (3 Phase 1 + 1 Phase 2) |
+| host3 | 192.168.0.99 | Agent | host3-remote | 4 test services (3 Phase 1 + 1 Phase 2) |
 
-**Active Routes**:
-- `test-local.lan` → localhost:8081 (host1)
-- `test-remote.lan` → 192.168.0.98:8080 (host2)
-- `test-host3.lan` → 192.168.0.99:9000 (host3)
+**Phase 1 Features**: ✅ All Working
+- Numbered labels (caddy_0, caddy_1, caddy_10, caddy_111)
+- Multiple domains (comma-separated)
+- Backward compatibility (simple labels)
+- Mixed labels (simple + numbered)
+- Combined features (numbered + multiple domains)
+- Multi-agent coordination
 
-All accessible via host1's Caddy server (port 80/443).
+**Phase 2 Features**: ✅ All Working
+- Global settings (email, auto_https)
+- Snippet definitions ((snippet_name))
+- Snippet imports (import: snippet_name)
+- TLS DNS challenge (tls.dns, tls.resolvers)
+- Transport TLS (transport.tls_insecure_skip_verify)
+- Handle directives (handle.abort)
+
+**Active Routes**: 16 total (13 Phase 1 + 3 Phase 2) (see [13-PHASE2-TEST-RESULTS.md](13-PHASE2-TEST-RESULTS.md))
+
+All accessible via host1's Caddy server (port 80).
 
 ## Architecture
 

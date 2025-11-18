@@ -1,6 +1,6 @@
 services:
   caddy-agent:
-    image: caddy-agent:latest
+    image: caddy-agent:phase2
     container_name: caddy-agent-remote
     restart: unless-stopped
     volumes:
@@ -13,15 +13,57 @@ services:
       - DOCKER_LABEL_PREFIX=caddy
     network_mode: host
 
-  # Test service - remote container on host2
+  # Test service - simple label (backward compatibility)
   test-remote:
     image: hashicorp/http-echo
     container_name: test-remote
     restart: unless-stopped
     network_mode: host
     command:
-      - -listen=:8080
-      - -text=Hello from host2
+      - -listen=:5678
+      - -text=Simple label on host2
     labels:
       caddy: test-remote.lan
       caddy.reverse_proxy: "{{upstreams 5678}}"
+
+  # Phase 1 test - multiple domains (main feature for host2)
+  test-multi-host2:
+    image: hashicorp/http-echo
+    container_name: test-multi-host2
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:5679
+      - -text=Multi-domain on host2
+    labels:
+      caddy: host2-app1.lan, host2-app2.lan
+      caddy.reverse_proxy: "{{upstreams 5679}}"
+
+  # Phase 1 test - high numbered labels
+  test-high-numbers:
+    image: hashicorp/http-echo
+    container_name: test-high-numbers
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:5680
+      - -text=High numbered routes
+    labels:
+      caddy_10: host2-route10.lan
+      caddy_10.reverse_proxy: "{{upstreams 5680}}"
+      caddy_111: host2-route111.lan
+      caddy_111.reverse_proxy: "{{upstreams 5680}}"
+
+  # Phase 2 test - snippet import
+  test-snippet-import:
+    image: hashicorp/http-echo
+    container_name: test-snippet-import
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:5681
+      - -text=Phase 2 - Snippet import on host2
+    labels:
+      caddy_20: phase2-import.lan
+      caddy_20.import: test_snippet
+      caddy_20.reverse_proxy: "{{upstreams 5681}}"

@@ -1,6 +1,6 @@
 services:
   caddy-agent:
-    image: caddy-agent:latest
+    image: caddy-agent:phase2
     container_name: caddy-agent-remote3
     restart: unless-stopped
     volumes:
@@ -13,7 +13,7 @@ services:
       - DOCKER_LABEL_PREFIX=caddy
     network_mode: host
 
-  # Test service - remote container on host3
+  # Test service - simple label (backward compatibility)
   test-host3:
     image: hashicorp/http-echo
     container_name: test-host3
@@ -21,7 +21,53 @@ services:
     network_mode: host
     command:
       - -listen=:9000
-      - -text=Hello from host3
+      - -text=Simple label on host3
     labels:
       caddy: test-host3.lan
-      caddy.reverse_proxy: 192.168.0.99:9000
+      caddy.reverse_proxy: "{{upstreams 9000}}"
+
+  # Phase 1 test - combined features (numbered + multiple domains)
+  test-combined:
+    image: hashicorp/http-echo
+    container_name: test-combined
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9001
+      - -text=Combined features on host3
+    labels:
+      caddy_0: host3-combined-a.lan, host3-combined-b.lan
+      caddy_0.reverse_proxy: "{{upstreams 9001}}"
+      caddy_1: host3-single.lan
+      caddy_1.reverse_proxy: "{{upstreams 9001}}"
+
+  # Phase 1 test - mixed simple and numbered
+  test-mixed:
+    image: hashicorp/http-echo
+    container_name: test-mixed
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9002
+      - -text=Mixed labels on host3
+    labels:
+      caddy: host3-simple.lan
+      caddy.reverse_proxy: "{{upstreams 9002}}"
+      caddy_5: host3-numbered5.lan
+      caddy_5.reverse_proxy: "{{upstreams 9002}}"
+
+  # Phase 2 test - transport TLS + handle directives
+  test-transport-handle:
+    image: hashicorp/http-echo
+    container_name: test-transport-handle
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9003
+      - -text=Phase 2 - Transport and handle on host3
+    labels:
+      caddy_30: phase2-transport.lan
+      caddy_30.reverse_proxy: "{{upstreams 9003}}"
+      caddy_30.transport: http
+      caddy_30.transport.tls: ""
+      caddy_30.transport.tls_insecure_skip_verify: ""
