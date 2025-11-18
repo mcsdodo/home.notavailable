@@ -102,6 +102,6 @@ EOF
 
 ## Caddy chain:
 1. 192.168.0.20 - LXC
-2. 192.168.0.21 - Proxmox1 (small)
-3. 192.168.0.22 - Proxmox2 (media)
-4. 192.168.0.23 - Proxmox3 (ai)
+2. 192.168.0.21 - Proxmox1 (small) see [docker-compose-small.yml](../portainer.stacks/caddy/docker-compose-small.yml)
+3. 192.168.0.22 - Proxmox2 (media) see [docker-compose-big-media.yml](../portainer.stacks/caddy/docker-compose-big-media.yml)
+4. 192.168.0.23 - Proxmox3 (ai) see [docker-compose-big-ai.yml](../portainer.stacks/caddy/docker-compose-big-ai.yml)
