@@ -21,46 +21,6 @@ When creating new files in this directory, use XX-[FILE_NAME].md format (e.g. 01
 
 > Python-based agent system for multi-host Docker reverse proxying without orchestration.
 
-## Status: ✅ Phase 2 Complete & Tested
-
-**Last Updated**: 2025-11-18
-**Deployment**: 3 hosts operational with Phase 1 + Phase 2 features
-**Docs**:
-- [07-FEATURE-PARITY-PLAN.md](07-FEATURE-PARITY-PLAN.md) - Full roadmap (4 phases)
-- [13-PHASE2-TEST-RESULTS.md](13-PHASE2-TEST-RESULTS.md) - Phase 2 test results
-- [11-PHASE1-TEST-RESULTS.md](11-PHASE1-TEST-RESULTS.md) - Phase 1 test results
-- [10-PHASE1-SUMMARY.md](10-PHASE1-SUMMARY.md) - Phase 1 summary
-- [12-NETWORK-MODE-ANALYSIS.md](12-NETWORK-MODE-ANALYSIS.md) - Bridge vs host networking
-- [03-README-MULTIHOST.md](03-README-MULTIHOST.md) - Original MVP docs
-
-## Current Deployment (Phase 2 Testing)
-
-| Host | IP | Role | Agent ID | Test Containers |
-|------|------|------|----------|-----------------|
-| host1 | 192.168.0.96 | Server | host1-server | Caddy + 4 test services (3 Phase 1 + 1 Phase 2) |
-| host2 | 192.168.0.98 | Agent | host2-remote | 4 test services (3 Phase 1 + 1 Phase 2) |
-| host3 | 192.168.0.99 | Agent | host3-remote | 4 test services (3 Phase 1 + 1 Phase 2) |
-
-**Phase 1 Features**: ✅ All Working
-- Numbered labels (caddy_0, caddy_1, caddy_10, caddy_111)
-- Multiple domains (comma-separated)
-- Backward compatibility (simple labels)
-- Mixed labels (simple + numbered)
-- Combined features (numbered + multiple domains)
-- Multi-agent coordination
-
-**Phase 2 Features**: ✅ All Working
-- Global settings (email, auto_https)
-- Snippet definitions ((snippet_name))
-- Snippet imports (import: snippet_name)
-- TLS DNS challenge (tls.dns, tls.resolvers)
-- Transport TLS (transport.tls_insecure_skip_verify)
-- Handle directives (handle.abort)
-
-**Active Routes**: 16 total (13 Phase 1 + 3 Phase 2) (see [13-PHASE2-TEST-RESULTS.md](13-PHASE2-TEST-RESULTS.md))
-
-All accessible via host1's Caddy server (port 80).
-
 ## Architecture
 
 ```
@@ -154,10 +114,9 @@ ssh root@192.168.0.98 "docker logs caddy-agent-remote --tail 20"
 
 ## Known Issues
 
-1. **Sysctl setting required**: `sysctl -w net.ipv4.ip_unprivileged_port_start=80` on all hosts
-2. **Manual config push needed**: Agent reports success but routes don't update - needs investigation
-3. **Published ports required**: Agent mode containers must publish ports to host
-4. **No API token enforcement**: Coded but not configured in Caddy
+1. **Manual config push needed**: Agent reports success but routes don't update - needs investigation
+2. **Published ports required**: Agent mode containers must publish ports to host
+3. **No API token enforcement**: Coded but not configured in Caddy
 
 ## Next Steps (Priority 1)
 
@@ -199,8 +158,3 @@ docker inspect <container> | jq '.Config.Labels'
 ```bash
 docker exec caddy-agent-server curl -X POST -H 'Content-Type: application/json' -d @/app/caddy-output.json http://localhost:2019/load
 ```
-
----
-
-**Version**: 1.0 - Production Deployment
-**Status**: ✅ Working with known issues
