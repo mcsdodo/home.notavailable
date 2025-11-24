@@ -5,6 +5,11 @@
 - host2: `ssh root@192.168.0.98` - Agent mode
 - host3: `ssh root@192.168.0.99` - Agent mode
 
+**Production Hosts** (SSH passwordless with keys):
+- prod-host1: `ssh root@192.168.0.112` - Server mode (Caddy + Agent)
+- prod-host2: `ssh root@192.168.0.235` - Agent mode
+- prod-host3: `ssh root@192.168.0.212` - Agent mode
+
 IMPORTANT: Developed on Windows, must work on Linux.
 
 ---
