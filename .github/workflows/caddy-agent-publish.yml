@@ -1,6 +1,7 @@
 name: Caddy Agent Docker Image CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main", "build-flow" ]
     paths:
