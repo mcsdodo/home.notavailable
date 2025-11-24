@@ -6,23 +6,54 @@ Complete reference for all configuration options and Docker labels.
 
 All configuration is done via environment variables. Set them in your docker-compose.yml or .env file.
 
-### Mode Selection
+### Caddy Connection
 
-#### `AGENT_MODE` (required)
+#### `CADDY_URL` (optional)
 
-Determines how the agent operates.
+URL of the Caddy Admin API to push configurations to.
 
-| Value | Use Case | Details |
-|-------|----------|---------|
-| `standalone` | Single-host setup | Agent and Caddy on same host, agent manages local Docker only |
-| `server` | Multi-host server | Central server where Caddy runs, accepts route updates from agents |
-| `agent` | Multi-host remote | Remote agent, pushes routes to central server |
-
-**Default**: `standalone`
+**Default**: `http://localhost:2019`
 **Example**:
 ```yaml
 environment:
-  - AGENT_MODE=server
+  # Local Caddy (same host)
+  - CADDY_URL=http://localhost:2019
+
+  # Remote Caddy (central server)
+  - CADDY_URL=http://192.168.0.96:2019
+```
+
+### Remote Mode Configuration
+
+#### `HOST_IP` (optional)
+
+IP address to use for upstream addresses. When set (or auto-detected), the agent operates in "remote mode" - upstreams are configured as `HOST_IP:port` instead of container names.
+
+**Default**: None (local mode) or auto-detected with `network_mode: host`
+**Auto-detection**: When running with `network_mode: host` and `HOST_IP` is not set, the agent automatically detects the host's IP address.
+
+**Example**:
+```yaml
+environment:
+  # Explicit (required for bridge network)
+  - HOST_IP=192.168.0.98
+
+  # Or omit for auto-detection (with network_mode: host)
+  # HOST_IP will be auto-detected
+```
+
+**Mode Detection Logic**:
+| HOST_IP | network_mode | Behavior |
+|---------|--------------|----------|
+| Set | Any | Use explicit HOST_IP for upstreams |
+| Not set | host | Auto-detect IP, use for upstreams |
+| Not set | bridge | Local mode, use container names |
+
+**Logging**: The agent logs which mode it's using at startup:
+```
+INFO  Using HOST_IP: 192.168.0.98 (explicit)
+INFO  Using HOST_IP: 192.168.0.98 (auto-detected, network_mode: host)
+INFO  Using local addressing (no HOST_IP, container network)
 ```
 
 ### Identity
@@ -81,60 +112,6 @@ environment:
 ```
 
 This allows multiple caddy-agent instances on the same host managing different sets of containers.
-
-### Server Mode Configuration
-
-These options apply only when `AGENT_MODE=server`.
-
-#### `CADDY_API_URL` (required for server mode)
-
-URL of the local Caddy Admin API.
-
-**Default**: `http://caddy:2019`
-**Example**:
-```yaml
-environment:
-  - CADDY_API_URL=http://localhost:2019
-  - CADDY_API_URL=http://127.0.0.1:2019
-```
-
-Should point to the Caddy Admin API endpoint.
-
-### Agent Mode Configuration
-
-These options apply only when `AGENT_MODE=agent`.
-
-#### `CADDY_SERVER_URL` (required for agent mode)
-
-URL of the remote Caddy Admin API (on server host).
-
-**Default**: None
-**Format**: `http://hostname:port`
-**Example**:
-```yaml
-environment:
-  - CADDY_SERVER_URL=http://192.168.1.10:2019
-  - CADDY_SERVER_URL=http://caddy-server.internal:2019
-  - CADDY_SERVER_URL=http://caddy.example.com:2019
-```
-
-#### `HOST_IP` (optional for agent mode)
-
-The IP address of this host, used when constructing upstream targets.
-
-**Default**: Auto-detected by connecting to 8.8.8.8 (Google DNS)
-**Format**: IPv4 address
-**Example**:
-```yaml
-environment:
-  - HOST_IP=192.168.1.11
-  - HOST_IP=10.0.0.5
-```
-
-Required if:
-- Auto-detection fails (no default route)
-- The host has multiple IPs and you need a specific one
-- The host isn't connected to the internet for auto-detection
 
 ### Authentication
 
@@ -237,7 +214,7 @@ LABEL caddy.reverse_proxy={{upstreams 3000}}
 
 Use when:
 - Container publishes port 3000
-- Agent is in `agent` mode (remote host)
+- Agent is in remote mode (HOST_IP configured)
 - Need automatic port detection
 
 ### Advanced Labels
@@ -274,7 +251,7 @@ LABEL caddy.version=1.2.3
 
 ## Configuration Examples
 
-### Single Host (Standalone)
+### Single Host (Local Mode)
 
 ```yaml
 version: '3'
@@ -282,10 +259,10 @@ services:
   agent:
     image: caddy-agent:latest
     environment:
-      AGENT_MODE: standalone
+      CADDY_URL: http://localhost:2019
       AGENT_ID: localhost
-      CADDY_API_URL: http://localhost:2019
       DOCKER_LABEL_PREFIX: caddy
+      # No HOST_IP = local mode (uses container names)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
@@ -293,37 +270,52 @@ services:
     image: myapp:latest
     labels:
       caddy: myapp.local
-      caddy.reverse_proxy: localhost:3000
+      caddy.reverse_proxy: "{{upstreams 3000}}"
 ```
 
-### Multi-Host Server
+### Multi-Host Setup
 
-**Host 1 (Server):**
+**Host 1 (Server - Local Mode):**
 ```yaml
 version: '3'
 services:
   agent:
     image: caddy-agent:latest
     environment:
-      AGENT_MODE: server
+      CADDY_URL: http://localhost:2019
       AGENT_ID: prod-server
-      CADDY_API_URL: http://localhost:2019
       DOCKER_LABEL_PREFIX: caddy
+      # No HOST_IP = local mode
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 ```
 
-**Host 2 (Agent):**
+**Host 2 (Remote Agent - Auto-detect with network_mode: host):**
+```yaml
+version: '3'
+services:
+  agent:
+    image: caddy-agent:latest
+    network_mode: host
+    environment:
+      CADDY_URL: http://192.168.1.10:2019
+      AGENT_ID: prod-host2
+      DOCKER_LABEL_PREFIX: caddy
+      # HOST_IP auto-detected with network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+```
+
+**Host 3 (Remote Agent - Explicit HOST_IP with bridge network):**
 ```yaml
 version: '3'
 services:
   agent:
     image: caddy-agent:latest
     environment:
-      AGENT_MODE: agent
-      AGENT_ID: prod-host2
-      CADDY_SERVER_URL: http://192.168.1.10:2019
-      HOST_IP: 192.168.1.11
+      CADDY_URL: http://192.168.1.10:2019
+      AGENT_ID: prod-host3
+      HOST_IP: 192.168.1.12
       DOCKER_LABEL_PREFIX: caddy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -336,9 +328,8 @@ services:
 agent-team-a:
   image: caddy-agent:latest
   environment:
-    AGENT_MODE: agent
+    CADDY_URL: http://192.168.1.10:2019
     AGENT_ID: team-a-agent
-    CADDY_SERVER_URL: http://192.168.1.10:2019
     HOST_IP: 192.168.1.11
     DOCKER_LABEL_PREFIX: caddy
     AGENT_FILTER_LABEL: team=a
@@ -349,9 +340,8 @@ agent-team-a:
 agent-team-b:
   image: caddy-agent:latest
   environment:
-    AGENT_MODE: agent
+    CADDY_URL: http://192.168.1.10:2019
     AGENT_ID: team-b-agent
-    CADDY_SERVER_URL: http://192.168.1.10:2019
     HOST_IP: 192.168.1.11
     DOCKER_LABEL_PREFIX: caddy
     AGENT_FILTER_LABEL: team=b
@@ -380,9 +370,8 @@ docker run -d \
 agent:
   image: caddy-agent:latest
   environment:
-    AGENT_MODE: agent
+    CADDY_URL: http://192.168.1.10:2019
     AGENT_ID: prod-host2
-    CADDY_SERVER_URL: http://192.168.1.10:2019
     HOST_IP: 192.168.1.11
     CADDY_API_TOKEN: ${CADDY_API_TOKEN}  # From .env file
   volumes:
@@ -400,9 +389,8 @@ CADDY_API_TOKEN=my-secret-api-token-12345
 agent:
   image: caddy-agent:latest
   environment:
-    AGENT_MODE: server
+    CADDY_URL: http://localhost:2019
     AGENT_ID: localhost
-    CADDY_API_URL: http://localhost:2019
     DOCKER_LABEL_PREFIX: proxy  # Changed from 'caddy'
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -411,7 +399,7 @@ app:
   image: myapp:latest
   labels:
     proxy: example.com  # Using 'proxy' instead of 'caddy'
-    proxy.reverse_proxy: localhost:3000
+    proxy.reverse_proxy: "{{upstreams 3000}}"
 ```
 
 ## Route Generation
@@ -449,36 +437,41 @@ The agent generates Caddy routes from labels using this algorithm:
 The agent validates configuration on startup:
 
 ```
-✅ Agent ID: host1-server
-✅ Mode: server
-✅ Caddy API: http://localhost:2019
-✅ Label Prefix: caddy
+🚀 Caddy Docker Agent Starting
+   Agent ID: host1-server
+   Caddy URL: http://localhost:2019
+   Docker Label Prefix: caddy
+   Mode: LOCAL (upstreams use container names)
 ```
 
-Configuration errors will be logged as:
+Or for remote mode:
 ```
-❌ Error: AGENT_MODE must be one of: standalone, server, agent
+🚀 Caddy Docker Agent Starting
+   Agent ID: host2-remote
+   Caddy URL: http://192.168.0.96:2019
+   Using HOST_IP: 192.168.0.98 (auto-detected, network_mode: host)
+   Mode: REMOTE (upstreams use 192.168.0.98)
 ```
 
 ## Common Configuration Mistakes
 
-### ❌ Mistake 1: Wrong CADDY_SERVER_URL
+### ❌ Mistake 1: Wrong CADDY_URL for Remote Agents
 
 ```yaml
 # Wrong - agent can't reach server
-CADDY_SERVER_URL: http://localhost:2019  # Points to itself!
+CADDY_URL: http://localhost:2019  # Points to itself!
 
-# Correct
-CADDY_SERVER_URL: http://192.168.1.10:2019  # Points to server host
+# Correct - point to central server
+CADDY_URL: http://192.168.1.10:2019  # Points to server host
 ```
 
-### ❌ Mistake 2: Missing HOST_IP in Agent Mode
+### ❌ Mistake 2: Missing HOST_IP with Bridge Network
 
 ```yaml
-# If auto-detection doesn't work
-HOST_IP: not_set  # Bad
+# If using bridge network (not network_mode: host), you need explicit HOST_IP
+HOST_IP: not_set  # Bad - auto-detection won't work
 
-# Explicitly set
+# Explicitly set when using bridge network
 HOST_IP: 192.168.1.11  # Good
 ```
 
