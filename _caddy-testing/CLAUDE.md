@@ -86,11 +86,12 @@ Containers  Containers
 - `agent` - Local Docker → Remote Caddy
 
 **Environment Variables**:
-- `AGENT_MODE`: standalone|server|agent
+- `CADDY_URL`: Caddy Admin API endpoint (default: http://localhost:2019)
+- `HOST_IP`: IP for upstreams; enables remote mode. Auto-detects with network_mode: host
 - `AGENT_ID`: Unique identifier (default: hostname)
-- `CADDY_SERVER_URL`: Remote Caddy API URL (agent mode)
-- `HOST_IP`: Host IP for routing (auto-detected)
 - `DOCKER_LABEL_PREFIX`: Label prefix (default: caddy)
+- `CADDY_API_TOKEN`: Bearer token for authentication (optional)
+- `AGENT_FILTER_LABEL`: Filter containers by label (optional)
 
 **Docker Compose Files**:
 - `docker-compose-prod-server.yml` - Server deployment
