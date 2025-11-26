@@ -8,6 +8,7 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+      - "2019:2019"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
@@ -21,10 +22,13 @@ services:
         ipv4_address: 192.168.0.21
       
     labels:
-      caddy: http://*.lan
-      caddy.reverse_proxy: "192.168.0.22:80"
-      caddy_1: "*.lacny.me"
-      caddy_1.reverse_proxy: "192.168.0.22:80"
+      caddy_01: http://*.lan
+      caddy_01.reverse_proxy: "192.168.0.22:80"
+      caddy_02: "*.lacny.me"
+      caddy_02.reverse_proxy: "192.168.0.22:80"
+      caddy_03: ":2020"
+      caddy_03.reverse_proxy: "localhost:2019"
+      caddy_03.reverse_proxy.header_up: "Host localhost:2019"
       autoheal: true
       
   webserver:
@@ -92,7 +96,7 @@ services:
 
       caddy_116: http://frigate-gpu.lan, frigate-gpu.lacny.me
       caddy_116.reverse_proxy: 192.168.0.115:5012
-  
+
 networks:
   caddy:
     name: caddy
