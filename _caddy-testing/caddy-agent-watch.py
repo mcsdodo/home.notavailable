@@ -25,8 +25,17 @@ RESYNC_INTERVAL = int(os.getenv("RESYNC_INTERVAL", "300"))              # second
 # Logging configuration
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # DEBUG, INFO, WARNING, ERROR
 
+# Snippet sharing API configuration
+SNIPPET_API_PORT = int(os.getenv("SNIPPET_API_PORT", "0"))  # 0 = disabled
+SNIPPET_SOURCES = os.getenv("SNIPPET_SOURCES", "")  # Comma-separated URLs
+SNIPPET_CACHE_TTL = int(os.getenv("SNIPPET_CACHE_TTL", "300"))  # 5 minutes
+
 # Cached effective host IP (computed once at startup)
 _effective_host_ip = None
+
+# Snippet API cache
+_snippet_cache = {}
+_snippet_cache_time = 0
 
 client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 
@@ -216,6 +225,31 @@ def parse_globals_and_snippets(labels):
             for directive, value in config.items():
                 global_settings[directive] = value
                 logger.info(f"Global setting: {directive} = {value}")
+
+    return global_settings, snippets
+
+def parse_globals_and_snippets_from_all_containers():
+    """Collect global settings and snippets from all Docker containers"""
+    global_settings = {}
+    snippets = {}
+
+    for container in client.containers.list():
+        labels = container.attrs['Config']['Labels']
+        if not labels:
+            continue
+
+        # Optional: filter containers by agent filter label
+        if AGENT_FILTER_LABEL:
+            filter_key, filter_value = AGENT_FILTER_LABEL.split("=", 1) if "=" in AGENT_FILTER_LABEL else (AGENT_FILTER_LABEL, None)
+            container_filter_value = labels.get(filter_key)
+            if not container_filter_value:
+                continue
+            if filter_value and container_filter_value != filter_value:
+                continue
+
+        container_globals, container_snippets = parse_globals_and_snippets(labels)
+        global_settings.update(container_globals)
+        snippets.update(container_snippets)
 
     return global_settings, snippets
 
@@ -1102,6 +1136,33 @@ def start_recovery_threads():
 
 # =============================================================================
 
+def start_snippet_api(snippets_ref):
+    """Start HTTP server to serve snippets (if enabled)"""
+    if SNIPPET_API_PORT <= 0:
+        return
+
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    class SnippetHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/snippets":
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                # Get current snippets from Docker labels
+                _, current_snippets = parse_globals_and_snippets_from_all_containers()
+                self.wfile.write(json.dumps(current_snippets).encode())
+            else:
+                self.send_error(404)
+
+        def log_message(self, format, *args):
+            logger.debug(f"Snippet API: {args[0]}")
+
+    server = HTTPServer(("0.0.0.0", SNIPPET_API_PORT), SnippetHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    logger.info(f"Snippet API listening on :{SNIPPET_API_PORT}")
+
 last_update = 0
 debounce_seconds = 5  # Increased debounce to 5 seconds
 
@@ -1149,9 +1210,17 @@ if __name__ == "__main__":
     logger.info(f"   Health Check: {HEALTH_CHECK_INTERVAL}s (0=disabled)")
     logger.info(f"   Periodic Resync: {RESYNC_INTERVAL}s (0=disabled)")
     logger.info(f"   Log Level: {LOG_LEVEL}")
+    logger.info(f"   Snippet API Port: {SNIPPET_API_PORT} (0=disabled)")
+    if SNIPPET_SOURCES:
+        logger.info(f"   Snippet Sources: {SNIPPET_SOURCES}")
 
     logger.info("="*60)
 
     sync_config()  # Initial sync
     start_recovery_threads()  # Start health check and periodic resync
+
+    # Start snippet API server (if enabled)
+    if SNIPPET_API_PORT > 0:
+        start_snippet_api(None)
+
     watch_docker_events()
