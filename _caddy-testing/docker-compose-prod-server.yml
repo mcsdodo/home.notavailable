@@ -6,12 +6,9 @@ services:
     network_mode: host
     environment:
       - CF_API_TOKEN=${CF_API_TOKEN}
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-      - "2019:2019"
+    command: caddy run --config /etc/caddy/caddy.json
     volumes:
+      - ./caddy-config.json:/etc/caddy/caddy.json:ro
       - caddy_data:/data
       - caddy_config:/config
 

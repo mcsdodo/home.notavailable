@@ -3,6 +3,16 @@
     "listen": "0.0.0.0:2019"
   },
   "apps": {
+    "tls": {
+      "automation": {
+        "policies": [
+          {
+            "subjects": ["*.lan", "*.test.lan"],
+            "issuers": [{"module": "internal"}]
+          }
+        ]
+      }
+    },
     "http": {
       "servers": {
         "srv0": {
@@ -28,15 +38,19 @@
           ]
         },
         "srv1": {
-          "listen": [":443"],
+          "listen": [":443", ":8080"],
+          "automatic_https": {
+            "disable": true
+          },
           "routes": [
             {
-              "@id": "placeholder_https",
-              "match": [{"host": ["placeholder-https.test.lan"]}],
+              "@id": "wildcard_test_lan",
+              "match": [{"host": ["*.test.lan"]}],
               "handle": [
                 {
                   "handler": "static_response",
-                  "body": "Placeholder HTTPS route"
+                  "body": "Wildcard catch-all for *.test.lan - route ordering test FAILED if you see this for specific routes",
+                  "status_code": 200
                 }
               ],
               "terminal": true
