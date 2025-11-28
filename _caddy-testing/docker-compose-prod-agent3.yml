@@ -6,7 +6,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - CADDY_URL=http://192.168.0.96:2019
+      - CADDY_URL=http://192.168.0.96:2020
       - AGENT_ID=host3-remote
       - HOST_IP=192.168.0.99
       - DOCKER_LABEL_PREFIX=caddy
@@ -71,9 +71,6 @@ services:
     labels:
       caddy_30: phase2-transport.lan
       caddy_30.reverse_proxy: "{{upstreams 9003}}"
-      caddy_30.transport: http
-      caddy_30.transport.tls: ""
-      caddy_30.transport.tls_insecure_skip_verify: ""
 
   # HTTP-only route test - should go to srv2 (HTTP server on :80)
   test-http-only:

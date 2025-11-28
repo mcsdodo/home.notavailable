@@ -57,12 +57,12 @@ docker save caddy-agent:1.0 | gzip > caddy-agent-1.0.tar.gz
 ### 2. Deploy Host1 (Server)
 
 ```bash
-scp caddy-agent-1.0.tar.gz docker-compose-prod-server.yml root@host1:/tmp/
+scp caddy-agent-1.0.tar.gz caddy-config.json docker-compose-prod-server.yml root@host1:/tmp/
 
 ssh root@host1 << 'EOF'
 mkdir -p /opt/caddy && cd /opt/caddy
 gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load
-cp /tmp/docker-compose-prod-server.yml .
+cp /tmp/docker-compose-prod-server.yml /tmp/caddy-config.json .
 docker compose up -d
 EOF
 ```
@@ -88,8 +88,8 @@ Same as Host2, but use `docker-compose-prod-agent3.yml`
 ### 5. Verify
 
 ```bash
-ssh root@host1 "curl http://localhost:2019/config/apps/http/servers/reverse_proxy/routes | jq 'length'"
-# Should show: 0 (no routes yet)
+ssh root@host1 "curl http://localhost:2019/config/apps/http/servers/srv1/routes | jq 'length'"
+# Should show initial routes from caddy-config.json
 ```
 
 ### 6. Add Routes
@@ -111,8 +111,8 @@ docker run -d --name app3 --network host \
 sleep 5
 
 # Verify routes
-ssh root@host1 "curl http://localhost:2019/config/apps/http/servers/reverse_proxy/routes | jq 'length'"
-# Should show: 2 (routes from host2 and host3)
+ssh root@host1 "curl http://localhost:2019/config/apps/http/servers/srv1/routes | jq 'length'"
+# Should show routes from all hosts
 ```
 
 ### 7. Test from Host1
@@ -131,7 +131,11 @@ EOF
 ### View Routes
 
 ```bash
-curl http://localhost:2019/config/apps/http/servers/reverse_proxy/routes | jq '.[] | {id: .["@id"], domain: .match[0].host[0]}'
+# HTTPS routes (srv1)
+curl http://localhost:2019/config/apps/http/servers/srv1/routes | jq '.[] | {id: .["@id"], domain: .match[0].host[0]}'
+
+# HTTP-only routes (srv2)
+curl http://localhost:2019/config/apps/http/servers/srv2/routes | jq '.[] | {id: .["@id"], domain: .match[0].host[0]}'
 ```
 
 ### View Logs
@@ -176,7 +180,7 @@ docker ps | grep caddy-server
 curl http://localhost:2019/config/ > /dev/null && echo "OK" || echo "FAIL"
 
 # Routes present?
-curl http://localhost:2019/config/apps/http/servers/reverse_proxy/routes | jq 'length'
+curl http://localhost:2019/config/apps/http/servers/srv1/routes | jq 'length'
 ```
 
 ### Restart Services
@@ -198,6 +202,7 @@ docker compose restart
 
 All necessary files are in the repo:
 
+- `caddy-config.json` - Caddy JSON config (srv0/srv1/srv2)
 - `docker-compose-prod-server.yml` - Server (host1)
 - `docker-compose-prod-agent2.yml` - Agent (host2)
 - `docker-compose-prod-agent3.yml` - Agent (host3)
@@ -208,11 +213,9 @@ Just copy and configure with your IPs.
 
 ## Documentation
 
-- **README.md** - Full documentation
 - **DEPLOYMENT.md** - Detailed deployment guide
-- **CONFIGURATION.md** - All config options
+- **CONFIGURATION.md** - All config options (including HTTP-only routes)
 - **TROUBLESHOOTING.md** - Common issues & fixes
-- **TESTING.md** - Test suite
 
 ---
 
@@ -221,10 +224,12 @@ Just copy and configure with your IPs.
 1. Add more hosts by copying and modifying the agent compose file
 2. Configure your apps with caddy labels
 3. Set up DNS pointing to host1
-4. Enable HTTPS by updating Caddyfile
+4. For HTTP-only routes, use `http://` prefix: `caddy=http://internal.lan`
 5. Monitor with `docker stats` or Prometheus
 
 ---
+
+**Version**: 1.1 | **Last Updated**: 2025-11-28
 
 **Need Help?** Check TROUBLESHOOTING.md or create a GitHub issue.
 

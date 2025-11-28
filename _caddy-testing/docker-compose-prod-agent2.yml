@@ -6,7 +6,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - CADDY_URL=http://192.168.0.96:2019
+      - CADDY_URL=http://192.168.0.96:2020
       - AGENT_ID=host2-remote
       - DOCKER_LABEL_PREFIX=caddy
       # HOST_IP not set - will auto-detect with network_mode: host
@@ -64,7 +64,6 @@ services:
       - -text=Phase 2 - Snippet import on host2
     labels:
       caddy_20: phase2-import.lan
-      caddy_20.import: test_snippet
       caddy_20.reverse_proxy: "{{upstreams 5681}}"
 
   # Phase 3 test - header manipulation (header_up)
@@ -107,3 +106,17 @@ services:
     labels:
       caddy: api.test.lan
       caddy.reverse_proxy: "{{upstreams 9101}}"
+
+  # Test - real-world wildcard certificate with Cloudflare DNS
+  test-wildcard-cert:
+    image: hashicorp/http-echo
+    container_name: test-wildcard-cert
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:8084
+      - -text=Wildcard cert with Cloudflare DNS on *.lacny.me (host2)
+    labels:
+      caddy: test-phase2.lacny.me
+      caddy.import: wildcard
+      caddy.reverse_proxy: "{{upstreams 8084}}"
