@@ -9,6 +9,7 @@ services:
       - CADDY_URL=http://192.168.0.96:2020
       - AGENT_ID=host2-remote
       - DOCKER_LABEL_PREFIX=caddy
+      - SNIPPET_SOURCES=http://192.168.0.96:8567
       # HOST_IP not set - will auto-detect with network_mode: host
       # Recovery mechanism (handles Caddy restarts)
       - HEALTH_CHECK_INTERVAL=5   # Fast detection of missing routes
@@ -152,3 +153,17 @@ services:
       caddy: multi-import.test.lan
       caddy.import: internal, custom-header
       caddy.reverse_proxy: "{{upstreams 9200}}"
+
+  # Test - remote snippet import (fetches 'wildcard' from host1)
+  test-remote-snippet:
+    image: hashicorp/http-echo
+    container_name: test-remote-snippet
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9250
+      - -text=SUCCESS - Remote snippet import from host1
+    labels:
+      caddy: remote-snippet-test.lan
+      caddy.import: wildcard
+      caddy.reverse_proxy: "{{upstreams 9250}}"
