@@ -1,48 +1,27 @@
 services:
-  caddy:
-    container_name: caddy
-    image: lucaslorentz/caddy-docker-proxy:latest
+  caddy-agent:
+    image: mcsdodo/caddy-agent
+    container_name: caddy-agent
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"      
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - TZ=Europe/Bratislava
-      - CADDY_INGRESS_NETWORKS=caddy
-    networks:
-      caddy:
-      macvlan0:
-        ipv4_address: 192.168.0.23
-    labels:
-      autoheal: true
-  
+      - CADDY_URL=http://192.168.0.21:2020
+      - AGENT_ID=big-ai
+      - DOCKER_LABEL_PREFIX=caddy
+      - HOST_IP=192.168.0.115
+
   webserver:
     container_name: webserver
     image: hashicorp/http-echo
     environment:
-      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
+      - ECHO_TEXT=${WEBSERVER_DOMAIN}
     command: [
       "-listen=:80",
       "-text=${ECHO_TEXT}"
-    ]      
-    labels: 
-      caddy: ${WEBSERVER_DOMAIN:-http://webserver.lan}
+    ]
+    ports:
+      - "8180:80"
+    labels:
+      caddy: agent-remote.lacny.me
       caddy.reverse_proxy: "{{upstreams 80}}"
-    networks:
-      - caddy
-  
-networks:
-  caddy:
-    name: caddy
-  macvlan0:
-    name: macvlan0
-    driver: macvlan
-    driver_opts:
-      parent: eth0
-    ipam:
-      config:
-        - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
-          gateway: ${MACVLAN_GATEWAY:-192.168.0.1}
