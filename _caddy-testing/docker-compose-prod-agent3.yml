@@ -74,3 +74,31 @@ services:
       caddy_30.transport: http
       caddy_30.transport.tls: ""
       caddy_30.transport.tls_insecure_skip_verify: ""
+
+  # HTTP-only route test - should go to srv2 (HTTP server on :80)
+  test-http-only:
+    image: hashicorp/http-echo
+    container_name: test-http-only
+    restart: unless-stopped
+    ports:
+      - "9300:9300"
+    command:
+      - -listen=:9300
+      - -text=SUCCESS - HTTP-only route (srv2) on host3
+    labels:
+      caddy: http://httponly.test.lan
+      caddy.reverse_proxy: "{{upstreams 9300}}"
+
+  # HTTPS route test - should go to srv1 (HTTPS server on :443)
+  test-https:
+    image: hashicorp/http-echo
+    container_name: test-https
+    restart: unless-stopped
+    ports:
+      - "9301:9301"
+    command:
+      - -listen=:9301
+      - -text=SUCCESS - HTTPS route (srv1) on host3
+    labels:
+      caddy: https.test.lan
+      caddy.reverse_proxy: "{{upstreams 9301}}"

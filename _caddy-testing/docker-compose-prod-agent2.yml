@@ -81,3 +81,29 @@ services:
       caddy_30.reverse_proxy: "{{upstreams 5682}}"
       caddy_30.reverse_proxy.header_up: "-X-Forwarded-For"
       caddy_30.reverse_proxy.header_down: "-Server"
+
+  # Route ordering test - specific route should match before wildcard (*.test.lan)
+  test-specific:
+    image: hashicorp/http-echo
+    container_name: test-specific
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9100
+      - -text=SUCCESS - Specific route matched before wildcard (host2)
+    labels:
+      caddy: app.test.lan
+      caddy.reverse_proxy: "{{upstreams 9100}}"
+
+  # Route ordering test - another specific route
+  test-another:
+    image: hashicorp/http-echo
+    container_name: test-another
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9101
+      - -text=SUCCESS - Another specific route (host2)
+    labels:
+      caddy: api.test.lan
+      caddy.reverse_proxy: "{{upstreams 9101}}"
