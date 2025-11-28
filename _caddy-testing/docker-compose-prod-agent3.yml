@@ -102,3 +102,19 @@ services:
     labels:
       caddy: https.test.lan
       caddy.reverse_proxy: "{{upstreams 9301}}"
+
+  # Transport TLS test - uses transport.tls without explicit transport: http
+  # This tests the fix for the missing protocol bug
+  test-transport-tls:
+    image: hashicorp/http-echo
+    container_name: test-transport-tls
+    restart: unless-stopped
+    ports:
+      - "9302:9302"
+    command:
+      - -listen=:9302
+      - -text=SUCCESS - Transport TLS (implicit protocol) on host3
+    labels:
+      caddy: transport-tls.test.lan
+      caddy.reverse_proxy: "{{upstreams 9302}}"
+      caddy.transport.tls_insecure_skip_verify: ""
