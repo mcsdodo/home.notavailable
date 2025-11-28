@@ -267,17 +267,21 @@ def parse_container_labels(container, labels, host_ip, snippets=None):
             logger.info(f"Skipping route {route_num} (no domain or snippet)")
             continue
 
-        # Phase 2: Apply imports from snippets
+        # Phase 2: Apply imports from snippets (supports multiple comma-separated snippets)
         if 'import' in config:
-            snippet_name = config['import']
-            if snippet_name in snippets:
-                logger.info(f"Applying snippet '{snippet_name}' to route {route_num}")
-                # Merge snippet config into this route (snippet directives come first, then route overrides)
-                merged_config = {**snippets[snippet_name], **config}
-                config = merged_config
-                logger.info(f"Merged config keys after import: {list(config.keys())}")
-            else:
-                logger.warning(f"Snippet '{snippet_name}' not found for route {route_num}")
+            import_value = config['import']
+            snippet_names = [s.strip() for s in import_value.split(',')]
+            merged_config = {}
+            for snippet_name in snippet_names:
+                if snippet_name in snippets:
+                    logger.info(f"Applying snippet '{snippet_name}' to route {route_num}")
+                    # Merge snippet config (later snippets override earlier)
+                    merged_config = {**merged_config, **snippets[snippet_name]}
+                else:
+                    logger.warning(f"Snippet '{snippet_name}' not found for route {route_num}")
+            # Route config overrides all snippets
+            config = {**merged_config, **config}
+            logger.info(f"Merged config keys after import: {list(config.keys())}")
 
         proxy_target = config.get('reverse_proxy')
         if not proxy_target:
