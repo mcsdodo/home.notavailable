@@ -1,0 +1,61 @@
+## Test: Route Ordering Fix
+# Tests that specific routes come before wildcard routes
+# Even when wildcard routes (*.test.lan) exist with terminal:true and abort:true,
+# specific routes (app.test.lan) should match first
+
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy-multiserver-test
+    restart: unless-stopped
+    network_mode: host
+    command: caddy run --config /etc/caddy/caddy.json
+    volumes:
+      - ./test-multiserver-config.json:/etc/caddy/caddy.json:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  caddy-agent:
+    image: caddy-agent:latest
+    container_name: caddy-agent-multiserver-test
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CADDY_URL=http://localhost:2019
+      - AGENT_ID=multiserver-test
+      - DOCKER_LABEL_PREFIX=caddy
+    depends_on:
+      - caddy
+
+  # Test service with specific domain that matches wildcard pattern
+  # Should work because route ordering puts specific routes before wildcards
+  test-specific:
+    image: hashicorp/http-echo
+    container_name: test-specific
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9100
+      - -text=SUCCESS - Specific route matched before wildcard
+    labels:
+      caddy: app.test.lan
+      caddy.reverse_proxy: "{{upstreams 9100}}"
+
+  # Another test service
+  test-another:
+    image: hashicorp/http-echo
+    container_name: test-another
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9101
+      - -text=SUCCESS - Another specific route
+    labels:
+      caddy: api.test.lan
+      caddy.reverse_proxy: "{{upstreams 9101}}"
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -591,21 +591,35 @@ def push_to_caddy(routes, global_settings=None, tls_dns_policies=None):
     if "servers" not in config["apps"]["http"]:
         config["apps"]["http"]["servers"] = {}
 
-    # Use the first server if it exists, otherwise create reverse_proxy server
+    # Find the right server to add routes to
     servers = config["apps"]["http"]["servers"]
     if servers:
-        # Use first existing server
-        server_name = list(servers.keys())[0]
+        # Find server that listens on :443 (preferred)
+        server_name = None
+        for name, srv in servers.items():
+            listeners = srv.get("listen", [])
+            if ":443" in listeners or "0.0.0.0:443" in listeners:
+                server_name = name
+                break
+
+        # Fallback: find server with :80
+        if not server_name:
+            for name, srv in servers.items():
+                listeners = srv.get("listen", [])
+                if ":80" in listeners or "0.0.0.0:80" in listeners:
+                    server_name = name
+                    break
+
+        # Last resort: first server (but don't modify its listeners)
+        if not server_name:
+            server_name = list(servers.keys())[0]
+
         if "routes" not in servers[server_name]:
             servers[server_name]["routes"] = []
-        # Ensure server has both HTTP and HTTPS listeners
-        if "listen" not in servers[server_name]:
-            servers[server_name]["listen"] = [":80", ":443"]
-        elif ":443" not in servers[server_name]["listen"]:
-            servers[server_name]["listen"].append(":443")
+
         local_routes = servers[server_name].get("routes", [])
     else:
-        # Create new server with HTTP and HTTPS listeners
+        # Create new server only if none exist
         servers["reverse_proxy"] = {
             "listen": [":80", ":443"],
             "routes": []
@@ -829,6 +843,14 @@ def save_local_config(config):
     except Exception as e:
         logger.error(f"❌ Failed to save local Caddy config: {e}")
 
+def is_wildcard_route(route):
+    """Check if route matches wildcard domains (e.g., *.lacny.me)"""
+    match = route.get("match", [{}])
+    if match:
+        hosts = match[0].get("host", [])
+        return any(h.startswith("*") for h in hosts)
+    return False
+
 def merge_routes(local_routes, new_routes):
     """Merge local and new routes, using route ID and agent ID for tracking"""
 
@@ -879,7 +901,13 @@ def merge_routes(local_routes, new_routes):
     if removed:
         logger.info(f"Routes removed: {removed}")
 
-    return list(merged.values())
+    # Sort routes: specific domains first, wildcards last
+    # This ensures routes like 'agent-remote.lacny.me' come before '*.lacny.me'
+    merged_list = list(merged.values())
+    specific_routes = [r for r in merged_list if not is_wildcard_route(r)]
+    wildcard_routes = [r for r in merged_list if is_wildcard_route(r)]
+
+    return specific_routes + wildcard_routes
 
 def sync_config():
     logger.info("🔄 Syncing config...")
