@@ -154,7 +154,9 @@ services:
       caddy.import: internal, custom-header
       caddy.reverse_proxy: "{{upstreams 9200}}"
 
-  # Test - remote snippet import (fetches 'wildcard' from host1)
+  # Test - remote snippet import (fetches 'https' snippet from host1)
+  # Uses 'https' instead of 'wildcard' because wildcard has handle.abort
+  # which would terminate the request before reverse_proxy runs
   test-remote-snippet:
     image: hashicorp/http-echo
     container_name: test-remote-snippet
@@ -165,5 +167,5 @@ services:
       - -text=SUCCESS - Remote snippet import from host1
     labels:
       caddy: remote-snippet-test.lan
-      caddy.import: wildcard
+      caddy.import: https
       caddy.reverse_proxy: "{{upstreams 9250}}"
