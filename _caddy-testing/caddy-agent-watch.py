@@ -240,7 +240,13 @@ def parse_container_labels(container, labels, host_ip, snippets=None):
 
         if not directive:
             # Base label: caddy or caddy_N
-            route_configs[route_num]['domain'] = label_value
+            # Check for http:// prefix (HTTP-only route)
+            if label_value.startswith('http://'):
+                route_configs[route_num]['domain'] = label_value[7:]  # Remove 'http://'
+                route_configs[route_num]['http_only'] = True
+            else:
+                route_configs[route_num]['domain'] = label_value
+                route_configs[route_num]['http_only'] = False
         else:
             # Directive label: caddy.reverse_proxy or caddy_N.reverse_proxy
             route_configs[route_num][directive] = label_value
@@ -250,7 +256,8 @@ def parse_container_labels(container, labels, host_ip, snippets=None):
     tls_dns_policies = []  # Collect TLS DNS policies for automation
     for route_num, config in sorted(route_configs.items()):
         domain = config.get('domain')
-        logger.info(f"Processing route {route_num}: domain={domain}, config_keys={list(config.keys())}")
+        http_only = config.get('http_only', False)
+        logger.info(f"Processing route {route_num}: domain={domain}, http_only={http_only}, config_keys={list(config.keys())}")
 
         # Skip snippets and global settings (no domain or snippet pattern)
         if not domain or (domain.startswith('(') and domain.endswith(')')):
@@ -320,7 +327,8 @@ def parse_container_labels(container, labels, host_ip, snippets=None):
             "handle": handle,
             "match": [{
                 "host": domains
-            }]
+            }],
+            "_http_only": http_only  # Internal flag for server selection (stripped before push)
         }
 
         # Add TLS config if present (for wildcard certificates, etc.)
@@ -591,45 +599,56 @@ def push_to_caddy(routes, global_settings=None, tls_dns_policies=None):
     if "servers" not in config["apps"]["http"]:
         config["apps"]["http"]["servers"] = {}
 
-    # Find the right server to add routes to
+    # Separate routes by protocol (HTTP-only vs HTTPS)
+    http_only_routes = []
+    https_routes = []
+    for route in routes:
+        is_http_only = route.pop('_http_only', False)  # Remove internal flag
+        if is_http_only:
+            http_only_routes.append(route)
+        else:
+            https_routes.append(route)
+
+    if http_only_routes:
+        logger.info(f"HTTP-only routes: {[r.get('@id') for r in http_only_routes]}")
+    if https_routes:
+        logger.info(f"HTTPS routes: {[r.get('@id') for r in https_routes]}")
+
+    # Find servers
     servers = config["apps"]["http"]["servers"]
+    https_server = None
+    http_server = None
+
     if servers:
-        # Find server that listens on :443 (preferred)
-        server_name = None
         for name, srv in servers.items():
             listeners = srv.get("listen", [])
-            if ":443" in listeners or "0.0.0.0:443" in listeners:
-                server_name = name
-                break
+            listeners_str = ' '.join(listeners)
+            has_443 = ':443' in listeners_str
+            has_80 = ':80' in listeners_str
 
-        # Fallback: find server with :80
-        if not server_name:
-            for name, srv in servers.items():
-                listeners = srv.get("listen", [])
-                if ":80" in listeners or "0.0.0.0:80" in listeners:
-                    server_name = name
-                    break
+            if has_443:
+                https_server = name
+            elif has_80 and not has_443:
+                http_server = name
 
-        # Last resort: first server (but don't modify its listeners)
-        if not server_name:
-            server_name = list(servers.keys())[0]
-
-        if "routes" not in servers[server_name]:
-            servers[server_name]["routes"] = []
-
-        local_routes = servers[server_name].get("routes", [])
+        # Fallback: if no dedicated servers, use first one for both
+        if not https_server and not http_server and servers:
+            https_server = list(servers.keys())[0]
+            http_server = https_server
     else:
         # Create new server only if none exist
         servers["reverse_proxy"] = {
             "listen": [":80", ":443"],
             "routes": []
         }
-        server_name = "reverse_proxy"
-        local_routes = []
+        https_server = "reverse_proxy"
+        http_server = "reverse_proxy"
 
-    # Phase 2: Apply global settings to server config
-    if global_settings:
-        apply_global_settings(config, server_name, global_settings)
+    logger.info(f"Server selection: HTTPS={https_server}, HTTP-only={http_server}")
+
+    # Phase 2: Apply global settings to HTTPS server config
+    if global_settings and https_server:
+        apply_global_settings(config, https_server, global_settings)
 
     # Phase 2: Apply TLS DNS policies
     logger.info(f"DEBUG: tls_dns_policies count: {len(tls_dns_policies) if tls_dns_policies else 0}")
@@ -637,9 +656,21 @@ def push_to_caddy(routes, global_settings=None, tls_dns_policies=None):
         logger.info(f"DEBUG: Calling apply_tls_dns_policies with {len(tls_dns_policies)} policies")
         apply_tls_dns_policies(config, tls_dns_policies)
 
-    # Merge routes
-    merged_routes = merge_routes(local_routes, routes)
-    config["apps"]["http"]["servers"][server_name]["routes"] = merged_routes
+    # Merge HTTPS routes to HTTPS server
+    if https_routes and https_server:
+        if "routes" not in servers[https_server]:
+            servers[https_server]["routes"] = []
+        local_routes = servers[https_server].get("routes", [])
+        merged_routes = merge_routes(local_routes, https_routes)
+        config["apps"]["http"]["servers"][https_server]["routes"] = merged_routes
+
+    # Merge HTTP-only routes to HTTP server
+    if http_only_routes and http_server:
+        if "routes" not in servers[http_server]:
+            servers[http_server]["routes"] = []
+        local_routes = servers[http_server].get("routes", [])
+        merged_routes = merge_routes(local_routes, http_only_routes)
+        config["apps"]["http"]["servers"][http_server]["routes"] = merged_routes
     # Save updated config
     save_local_config(config)
 
