@@ -59,37 +59,38 @@ A Python-based agent system for managing Caddy reverse proxy across multiple Doc
 - 3+ hosts (or can run all on localhost for testing)
 - Network connectivity between hosts on port 2019 (Caddy Admin API)
 
-### 1. Build the Agent Image
+### Docker Image
+
+The agent is available on Docker Hub:
 
 ```bash
+docker pull mcsdodo/caddy-agent:latest
+```
+
+### 1. Deploy on Host1 (Server)
+
+```bash
+scp docker-compose-prod-server.yml root@host1:/opt/caddy/docker-compose.yml
+ssh root@host1 "cd /opt/caddy && docker compose up -d"
+```
+
+### 2. Deploy on Host2 (Agent)
+
+```bash
+scp docker-compose-prod-agent2.yml root@host2:/opt/caddy/docker-compose.yml
+ssh root@host2 "cd /opt/caddy && docker compose up -d"
+```
+
+### Building from Source (Optional)
+
+```bash
+git clone <repo>
 cd caddy-agent
 docker build -t caddy-agent:latest .
 docker save caddy-agent:latest | gzip > caddy-agent.tar.gz
 ```
 
-### 2. Deploy on Host1 (Server)
-
-```bash
-scp caddy-agent.tar.gz docker-compose-prod-server.yml Caddyfile root@host1:/root/caddy/
-ssh root@host1 << 'EOF'
-  cd /root/caddy
-  gunzip -c caddy-agent.tar.gz | docker load
-  docker compose -f docker-compose-prod-server.yml up -d
-EOF
-```
-
-### 3. Deploy on Host2 (Agent)
-
-```bash
-scp caddy-agent.tar.gz docker-compose-prod-agent2.yml root@host2:/root/caddy/
-ssh root@host2 << 'EOF'
-  cd /root/caddy
-  gunzip -c caddy-agent.tar.gz | docker load
-  docker compose -f docker-compose-prod-agent2.yml up -d
-EOF
-```
-
-### 4. Deploy Your First Container
+### 3. Deploy Your First Container
 
 ```bash
 # On host2, create a container with caddy labels
@@ -101,7 +102,7 @@ docker run -d \
   myapp:latest
 ```
 
-### 5. Verify Routing
+### 4. Verify Routing
 
 ```bash
 # From any host
@@ -177,7 +178,7 @@ services:
       - caddy_config:/config
 
   agent:
-    image: caddy-agent:latest
+    image: mcsdodo/caddy-agent:latest
     network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -215,7 +216,7 @@ services:
       - caddy_config:/config
 
   agent:
-    image: caddy-agent:latest
+    image: mcsdodo/caddy-agent:latest
     network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -229,7 +230,7 @@ services:
 ```yaml
 services:
   agent:
-    image: caddy-agent:latest
+    image: mcsdodo/caddy-agent:latest
     network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

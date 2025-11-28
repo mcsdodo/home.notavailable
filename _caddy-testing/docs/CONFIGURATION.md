@@ -4,7 +4,7 @@ Complete reference for all configuration options and Docker labels.
 
 ## Server Architecture
 
-The Caddy JSON config (`caddy-config.json`) defines three servers:
+The caddy-docker-proxy manages Caddy configuration via Docker labels. The server structure:
 
 | Server | Port | Purpose |
 |--------|------|---------|
@@ -294,7 +294,7 @@ LABEL caddy.version=1.2.3
 version: '3'
 services:
   agent:
-    image: caddy-agent:latest
+    image: mcsdodo/caddy-agent:latest
     environment:
       CADDY_URL: http://localhost:2019
       AGENT_ID: localhost
@@ -317,7 +317,7 @@ services:
 version: '3'
 services:
   agent:
-    image: caddy-agent:latest
+    image: mcsdodo/caddy-agent:latest
     environment:
       CADDY_URL: http://localhost:2019
       AGENT_ID: prod-server
@@ -332,7 +332,7 @@ services:
 version: '3'
 services:
   agent:
-    image: caddy-agent:latest
+    image: mcsdodo/caddy-agent:latest
     network_mode: host
     environment:
       CADDY_URL: http://192.168.1.10:2019
@@ -348,7 +348,7 @@ services:
 version: '3'
 services:
   agent:
-    image: caddy-agent:latest
+    image: mcsdodo/caddy-agent:latest
     environment:
       CADDY_URL: http://192.168.1.10:2019
       AGENT_ID: prod-host3
@@ -363,7 +363,7 @@ services:
 **Agent for Team A:**
 ```yaml
 agent-team-a:
-  image: caddy-agent:latest
+  image: mcsdodo/caddy-agent:latest
   environment:
     CADDY_URL: http://192.168.1.10:2019
     AGENT_ID: team-a-agent
@@ -375,7 +375,7 @@ agent-team-a:
 **Agent for Team B:**
 ```yaml
 agent-team-b:
-  image: caddy-agent:latest
+  image: mcsdodo/caddy-agent:latest
   environment:
     CADDY_URL: http://192.168.1.10:2019
     AGENT_ID: team-b-agent
@@ -405,7 +405,7 @@ docker run -d \
 
 ```yaml
 agent:
-  image: caddy-agent:latest
+  image: mcsdodo/caddy-agent:latest
   environment:
     CADDY_URL: http://192.168.1.10:2019
     AGENT_ID: prod-host2
@@ -424,7 +424,7 @@ CADDY_API_TOKEN=my-secret-api-token-12345
 
 ```yaml
 agent:
-  image: caddy-agent:latest
+  image: mcsdodo/caddy-agent:latest
   environment:
     CADDY_URL: http://localhost:2019
     AGENT_ID: localhost
