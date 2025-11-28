@@ -1,0 +1,65 @@
+{
+  "admin": {
+    "listen": "0.0.0.0:2019"
+  },
+  "apps": {
+    "http": {
+      "servers": {
+        "srv0": {
+          "listen": [":2020"],
+          "routes": [
+            {
+              "handle": [
+                {
+                  "handler": "reverse_proxy",
+                  "headers": {
+                    "request": {
+                      "set": {
+                        "Host": ["localhost:2019"]
+                      }
+                    }
+                  },
+                  "upstreams": [
+                    {"dial": "localhost:2019"}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "srv1": {
+          "listen": [":443"],
+          "routes": [
+            {
+              "@id": "placeholder_https",
+              "match": [{"host": ["placeholder-https.test.lan"]}],
+              "handle": [
+                {
+                  "handler": "static_response",
+                  "body": "Placeholder HTTPS route"
+                }
+              ],
+              "terminal": true
+            }
+          ]
+        },
+        "srv2": {
+          "listen": [":80"],
+          "routes": [
+            {
+              "@id": "placeholder_http",
+              "match": [{"host": ["placeholder-http.test.lan"]}],
+              "handle": [
+                {
+                  "handler": "static_response",
+                  "body": "Placeholder HTTP route"
+                }
+              ],
+              "terminal": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
