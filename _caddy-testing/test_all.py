@@ -406,6 +406,87 @@ class IntegrationTests:
 
 
 # =============================================================================
+# SERVER MODE TESTS - Host1 caddy-agent-server (uses 'agent' prefix)
+# =============================================================================
+
+class ServerModeTests:
+    """Integration tests for server mode agent on host1"""
+
+    @staticmethod
+    def test_server_mode_basic_route():
+        """Test: Server mode agent creates route (test.server.lan)"""
+        result = IntegrationTests.run_curl("test.server.lan", port=443, https=True)
+        assert result and "server mode" in result.lower(), f"Expected server mode response, got: {result}"
+        print("[PASS] test_server_mode_basic_route")
+
+    @staticmethod
+    def test_server_mode_route_id_prefix():
+        """Test: Server mode routes have host1-server_ prefix"""
+        try:
+            result = subprocess.run(
+                ["curl", "-s", "--max-time", "5", f"http://{CADDY_SERVER}:{CADDY_API_PORT}/config/apps/http/servers/srv1/routes"],
+                capture_output=True, text=True, timeout=7
+            )
+            routes = result.stdout
+            assert "host1-server_" in routes, f"Expected host1-server_ prefix in routes"
+            print("[PASS] test_server_mode_route_id_prefix")
+        except Exception as e:
+            raise AssertionError(f"Failed to check route IDs: {e}")
+
+    @staticmethod
+    def test_coexistence_caddy_and_agent_prefixes():
+        """Test: Both caddy (caddy-docker-proxy) and agent (server mode) routes coexist"""
+        try:
+            result = subprocess.run(
+                ["curl", "-s", "--max-time", "5", f"http://{CADDY_SERVER}:{CADDY_API_PORT}/config/apps/http/servers/srv1/routes"],
+                capture_output=True, text=True, timeout=7
+            )
+            routes = result.stdout
+            # Check for routes from both sources
+            has_host1_server = "host1-server_" in routes
+            has_host2_remote = "host2-remote_" in routes or "host3-remote_" in routes
+            assert has_host1_server, "Missing server mode routes (host1-server_*)"
+            assert has_host2_remote, "Missing remote agent routes (host2-remote_* or host3-remote_*)"
+            print("[PASS] test_coexistence_caddy_and_agent_prefixes")
+        except Exception as e:
+            raise AssertionError(f"Failed to verify coexistence: {e}")
+
+    @staticmethod
+    def run_all():
+        """Run all server mode tests"""
+        print("=" * 60)
+        print("SERVER MODE TESTS - Host1 Agent")
+        print("=" * 60)
+
+        # First check API accessibility
+        if not IntegrationTests.check_caddy_api():
+            print(f"[SKIP] Caddy API not accessible at {CADDY_SERVER}:{CADDY_API_PORT}")
+            return False
+
+        tests = [
+            ServerModeTests.test_server_mode_basic_route,
+            ServerModeTests.test_server_mode_route_id_prefix,
+            ServerModeTests.test_coexistence_caddy_and_agent_prefixes,
+        ]
+
+        passed = 0
+        failed = 0
+        for test in tests:
+            try:
+                test()
+                passed += 1
+            except AssertionError as e:
+                print(f"[FAIL] {test.__name__}: {e}")
+                failed += 1
+            except Exception as e:
+                print(f"[ERROR] {test.__name__}: {e}")
+                failed += 1
+
+        print(f"\nPassed: {passed}/{len(tests)}")
+        return failed == 0
+
+
+# =============================================================================
 # CONFIGURATION TESTS
 # =============================================================================
 
@@ -459,13 +540,16 @@ def main():
     parser = argparse.ArgumentParser(description="Caddy Agent Test Suite")
     parser.add_argument("--unit", action="store_true", help="Run unit tests only")
     parser.add_argument("--integration", action="store_true", help="Run integration tests only")
+    parser.add_argument("--server-mode", action="store_true", help="Run server mode tests only")
     parser.add_argument("--config", action="store_true", help="Run config tests only")
     args = parser.parse_args()
 
     # Default: run all
-    run_unit = args.unit or (not args.unit and not args.integration and not args.config)
-    run_integration = args.integration or (not args.unit and not args.integration and not args.config)
-    run_config = args.config or (not args.unit and not args.integration and not args.config)
+    any_specific = args.unit or args.integration or args.server_mode or args.config
+    run_unit = args.unit or not any_specific
+    run_integration = args.integration or not any_specific
+    run_server_mode = args.server_mode or not any_specific
+    run_config = args.config or not any_specific
 
     results = []
 
@@ -483,6 +567,10 @@ def main():
 
     if run_integration:
         results.append(("Integration Tests", IntegrationTests.run_all()))
+        print()
+
+    if run_server_mode:
+        results.append(("Server Mode Tests", ServerModeTests.run_all()))
         print()
 
     # Summary
