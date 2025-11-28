@@ -14,6 +14,7 @@ A Python-based agent system for managing Caddy reverse proxy across multiple Doc
 - ✅ **Agent Coordination** - Multiple agents safely update routes with conflict prevention
 - ✅ **Dynamic Updates** - Add/remove/restart containers, routes update automatically
 - ✅ **Simple Configuration** - Docker labels define routes, no external config files needed
+- ✅ **Snippet Sharing** - Share TLS and config snippets between hosts via HTTP API
 - ✅ **Production Ready** - Tested across 3 hosts with comprehensive test suite
 
 ## Architecture
