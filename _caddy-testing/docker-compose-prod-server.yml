@@ -1,101 +1,54 @@
 services:
   caddy:
-    image: caddy-cloudflare:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.Caddy
+    image: caddy-docker-proxy:latest
     container_name: caddy-server
     restart: unless-stopped
     network_mode: host
-    environment:
-      - CF_API_TOKEN=${CF_API_TOKEN}
-    command: caddy run --config /etc/caddy/caddy.json
     volumes:
-      - ./caddy-config.json:/etc/caddy/caddy.json:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - caddy_data:/data
       - caddy_config:/config
-
-  caddy-agent:
-    image: caddy-agent:latest
-    container_name: caddy-agent-server
-    restart: unless-stopped
-    network_mode: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - CADDY_URL=http://localhost:2019
-      - AGENT_ID=host1-server
-      - DOCKER_LABEL_PREFIX=caddy
-      # No HOST_IP = local mode (uses container names for upstreams)
-    depends_on:
-      - caddy
-
-  # Test service - backward compatibility (simple labels)
-  test-local:
-    image: hashicorp/http-echo
-    container_name: test-local
-    restart: unless-stopped
-    network_mode: host
-    command:
-      - -listen=:8081
-      - -text=Hello from host1 - simple label
-    labels:
-      caddy: test-local.lan
-      caddy.reverse_proxy: 192.168.0.96:8081
-
-  # Phase 1 test - numbered labels
-  test-numbered:
-    image: hashicorp/http-echo
-    container_name: test-numbered
-    restart: unless-stopped
-    network_mode: host
-    command:
-      - -listen=:8082
-      - -text=Route 0 from host1
-    labels:
-      caddy_0: test-numbered-0.lan
-      caddy_0.reverse_proxy: 192.168.0.96:8082
-      caddy_1: test-numbered-1.lan
-      caddy_1.reverse_proxy: 192.168.0.96:8082
-
-  # Phase 1 test - multiple domains
-  test-multi-domain:
-    image: hashicorp/http-echo
-    container_name: test-multi-domain
-    restart: unless-stopped
-    network_mode: host
-    command:
-      - -listen=:8083
-      - -text=Multi-domain service on host1
-    labels:
-      caddy: test-multi-a.lan, test-multi-b.lan, test-multi-c.lan
-      caddy.reverse_proxy: 192.168.0.96:8083
-
-  # Phase 2 test - real-world wildcard certificate with Cloudflare DNS
-  test-wildcard-cert:
-    image: hashicorp/http-echo
-    container_name: test-wildcard-cert
-    restart: unless-stopped
-    network_mode: host
-    command:
-      - -listen=:8084
-      - -text=Phase 2 - Real wildcard cert with Cloudflare DNS on *.lacny.me
+      - TZ=Europe/Bratislava
     labels:
       # Global settings
-      caddy_0.email: ${EMAIL}
+      caddy_0.email: "${EMAIL}"
       caddy_0.auto_https: prefer_wildcard
 
-      # Wildcard snippet definition
+      # Wildcard snippet (Cloudflare DNS challenge)
       caddy_1: (wildcard)
       caddy_1.tls.dns: "cloudflare ${CF_API_TOKEN}"
       caddy_1.tls.resolvers: 1.1.1.1 1.0.0.1
       caddy_1.handle.abort: ""
 
-      # Wildcard domain using snippet (handle.abort only - for cert acquisition)
+      # HTTPS backend snippet (skip TLS verify)
+      caddy_2: (https)
+      caddy_2.transport: http
+      caddy_2.transport.tls: ""
+      caddy_2.transport.tls_insecure_skip_verify: ""
+
+      # Setup wildcard domains
       caddy_10: "*.lacny.me"
       caddy_10.import: wildcard
 
-      # Specific test subdomain with TLS DNS challenge
-      caddy_20: test-phase2.lacny.me
-      caddy_20.import: wildcard
-      caddy_20.reverse_proxy: 192.168.0.96:8084
+      # Internal certificates for .lan domains (local testing)
+      caddy_11: (internal)
+      caddy_11.tls: internal
+
+      caddy_12: "*.lan"
+      caddy_12.import: internal
+
+      # Catch-all for .lan domains (HTTP-only)
+      caddy_20: http://*.lan
+      caddy_20.reverse_proxy: "192.168.0.96:80"
+
+      # Admin API proxy
+      caddy_30: ":2020"
+      caddy_30.reverse_proxy: "localhost:2019"
+      caddy_30.reverse_proxy.header_up: "Host localhost:2019"
 
 volumes:
   caddy_data:

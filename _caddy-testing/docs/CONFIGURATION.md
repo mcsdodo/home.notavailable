@@ -2,6 +2,20 @@
 
 Complete reference for all configuration options and Docker labels.
 
+## Server Architecture
+
+The Caddy JSON config (`caddy-config.json`) defines three servers:
+
+| Server | Port | Purpose |
+|--------|------|---------|
+| srv0 | :2020 | Admin API proxy (optional) |
+| srv1 | :443, :8080 | Main HTTPS server (with internal CA for .lan domains) |
+| srv2 | :80 | HTTP-only server |
+
+Routes are automatically placed:
+- Regular domains → srv1 (HTTPS)
+- `http://` prefix domains → srv2 (HTTP-only)
+
 ## Environment Variables
 
 All configuration is done via environment variables. Set them in your docker-compose.yml or .env file.
@@ -216,6 +230,29 @@ Use when:
 - Container publishes port 3000
 - Agent is in remote mode (HOST_IP configured)
 - Need automatic port detection
+
+### HTTP-only Routes
+
+Use `http://` prefix to route traffic to the HTTP-only server (srv2 on port 80):
+
+```dockerfile
+# HTTP-only route (no TLS, served on port 80)
+LABEL caddy=http://internal-api.lan
+LABEL caddy.reverse_proxy={{upstreams 3000}}
+```
+
+This is useful for:
+- Internal services that don't need TLS
+- IoT devices that don't support HTTPS
+- Legacy applications requiring HTTP
+
+### Route Ordering
+
+The agent automatically orders routes so specific domains match before wildcards:
+- Specific routes (`app.example.com`) are processed first
+- Wildcard routes (`*.example.com`) are processed last
+
+This ensures that `app.example.com` routes to your app, not the wildcard catch-all.
 
 ### Advanced Labels
 
@@ -512,18 +549,25 @@ docker inspect caddy-agent-server | jq '.[].Config.Env'
 ### Check Detected Host IP
 
 ```bash
-docker logs caddy-agent-server | grep "Host IP"
+docker logs caddy-agent-server | grep "HOST_IP"
 ```
 
 ### Verify Label Detection
 
 ```bash
-docker logs caddy-agent-server | grep "Route:"
+docker logs caddy-agent-server | grep "Routes added"
 ```
 
 ### Check Generated Routes
 
 ```bash
+# HTTPS routes (srv1)
+curl -s http://localhost:2019/config/apps/http/servers/srv1/routes | python3 -m json.tool
+
+# HTTP-only routes (srv2)
+curl -s http://localhost:2019/config/apps/http/servers/srv2/routes | python3 -m json.tool
+
+# Local agent config copy
 docker exec caddy-agent-server cat /app/caddy-output.json | python3 -m json.tool
 ```
 
@@ -547,5 +591,5 @@ No hard limit, but tested up to 50+ containers on a single host.
 
 ---
 
-**Version**: 1.0
-**Last Updated**: 2025-11-16
+**Version**: 1.1
+**Last Updated**: 2025-11-28

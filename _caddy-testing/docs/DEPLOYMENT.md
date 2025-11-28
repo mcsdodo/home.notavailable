@@ -77,32 +77,23 @@ ssh root@host1 << 'EOF'
 mkdir -p /opt/caddy
 cd /opt/caddy
 
-# Create minimal Caddyfile
-cat > Caddyfile << 'CADDY'
-{
-  admin 0.0.0.0:2019
-}
-
-http://localhost {
-  respond "Caddy is running"
-}
-CADDY
-
 # Create necessary directories
 mkdir -p data config
 chown -R nobody:nogroup data config
-
 EOF
 ```
+
+Note: The `caddy-config.json` file must be copied to host1 (see below).
 
 ### Transfer and Load Image
 
 ```bash
-scp caddy-agent-1.0.tar.gz root@host1:/tmp/
+scp caddy-agent-1.0.tar.gz caddy-config.json root@host1:/tmp/
 
 ssh root@host1 << 'EOF'
 cd /opt/caddy
 gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load
+cp /tmp/caddy-config.json .
 rm /tmp/caddy-agent-1.0.tar.gz
 EOF
 ```
@@ -125,12 +116,11 @@ services:
     container_name: caddy-server
     restart: unless-stopped
     network_mode: host
+    command: caddy run --config /etc/caddy/caddy.json
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-config.json:/etc/caddy/caddy.json:ro
       - ./data:/data
       - ./config:/config
-    environment:
-      - CADDY_ADMIN=0.0.0.0:2019
 
   agent:
     image: caddy-agent:1.0
@@ -140,9 +130,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - AGENT_MODE=server
       - AGENT_ID=host1-prod-server
-      - CADDY_API_URL=http://localhost:2019
+      - CADDY_URL=http://localhost:2019
       - DOCKER_LABEL_PREFIX=caddy
     depends_on:
       - caddy
@@ -337,15 +326,17 @@ EOF
 ### Verify Routes
 
 ```bash
-# Check routes in Caddy
-curl http://192.168.1.10:2019/config/apps/http/servers/reverse_proxy/routes | \
+# Check HTTPS routes (srv1)
+curl http://192.168.1.10:2019/config/apps/http/servers/srv1/routes | \
   jq '.[] | {id: .["@id"], domain: .match[0].host[0]}'
 
-# Test routing
-ssh root@host1 << 'EOF'
-curl -H "Host: testapp-host1.local" http://localhost
-curl -H "Host: testapp-host2.local" http://localhost
-EOF
+# Check HTTP-only routes (srv2)
+curl http://192.168.1.10:2019/config/apps/http/servers/srv2/routes | \
+  jq '.[] | {id: .["@id"], domain: .match[0].host[0]}'
+
+# Test routing (from Linux host with --resolve for SNI)
+curl -sk --resolve testapp-host1.local:443:192.168.1.10 https://testapp-host1.local
+curl -sk --resolve testapp-host2.local:443:192.168.1.10 https://testapp-host2.local
 ```
 
 Expected output:
@@ -354,30 +345,42 @@ Hello from host1
 Hello from host2
 ```
 
-## Step 6: Enable HTTPS with Let's Encrypt
+## Step 6: TLS Configuration
 
-Update Caddyfile on host1:
+The `caddy-config.json` includes TLS automation policies:
 
-```bash
-ssh root@host1 << 'EOF'
-cat > Caddyfile << 'CADDY'
+- **Internal CA** for `.lan` domains (local testing)
+- **Let's Encrypt** for public domains (automatic)
+
+For public domains, routes will automatically get Let's Encrypt certificates.
+
+To customize TLS, edit `caddy-config.json`:
+
+```json
 {
-  admin 0.0.0.0:2019
+  "apps": {
+    "tls": {
+      "automation": {
+        "policies": [
+          {
+            "subjects": ["*.lan", "*.test.lan"],
+            "issuers": [{"module": "internal"}]
+          },
+          {
+            "subjects": ["*.example.com"],
+            "issuers": [{"module": "acme", "email": "your-email@example.com"}]
+          }
+        ]
+      }
+    }
+  }
 }
+```
 
-# Email for Let's Encrypt notifications
-*.local {
-  tls internal
-}
-
-*.example.com {
-  tls your-email@example.com
-}
-CADDY
-
-# Reload Caddy
-curl -X POST http://localhost:2019/reload
-EOF
+After editing, restart Caddy and agents:
+```bash
+ssh root@host1 "cd /opt/caddy && docker compose restart caddy"
+# Agents will automatically resync
 ```
 
 ## Monitoring & Health Checks
@@ -408,9 +411,11 @@ ssh root@host1 "docker logs caddy-agent-server 2>&1 | grep -c 'updated successfu
 # Health check
 curl -s http://localhost:2019/config/ > /dev/null && echo "OK" || echo "DOWN"
 
-# Route count
-curl -s http://localhost:2019/config/apps/http/servers/reverse_proxy/routes | \
-  jq 'length'
+# Route count (HTTPS routes on srv1)
+curl -s http://localhost:2019/config/apps/http/servers/srv1/routes | jq 'length'
+
+# Route count (HTTP-only routes on srv2)
+curl -s http://localhost:2019/config/apps/http/servers/srv2/routes | jq 'length'
 
 # Uptime (check from logs)
 docker logs caddy-server | grep "serving"
@@ -454,9 +459,10 @@ sed -i 's/caddy:2/caddy:2.7/' docker-compose.yml
 docker compose down caddy
 docker compose up -d caddy
 
-# Agents will automatically resync
+# Restart agents to resync
+docker restart caddy-agent-server
 sleep 10
-curl http://localhost:2019/config/apps/http/servers/reverse_proxy/routes | jq 'length'
+curl http://localhost:2019/config/apps/http/servers/srv1/routes | jq 'length'
 EOF
 ```
 
@@ -468,7 +474,8 @@ EOF
 # Backup all configs
 ssh root@host1 << 'EOF'
 tar czf /opt/caddy/backup-$(date +%Y%m%d).tar.gz \
-  /opt/caddy/Caddyfile \
+  /opt/caddy/caddy-config.json \
+  /opt/caddy/docker-compose.yml \
   /opt/caddy/data \
   /opt/caddy/config
 
@@ -572,5 +579,5 @@ The system scales linearly - 10 hosts = 10 agents, all coordinating safely.
 
 ---
 
-**Version**: 1.0
-**Last Updated**: 2025-11-16
+**Version**: 1.1
+**Last Updated**: 2025-11-28
