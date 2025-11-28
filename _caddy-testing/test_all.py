@@ -374,6 +374,13 @@ class IntegrationTests:
             raise AssertionError(f"Failed to verify transport config: {e}")
 
     @staticmethod
+    def test_multi_import():
+        """Test: Multiple comma-separated snippet imports (caddy.import: a, b)"""
+        result = IntegrationTests.run_curl("multi-import.test.lan", port=443, https=True)
+        assert result and "multi-import" in result.lower(), f"Expected multi-import response, got: {result}"
+        print("[PASS] test_multi_import")
+
+    @staticmethod
     def run_all():
         """Run all integration tests"""
         print("=" * 60)
@@ -407,6 +414,8 @@ class IntegrationTests:
             IntegrationTests.test_https_explicit_route,
             # Transport TLS fix
             IntegrationTests.test_transport_tls_implicit_protocol,
+            # Multi-import fix
+            IntegrationTests.test_multi_import,
         ]
 
         passed = 0

@@ -123,3 +123,32 @@ services:
       caddy: test-phase2.lacny.me
       caddy.import: wildcard
       caddy.reverse_proxy: "{{upstreams 8084}}"
+
+  # Snippet definitions for host2 (agents only see local containers)
+  snippets-host2:
+    image: busybox
+    container_name: snippets-host2
+    restart: "no"
+    command: ["sleep", "infinity"]
+    network_mode: host
+    labels:
+      # Internal TLS snippet (for .lan domains)
+      caddy_1: (internal)
+      caddy_1.tls: internal
+      # Custom header snippet (adds X-Custom-Header)
+      caddy_2: (custom-header)
+      caddy_2.reverse_proxy.header_up: "X-Multi-Import test-value"
+
+  # Multi-import test - uses internal + custom-header snippets
+  test-multi-import:
+    image: hashicorp/http-echo
+    container_name: test-multi-import
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -listen=:9200
+      - -text=SUCCESS - Multi-import (internal, custom-header) on host2
+    labels:
+      caddy: multi-import.test.lan
+      caddy.import: internal, custom-header
+      caddy.reverse_proxy: "{{upstreams 9200}}"
