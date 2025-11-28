@@ -6,11 +6,18 @@ Get Caddy Agent running in 5 minutes.
 
 - Linux host(s) with Docker installed
 - SSH access to hosts
-- ~500MB free disk space
 
-## Single Host (Easiest)
+## Docker Image
 
-### 1. Build
+The agent is available as a public Docker image:
+
+```bash
+docker pull mcsdodo/caddy-agent:latest
+```
+
+No build required - just pull and run!
+
+### Building from Source (Optional)
 
 ```bash
 git clone <repo>
@@ -18,7 +25,9 @@ cd caddy-agent
 docker build -t caddy-agent:latest .
 ```
 
-### 2. Deploy
+## Single Host (Easiest)
+
+### 1. Deploy
 
 ```bash
 docker compose up -d
@@ -47,52 +56,41 @@ Done! 🎉
 
 ## Three Hosts (Production)
 
-### 1. Build
+### 1. Deploy Host1 (Server)
 
 ```bash
-docker build -t caddy-agent:1.0 .
-docker save caddy-agent:1.0 | gzip > caddy-agent-1.0.tar.gz
-```
-
-### 2. Deploy Host1 (Server)
-
-```bash
-scp caddy-agent-1.0.tar.gz caddy-config.json docker-compose-prod-server.yml root@host1:/tmp/
+scp docker-compose-prod-server.yml root@host1:/opt/caddy/docker-compose.yml
 
 ssh root@host1 << 'EOF'
-mkdir -p /opt/caddy && cd /opt/caddy
-gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load
-cp /tmp/docker-compose-prod-server.yml /tmp/caddy-config.json .
+cd /opt/caddy
 docker compose up -d
 EOF
 ```
 
-### 3. Deploy Host2 (Agent)
+### 2. Deploy Host2 (Agent)
 
 ```bash
-scp caddy-agent-1.0.tar.gz docker-compose-prod-agent2.yml root@host2:/tmp/
+scp docker-compose-prod-agent2.yml root@host2:/opt/caddy/docker-compose.yml
 
 ssh root@host2 << 'EOF'
-mkdir -p /opt/caddy && cd /opt/caddy
-gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load
-cp /tmp/docker-compose-prod-agent2.yml docker-compose.yml
-# Edit docker-compose.yml: change CADDY_SERVER_URL and HOST_IP to your IPs
+cd /opt/caddy
+# Edit docker-compose.yml: change CADDY_URL and HOST_IP to your IPs
 docker compose up -d
 EOF
 ```
 
-### 4. Deploy Host3 (Agent)
+### 3. Deploy Host3 (Agent)
 
 Same as Host2, but use `docker-compose-prod-agent3.yml`
 
-### 5. Verify
+### 4. Verify
 
 ```bash
 ssh root@host1 "curl http://localhost:2019/config/apps/http/servers/srv1/routes | jq 'length'"
-# Should show initial routes from caddy-config.json
+# Should show routes from caddy-docker-proxy
 ```
 
-### 6. Add Routes
+### 5. Add Routes
 
 ```bash
 # On host2
@@ -115,7 +113,7 @@ ssh root@host1 "curl http://localhost:2019/config/apps/http/servers/srv1/routes 
 # Should show routes from all hosts
 ```
 
-### 7. Test from Host1
+### 6. Test from Host1
 
 ```bash
 ssh root@host1 << 'EOF'
@@ -202,12 +200,11 @@ docker compose restart
 
 All necessary files are in the repo:
 
-- `caddy-config.json` - Caddy JSON config (srv0/srv1/srv2)
-- `docker-compose-prod-server.yml` - Server (host1)
+- `docker-compose-prod-server.yml` - Server with caddy-docker-proxy (host1)
 - `docker-compose-prod-agent2.yml` - Agent (host2)
 - `docker-compose-prod-agent3.yml` - Agent (host3)
 
-Just copy and configure with your IPs.
+Just copy and configure with your IPs. Configuration is done via Docker labels.
 
 ---
 

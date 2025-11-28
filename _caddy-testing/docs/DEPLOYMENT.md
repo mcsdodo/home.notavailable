@@ -49,7 +49,19 @@ echo "net.ipv4.ip_unprivileged_port_start=80" >> /etc/sysctl.conf
 sysctl -p
 ```
 
-## Step 1: Build Docker Image
+## Step 1: Docker Image
+
+### Option A: Use Public Image (Recommended)
+
+The agent is available on Docker Hub:
+
+```bash
+docker pull mcsdodo/caddy-agent:latest
+```
+
+No build or file transfer required - hosts pull directly from Docker Hub.
+
+### Option B: Build from Source
 
 On a build machine (can be your laptop or CI/CD system):
 
@@ -61,11 +73,8 @@ cd caddy-agent
 # Build the image
 docker build -t caddy-agent:1.0 .
 
-# Save as tarball for distribution
+# Save as tarball for distribution (if needed for air-gapped environments)
 docker save caddy-agent:1.0 | gzip > caddy-agent-1.0.tar.gz
-
-# Verify image size
-ls -lh caddy-agent-1.0.tar.gz  # ~156MB compressed
 ```
 
 ## Step 2: Deploy to Host1 (Server)
@@ -83,19 +92,12 @@ chown -R nobody:nogroup data config
 EOF
 ```
 
-Note: The `caddy-config.json` file must be copied to host1 (see below).
-
-### Transfer and Load Image
+### Transfer Files (if using local build)
 
 ```bash
-scp caddy-agent-1.0.tar.gz caddy-config.json root@host1:/tmp/
-
-ssh root@host1 << 'EOF'
-cd /opt/caddy
-gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load
-cp /tmp/caddy-config.json .
-rm /tmp/caddy-agent-1.0.tar.gz
-EOF
+# Only needed if using Option B (build from source):
+# scp caddy-agent-1.0.tar.gz root@host1:/tmp/
+# ssh root@host1 "gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load"
 ```
 
 ### Create docker-compose.yml for Host1
@@ -112,18 +114,17 @@ version: '3.8'
 
 services:
   caddy:
-    image: caddy:2
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
     container_name: caddy-server
     restart: unless-stopped
     network_mode: host
-    command: caddy run --config /etc/caddy/caddy.json
     volumes:
-      - ./caddy-config.json:/etc/caddy/caddy.json:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/data
       - ./config:/config
 
   agent:
-    image: caddy-agent:1.0
+    image: mcsdodo/caddy-agent:latest
     container_name: caddy-agent-server
     restart: unless-stopped
     network_mode: host
@@ -175,24 +176,13 @@ cd /opt/caddy
 EOF
 ```
 
-### Transfer and Load Image
-
-```bash
-scp caddy-agent-1.0.tar.gz root@host2:/tmp/
-
-ssh root@host2 << 'EOF'
-cd /opt/caddy
-gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load
-rm /tmp/caddy-agent-1.0.tar.gz
-EOF
-```
-
 ### Create docker-compose.yml for Host2
 
 Replace `192.168.1.10` with host1 IP and `192.168.1.11` with host2 IP:
 
 ```bash
 ssh root@host2 << 'EOF'
+mkdir -p /opt/caddy
 cd /opt/caddy
 
 cat > docker-compose.yml << 'COMPOSE'
@@ -200,7 +190,7 @@ version: '3.8'
 
 services:
   agent:
-    image: caddy-agent:1.0
+    image: mcsdodo/caddy-agent:latest
     container_name: caddy-agent
     restart: unless-stopped
     network_mode: host
@@ -248,20 +238,16 @@ ssh root@host2 "docker logs caddy-agent | grep -E 'Syncing|updated successfully'
 Repeat Step 3 but for host3:
 
 ```bash
-# On your local machine
-scp caddy-agent-1.0.tar.gz root@host3:/tmp/
-
 ssh root@host3 << 'EOF'
 mkdir -p /opt/caddy
 cd /opt/caddy
-gunzip -c /tmp/caddy-agent-1.0.tar.gz | docker load
 
 cat > docker-compose.yml << 'COMPOSE'
 version: '3.8'
 
 services:
   agent:
-    image: caddy-agent:1.0
+    image: mcsdodo/caddy-agent:latest
     container_name: caddy-agent
     restart: unless-stopped
     network_mode: host
@@ -347,40 +333,32 @@ Hello from host2
 
 ## Step 6: TLS Configuration
 
-The `caddy-config.json` includes TLS automation policies:
+TLS is configured via Docker labels on the Caddy container (using caddy-docker-proxy):
 
 - **Internal CA** for `.lan` domains (local testing)
 - **Let's Encrypt** for public domains (automatic)
+- **Cloudflare DNS** for wildcard certificates
 
-For public domains, routes will automatically get Let's Encrypt certificates.
+Configuration is done via labels on the Caddy service in docker-compose.yml:
 
-To customize TLS, edit `caddy-config.json`:
-
-```json
-{
-  "apps": {
-    "tls": {
-      "automation": {
-        "policies": [
-          {
-            "subjects": ["*.lan", "*.test.lan"],
-            "issuers": [{"module": "internal"}]
-          },
-          {
-            "subjects": ["*.example.com"],
-            "issuers": [{"module": "acme", "email": "your-email@example.com"}]
-          }
-        ]
-      }
-    }
-  }
-}
+```yaml
+services:
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    labels:
+      # Global config
+      caddy_0.email: your-email@example.com
+      caddy_0.auto_https: prefer_wildcard
+      # Internal CA for .lan domains
+      caddy_11: "(internal)"
+      caddy_11.tls: internal
+      caddy_12: "*.lan"
+      caddy_12.import: internal
 ```
 
-After editing, restart Caddy and agents:
+After editing labels, recreate the Caddy container:
 ```bash
-ssh root@host1 "cd /opt/caddy && docker compose restart caddy"
-# Agents will automatically resync
+ssh root@host1 "cd /opt/caddy && docker compose up -d --force-recreate caddy"
 ```
 
 ## Monitoring & Health Checks
@@ -426,25 +404,18 @@ docker logs caddy-server | grep "serving"
 ### Update Agent Image
 
 ```bash
-# On build machine
-docker build -t caddy-agent:1.1 .
-docker save caddy-agent:1.1 | gzip > caddy-agent-1.1.tar.gz
-
-# On each host
+# On each host - pull latest and restart
 ssh root@host2 << 'EOF'
 cd /opt/caddy
-gunzip -c /tmp/caddy-agent-1.1.tar.gz | docker load
-
-# Update compose file to use new image
-sed -i 's/caddy-agent:1.0/caddy-agent:1.1/' docker-compose.yml
-
-# Restart agent
-docker compose up -d --no-deps --build agent
+docker compose pull agent
+docker compose up -d --no-deps agent
 
 # Verify
 docker logs caddy-agent --tail 5
 EOF
 ```
+
+For self-built images, build and transfer as shown in Step 1 Option B.
 
 ### Update Caddy
 
@@ -474,7 +445,6 @@ EOF
 # Backup all configs
 ssh root@host1 << 'EOF'
 tar czf /opt/caddy/backup-$(date +%Y%m%d).tar.gz \
-  /opt/caddy/caddy-config.json \
   /opt/caddy/docker-compose.yml \
   /opt/caddy/data \
   /opt/caddy/config

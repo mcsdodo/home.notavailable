@@ -480,7 +480,7 @@ ERROR ❌ Cannot connect to Docker daemon at unix:///var/run/docker.sock
    ```yaml
    services:
      agent:
-       image: caddy-agent:latest
+       image: mcsdodo/caddy-agent:latest
        deploy:
          resources:
            limits:
