@@ -22,12 +22,17 @@ AGENT_FILTER_LABEL = os.getenv("AGENT_FILTER_LABEL", None)
 HEALTH_CHECK_INTERVAL = int(os.getenv("HEALTH_CHECK_INTERVAL", "5"))    # seconds, 0 to disable
 RESYNC_INTERVAL = int(os.getenv("RESYNC_INTERVAL", "300"))              # seconds, 0 to disable
 
+# Logging configuration
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # DEBUG, INFO, WARNING, ERROR
+
 # Cached effective host IP (computed once at startup)
 _effective_host_ip = None
 
 client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# Configure logging with LOG_LEVEL env var
+log_level = getattr(logging, LOG_LEVEL, logging.INFO)
+logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 def detect_host_ip():
@@ -695,11 +700,13 @@ def push_to_caddy(routes, global_settings=None, tls_dns_policies=None):
         host_ip = get_effective_host_ip()
         mode_desc = f"remote (HOST_IP={host_ip})" if host_ip else "local"
         logger.info(f"Pushing config to {target_url} [Mode: {mode_desc}]")
+        logger.debug(f"Full config being pushed:\n{json.dumps(config, indent=2)}")
         response = requests.post(f"{target_url}/load", json=config, headers=headers)
         if response.status_code == 200:
             logger.info(f"✅ Caddy config updated successfully [Agent: {AGENT_ID}]")
         else:
             logger.error(f"❌ Caddy update failed: {response.status_code} - {response.text}")
+            logger.debug(f"Failed config:\n{json.dumps(config, indent=2)}")
     except Exception as e:
         logger.error(f"❌ Error pushing to Caddy: {e}")
 
@@ -979,13 +986,21 @@ def get_our_route_count():
             headers["Authorization"] = f"Bearer {CADDY_API_TOKEN}"
 
         count = 0
+        our_route_ids = []
         # Check all servers for our routes
         response = requests.get(f"{CADDY_URL}/config/apps/http/servers", headers=headers, timeout=5)
         if response.ok:
             servers = response.json() or {}
             for server_name, server_config in servers.items():
                 routes = server_config.get("routes", [])
-                count += len([r for r in routes if r.get("@id", "").startswith(f"{AGENT_ID}_")])
+                for r in routes:
+                    route_id = r.get("@id", "")
+                    if route_id.startswith(f"{AGENT_ID}_"):
+                        count += 1
+                        our_route_ids.append(route_id)
+            logger.debug(f"Found {count} routes in Caddy for agent {AGENT_ID}: {our_route_ids}")
+        else:
+            logger.debug(f"Failed to get routes from Caddy: {response.status_code}")
         return count
     except Exception as e:
         logger.debug(f"Error getting route count: {e}")
@@ -995,6 +1010,8 @@ def get_expected_route_count():
     """Get count of routes we should have (from local Docker containers)"""
     try:
         routes, _, _ = get_caddy_routes()
+        route_ids = [r.get("@id", "unknown") for r in routes]
+        logger.debug(f"Expected {len(routes)} routes from Docker: {route_ids}")
         return len(routes)
     except Exception as e:
         logger.debug(f"Error getting expected route count: {e}")
@@ -1008,7 +1025,9 @@ def routes_need_sync():
     if current == -1:
         return None  # Can't determine, API error
     expected = get_expected_route_count()
-    return current < expected
+    need_sync = current < expected
+    logger.debug(f"Route check: current={current}, expected={expected}, need_sync={need_sync}")
+    return need_sync
 
 def safe_sync():
     """Thread-safe sync with deduplication"""
@@ -1025,24 +1044,30 @@ def safe_sync():
 
 def health_check_loop():
     """Fast detection: check if our routes are present every few seconds"""
+    logger.debug("🏥 Health check thread starting, waiting 10s for initial sync to settle...")
     time.sleep(10)  # Startup delay: let initial sync settle before checking
     consecutive_failures = 0
+    logger.debug("🏥 Health check thread active, beginning monitoring")
 
     while True:
         # Exponential backoff on repeated failures (max 30s)
         interval = min(HEALTH_CHECK_INTERVAL * (2 ** consecutive_failures), 30)
+        if consecutive_failures > 0:
+            logger.debug(f"🏥 Backoff active: sleeping {interval}s (failures={consecutive_failures})")
         time.sleep(interval)
 
         need_sync = routes_need_sync()
         if need_sync is None:
             consecutive_failures += 1
-            logger.warning("🏥 Health check: Caddy API unreachable")
+            logger.warning(f"🏥 Health check: Caddy API unreachable (failure #{consecutive_failures})")
             continue
 
         consecutive_failures = 0  # Reset on success
         if need_sync:
             logger.info("🏥 Routes missing, resyncing...")
             safe_sync()
+        else:
+            logger.debug("🏥 Health check: routes OK")
 
 def periodic_resync_loop():
     """Fallback: force resync periodically regardless of state"""
@@ -1119,6 +1144,7 @@ if __name__ == "__main__":
 
     logger.info(f"   Health Check: {HEALTH_CHECK_INTERVAL}s (0=disabled)")
     logger.info(f"   Periodic Resync: {RESYNC_INTERVAL}s (0=disabled)")
+    logger.info(f"   Log Level: {LOG_LEVEL}")
 
     logger.info("="*60)
 
