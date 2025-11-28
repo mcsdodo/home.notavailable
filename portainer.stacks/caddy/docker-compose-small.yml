@@ -24,39 +24,6 @@ services:
         ipv4_address: 192.168.0.21
       
     labels:
-      caddy_01: http://*.lan
-      caddy_01.reverse_proxy: "192.168.0.22:80"
-      caddy_02: "*.lacny.me"
-      caddy_02.reverse_proxy: "192.168.0.22:80"
-      caddy_03: ":2020"
-      caddy_03.reverse_proxy: "localhost:2019"
-      caddy_03.reverse_proxy.header_up: "Host localhost:2019"
-      autoheal: true
-      
-  webserver:
-    container_name: webserver
-    image: hashicorp/http-echo
-    environment:
-      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
-    command: [
-      "-listen=:80",
-      "-text=${ECHO_TEXT}"
-    ]      
-    labels: 
-      caddy_0: ${WEBSERVER_DOMAIN:-http://webserver.lan}, app.lacny.me
-      caddy_0.reverse_proxy: "{{upstreams 80}}"
-    networks:
-      - caddy
-      
-  caddy-config:
-    container_name: caddy-config
-    image: traefik/whoami:latest
-    networks:
-      - caddy
-    restart: always
-    ports: 
-      - "8121:80"
-    labels:
       #### Global Settings ####
       caddy_0.email: "${EMAIL}"
       caddy_0.auto_https: prefer_wildcard
@@ -68,6 +35,10 @@ services:
       caddy_1.tls.resolvers: 1.1.1.1 1.0.0.1
       caddy_1.handle.abort: ""
       # caddy_1.tls.ca: https://acme-staging-v02.api.letsencrypt.org/directory
+
+      caddy_2: ":2020"
+      caddy_2.reverse_proxy: "localhost:2019"
+      caddy_2.reverse_proxy.header_up: "Host localhost:2019"
 
       # Skip TLS verify for backend with self-signed HTTPS
       caddy_3: (https)
@@ -93,6 +64,28 @@ services:
 
       caddy_114: http://nvo.lan
       caddy_114.reverse_proxy: 192.168.0.15
+
+      caddy_01: http://*.lan
+      caddy_01.reverse_proxy: "192.168.0.22:80"
+      caddy_02: "*.lacny.me"
+      caddy_02.reverse_proxy: "192.168.0.22:80"
+
+      autoheal: true
+      
+  webserver:
+    container_name: webserver
+    image: hashicorp/http-echo
+    environment:
+      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
+    command: [
+      "-listen=:80",
+      "-text=${ECHO_TEXT}"
+    ]      
+    labels: 
+      caddy_0: ${WEBSERVER_DOMAIN:-http://webserver.lan}, app.lacny.me
+      caddy_0.reverse_proxy: "{{upstreams 80}}"
+    networks:
+      - caddy
 
   caddy-agent:
     container_name: caddy-agent
