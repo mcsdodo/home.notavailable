@@ -25,6 +25,8 @@ host1 (.96) - SERVER
 ├─ Caddy (caddy-docker-proxy)
 │  ├─ Port 80/443 (routes)
 │  └─ Port 2020 (admin API proxy)
+├─ caddy-agent-server (uses 'agent' prefix)
+│  └─ Tests server mode functionality
 └─ Local containers (via docker labels)
         ▲
         │ HTTP POST :2020/load
@@ -35,16 +37,29 @@ Containers  Containers
 ```
 
 **Key Points**:
-- Server uses `caddy-docker-proxy` (no separate agent needed for local containers)
+- Server uses `caddy-docker-proxy` for `caddy.*` labeled containers
+- `caddy-agent-server` tests server mode with `agent.*` labeled containers
 - Admin API exposed via reverse proxy on port 2020 (not 2019 directly)
 - Remote agents push routes to :2020 which proxies to internal :2019
 
 ## Components
 
 ### Server (host1)
-- `caddy-docker-proxy` - Watches local Docker labels, manages Caddy config
+- `caddy-docker-proxy` - Watches `caddy.*` labels, manages Caddy config
+- `caddy-agent-server` - Watches `agent.*` labels (server mode testing)
 - Global config via labels on Caddy container itself
 - Admin API proxy: `:2020` → `localhost:2019`
+
+### Dual-Agent Setup on Host1
+
+Host1 runs both systems to test server mode:
+
+| Component | Label Prefix | Purpose |
+|-----------|--------------|---------|
+| caddy-docker-proxy | `caddy.*` | Production routing |
+| caddy-agent-server | `agent.*` | Server mode testing |
+
+Test domains use `*.server.lan` pattern (e.g., `test.server.lan`).
 
 ### Remote Agents (host2, host3)
 - `caddy-agent-watch.py` - Watches Docker events, pushes routes to server
@@ -121,6 +136,9 @@ curl -sk --resolve test-phase2.lacny.me:443:192.168.0.96 https://test-phase2.lac
 
 # HTTP-only routes (use http:// prefix in labels)
 curl -s --resolve httponly.test.lan:80:192.168.0.96 http://httponly.test.lan
+
+# Server mode test routes (uses 'agent' prefix)
+curl -sk --resolve test.server.lan:443:192.168.0.96 https://test.server.lan
 ```
 
 ### Verify Routes
@@ -180,6 +198,9 @@ python test_all.py --unit
 
 # Run integration tests only (requires deployed hosts)
 python test_all.py --integration
+
+# Run server mode tests only (requires host1 with caddy-agent-server)
+python test_all.py --server-mode
 ```
 
 ## Debugging
