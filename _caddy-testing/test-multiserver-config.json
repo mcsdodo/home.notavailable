@@ -1,0 +1,50 @@
+{
+  "admin": {
+    "listen": "0.0.0.0:2019"
+  },
+  "apps": {
+    "http": {
+      "servers": {
+        "srv0": {
+          "listen": [":2020"],
+          "routes": [
+            {
+              "handle": [
+                {
+                  "handler": "reverse_proxy",
+                  "headers": {
+                    "request": {
+                      "set": {
+                        "Host": ["localhost:2019"]
+                      }
+                    }
+                  },
+                  "upstreams": [
+                    {"dial": "localhost:2019"}
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "srv1": {
+          "listen": [":80", ":443"],
+          "routes": [
+            {
+              "@id": "wildcard_test_lan",
+              "match": [{"host": ["*.test.lan"]}],
+              "handle": [
+                {
+                  "handler": "static_response",
+                  "body": "Wildcard catch-all for *.test.lan",
+                  "abort": true
+                }
+              ],
+              "terminal": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
