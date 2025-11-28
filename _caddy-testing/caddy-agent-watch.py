@@ -235,7 +235,12 @@ def parse_globals_and_snippets(labels):
     return global_settings, snippets
 
 def parse_globals_and_snippets_from_all_containers():
-    """Collect global settings and snippets from all Docker containers"""
+    """Collect global settings and snippets from all Docker containers
+
+    Note: This scans ALL containers regardless of AGENT_FILTER_LABEL,
+    and checks for both 'caddy.*' and 'agent.*' prefixes because snippets
+    are shared resources that should be visible to all agents.
+    """
     global_settings = {}
     snippets = {}
 
@@ -244,18 +249,63 @@ def parse_globals_and_snippets_from_all_containers():
         if not labels:
             continue
 
-        # Optional: filter containers by agent filter label
-        if AGENT_FILTER_LABEL:
-            filter_key, filter_value = AGENT_FILTER_LABEL.split("=", 1) if "=" in AGENT_FILTER_LABEL else (AGENT_FILTER_LABEL, None)
-            container_filter_value = labels.get(filter_key)
-            if not container_filter_value:
-                continue
-            if filter_value and container_filter_value != filter_value:
-                continue
+        # Scan with multiple common prefixes to find all snippets
+        # This allows snippet API to serve snippets from any container
+        for prefix in ['caddy', 'agent']:
+            container_globals, container_snippets = parse_globals_and_snippets_with_prefix(labels, prefix)
+            global_settings.update(container_globals)
+            snippets.update(container_snippets)
 
-        container_globals, container_snippets = parse_globals_and_snippets(labels)
-        global_settings.update(container_globals)
-        snippets.update(container_snippets)
+    return global_settings, snippets
+
+def parse_globals_and_snippets_with_prefix(labels, prefix):
+    """Extract global settings and snippet definitions from labels with a specific prefix.
+    This is a helper for parse_globals_and_snippets_from_all_containers().
+    """
+    import re
+
+    global_settings = {}
+    snippets = {}
+    route_configs = {}
+
+    # Collect all label configurations for this prefix
+    for label_key, label_value in labels.items():
+        if not label_key.startswith(prefix):
+            continue
+
+        match = re.match(f"^{re.escape(prefix)}(?:_(\\d+))?(?:\\.(.+))?$", label_key)
+        if not match:
+            continue
+
+        route_num = match.group(1) or "0"
+        directive = match.group(2) or ""
+
+        if route_num not in route_configs:
+            route_configs[route_num] = {}
+
+        if not directive:
+            route_configs[route_num]['domain'] = label_value
+        else:
+            route_configs[route_num][directive] = label_value
+
+    # Identify snippets and global settings
+    for route_num, config in route_configs.items():
+        domain = config.get('domain', '')
+
+        # Check if this is a snippet definition: (snippet_name)
+        if domain.startswith('(') and domain.endswith(')'):
+            snippet_name = domain[1:-1]
+            # Remove 'domain' from config
+            snippet_config = {k: v for k, v in config.items() if k != 'domain'}
+            snippets[snippet_name] = snippet_config
+            logger.debug(f"Snippet API: found '{snippet_name}' with prefix '{prefix}' ({len(snippet_config)} directives)")
+            continue
+
+        # Check if this is a global setting (no domain, only directives)
+        if not domain and config:
+            # This is a global setting
+            for directive, value in config.items():
+                global_settings[directive] = value
 
     return global_settings, snippets
 
@@ -1190,10 +1240,14 @@ def start_snippet_api():
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
                     # Get current snippets from Docker labels
+                    logger.info("Snippet API: Fetching snippets from all containers...")
                     _, current_snippets = parse_globals_and_snippets_from_all_containers()
+                    logger.info(f"Snippet API: Found {len(current_snippets)} snippets: {list(current_snippets.keys())}")
                     self.wfile.write(json.dumps(current_snippets).encode())
                 except Exception as e:
                     logger.error(f"Error serving snippets: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
                     self.send_error(500, f"Internal server error: {e}")
             else:
                 self.send_error(404)
