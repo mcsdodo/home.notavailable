@@ -11,6 +11,8 @@ services:
       - "2019:2019"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+      - caddy_config:/config
     environment:
       - TZ=Europe/Bratislava
       - CADDY_INGRESS_NETWORKS=caddy
@@ -109,3 +111,8 @@ networks:
       config:
         - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
           gateway: ${MACVLAN_GATEWAY:-192.168.0.1}
+
+
+volumes:
+  caddy_data:
+  caddy_config:          
