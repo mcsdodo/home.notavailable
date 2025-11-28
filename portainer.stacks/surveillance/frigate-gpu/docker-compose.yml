@@ -33,6 +33,8 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
     labels:
       autoheal: true
+      caddy_116: http://frigate-gpu.lan, frigate-gpu.lacny.me
+      caddy_116.reverse_proxy: "{{ upstreams 5000 }}"
     ports:
       - "8554:8554" # RTSP feeds
       - "8555:8555/tcp" # WebRTC over tcp
