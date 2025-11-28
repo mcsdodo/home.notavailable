@@ -355,6 +355,25 @@ class IntegrationTests:
         print("[PASS] test_https_explicit_route")
 
     @staticmethod
+    def test_transport_tls_implicit_protocol():
+        """Test: Transport TLS without explicit 'transport: http' (tests protocol fix)"""
+        # This tests the fix for: transport.tls_insecure_skip_verify without transport: http
+        # The route should be pushed successfully with implicit protocol: http
+        try:
+            result = subprocess.run(
+                ["curl", "-s", "--max-time", "5", f"http://{CADDY_SERVER}:{CADDY_API_PORT}/config/apps/http/servers/srv1/routes"],
+                capture_output=True, text=True, timeout=7
+            )
+            routes = result.stdout
+            # Check route exists
+            assert "transport-tls.test.lan" in routes, "transport-tls.test.lan route not found"
+            # Check transport config has protocol
+            assert '"protocol"' in routes, "Transport config missing protocol field"
+            print("[PASS] test_transport_tls_implicit_protocol")
+        except Exception as e:
+            raise AssertionError(f"Failed to verify transport config: {e}")
+
+    @staticmethod
     def run_all():
         """Run all integration tests"""
         print("=" * 60)
@@ -386,6 +405,8 @@ class IntegrationTests:
             # HTTP vs HTTPS
             IntegrationTests.test_http_only_route,
             IntegrationTests.test_https_explicit_route,
+            # Transport TLS fix
+            IntegrationTests.test_transport_tls_implicit_protocol,
         ]
 
         passed = 0
