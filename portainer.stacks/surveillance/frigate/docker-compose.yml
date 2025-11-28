@@ -19,6 +19,7 @@ services:
         tmpfs:
           size: 1000000000
     environment:
+      - FRIGATE_GEMINI_API_KEY=${FRIGATE_GEMINI_API_KEY}
       - FRIGATE_RTSP_CREDENTIALS=${FRIGATE_RTSP_CREDENTIALS}
       - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER}
       - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD}
@@ -38,6 +39,8 @@ services:
     #   start_period: 40s    
     labels:
       autoheal: true
+      caddy: http://frigate.lan, frigate.lacny.me
+      caddy.reverse_proxy: "{{ upstreams 5000 }}"
     ports:
       - "8554:8554" # RTSP feeds
       - "8555:8555/tcp" # WebRTC over tcp
@@ -69,3 +72,16 @@ services:
   #     - "554:8554"
   #   environment:
   #     - SOURCE_URL=file:///recordings/2025-03-24/14/garaz-von/30.09.mp4 
+
+  caddy-agent:
+    image: mcsdodo/caddy-agent
+    container_name: caddy-agent
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CADDY_URL=http://192.168.0.21:2020
+      - AGENT_ID=frigate
+      - DOCKER_LABEL_PREFIX=caddy
+      - HOST_IP=192.168.0.235
+      - LOG_LEVEL=debug

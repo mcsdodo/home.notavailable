@@ -67,6 +67,7 @@ services:
       caddy_1.tls.dns: "cloudflare ${CF_API_TOKEN}"
       caddy_1.tls.resolvers: 1.1.1.1 1.0.0.1
       caddy_1.handle.abort: ""
+      # caddy_1.tls.ca: https://acme-staging-v02.api.letsencrypt.org/directory
 
       # Skip TLS verify for backend with self-signed HTTPS
       caddy_3: (https)
@@ -93,12 +94,7 @@ services:
       caddy_114: http://nvo.lan
       caddy_114.reverse_proxy: 192.168.0.15
 
-      caddy_115: http://frigate.lan
-      caddy_115.reverse_proxy: 192.168.0.235:5011
-
-      caddy_116: http://frigate-gpu.lan, frigate-gpu.lacny.me
-      caddy_116.reverse_proxy: 192.168.0.115:5012
-
+  
 networks:
   caddy:
     name: caddy
@@ -111,8 +107,6 @@ networks:
       config:
         - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
           gateway: ${MACVLAN_GATEWAY:-192.168.0.1}
-
-
 volumes:
   caddy_data:
-  caddy_config:          
+  caddy_config:
