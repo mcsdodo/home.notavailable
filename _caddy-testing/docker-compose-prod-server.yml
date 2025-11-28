@@ -65,6 +65,9 @@ services:
       - CADDY_URL=http://localhost:2019
       - AGENT_ID=host1-server
       - DOCKER_LABEL_PREFIX=agent
+      # Recovery mechanism (handles Caddy restarts)
+      - HEALTH_CHECK_INTERVAL=5   # Fast detection of missing routes
+      - RESYNC_INTERVAL=300       # Fallback periodic resync (5 min)
     labels:
       # Caddy TLS config for *.server.lan (picked up by caddy-docker-proxy)
       caddy_14: "*.server.lan"
