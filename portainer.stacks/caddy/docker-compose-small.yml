@@ -94,7 +94,20 @@ services:
       caddy_114: http://nvo.lan
       caddy_114.reverse_proxy: 192.168.0.15
 
-  
+  caddy-agent:
+    container_name: caddy-agent
+    image: mcsdodo/caddy-agent:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - SNIPPET_API_PORT=8567
+      - LOG_LEVEL=INFO
+      - CONFIG_PUSH_ENABLED=false
+    ports:
+      - "8567:8567"
+
+
 networks:
   caddy:
     name: caddy
