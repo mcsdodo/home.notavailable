@@ -38,24 +38,5 @@ actions:
     value_template: |-
       {{ states('input_text.frigate_face_id') != '' and
          states('input_text.frigate_face_id') == states('input_text.frigate_zone_id') }}
-  - action: dahua.vto_open_door
-    target:
-      entity_id: camera.vratnik_main
-    data:
-      door_id: 1
-    enabled: true
-  - data:
-      title: Dvere boli otvorené (Event correlation)
-      message: ""
-    action: persistent_notification.create
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.frigate_face_id
-    data:
-      value: ""
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.frigate_zone_id
-    data:
-      value: ""
+  - action: script.unlock_door_face_recognition
 mode: parallel
