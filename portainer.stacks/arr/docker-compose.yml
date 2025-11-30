@@ -27,10 +27,9 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://mylar.lan
+      caddy: http://mylar.lan, mylar.lacny.me
       caddy.reverse_proxy: "{{upstreams 8090}}"
     networks:
-      - caddy
       - default
 
   sonarr:
@@ -49,11 +48,10 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy_0: http://series.lan, http://sonarr.lan
+      caddy_0: http://series.lan, http://sonarr.lan, series.lacny.me, sonarr.lacny.me
       caddy_0.reverse_proxy: "{{upstreams 8989}}"
 
     networks:
-      - caddy
       - default
       
   radarr:
@@ -72,10 +70,9 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy_0: http://movies.lan, http://radarr.lan
+      caddy_0: http://movies.lan, http://radarr.lan, movies.lacny.me, radarr.lacny.me
       caddy_0.reverse_proxy: "{{upstreams 7878}}"
     networks:
-      - caddy
       - default
       
   overseerr:
@@ -91,14 +88,13 @@ services:
     labels:
       kuma.__docker: ""     
       autoheal: true
-      caddy_0: http://overseerr.lan, http://requests.lan
+      caddy_0: http://overseerr.lan, http://requests.lan, requests.lacny.me, overseerr.lacny.me
       caddy_0.reverse_proxy: "{{upstreams 5055}}"
       dockflare.enable: true
       dockflare.hostname: requests.notavailable.uk
-      dockflare.service: http://requests.lan
-      dockflare.httpHostHeader: requests.lan
+      dockflare.service: requests.lacny.me
+      dockflare.httpHostHeader: requests.lacny.me
     networks:
-      - caddy
       - default
 
   jellyseerr:
@@ -111,12 +107,13 @@ services:
       - /mnt/shared_configs/jellyseerr/config:/app/config
     restart: unless-stopped
     networks:
-      - caddy
       - default
     labels:
       autoheal: true
-      caddy_0: http://jellyseerr.lan
-      caddy_0.reverse_proxy: "{{upstreams 5055}}"      
+      caddy_0: http://jellyseerr.lan, jellyseerr.lacny.me
+      caddy_0.reverse_proxy: "{{upstreams 5055}}"    
+    ports:
+      - 5056:5055
       
   # scheduled-restarts:
   #   image: docker:cli
@@ -137,6 +134,3 @@ services:
   #         sleep 60
   #       done
 
-networks:
-  caddy:
-    external: true

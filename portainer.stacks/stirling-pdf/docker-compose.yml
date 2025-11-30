@@ -13,11 +13,5 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://pdf.lan
+      caddy: http://pdf.lan, pdf.lacny.me
       caddy.reverse_proxy: "{{upstreams 8080}}"
-    networks:
-      - caddy
-
-networks:
-  caddy:
-    external: true

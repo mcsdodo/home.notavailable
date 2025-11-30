@@ -19,7 +19,7 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true      
-      caddy: http://jellyfin.lan
+      caddy: http://jellyfin.lan, jellyfin.lacny.me
       caddy.reverse_proxy: "{{upstreams 8096}}"   
     # runtime: nvidia
     # deploy:
@@ -31,7 +31,6 @@ services:
     #           capabilities: [gpu]    
     networks:
       - arr_default
-      - caddy
       
   scheduled-restarts:
     image: docker:cli
@@ -50,5 +49,3 @@ services:
 networks:
   arr_default:
     external: true
-  caddy:
-    external: true        

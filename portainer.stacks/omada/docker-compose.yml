@@ -40,10 +40,6 @@ services:
       - "29810:29810/udp"
     labels:
       autoheal: true
-      caddy: omada.lacny.me
-      caddy.reverse_proxy: "{{ upstreams 8043}}"
-      caddy.transport.tls: ""
-      caddy.transport.tls_insecure_skip_verify: ""
       
   caddy-agent:
     image: mcsdodo/caddy-agent
@@ -57,7 +53,11 @@ services:
       - DOCKER_LABEL_PREFIX=caddy
       - HOST_IP=192.168.0.238   
       - LOG_LEVEL=debug
-
-
+      - SNIPPET_SOURCES=http://192.168.0.112:8567
+    labels:
+      caddy_0: omada.lacny.me, http://omada.lan
+      caddy_0.import: https
+      # caddy.reverse_proxy: "{{ upstreams 8043}}"
+      caddy_0.reverse_proxy: 192.168.0.238:8043
 
    
