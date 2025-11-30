@@ -83,13 +83,54 @@ services:
       caddy_114: http://nvo.lan
       caddy_114.reverse_proxy: 192.168.0.15
 
-      caddy_115: proxmox.lacny.me
+      caddy_115: proxmox-small.lacny.me
       # caddy_115.import: https # -> this doesn't work with docker-proxy (cannot merge transport with reverse_proxy properly)
       caddy_115.reverse_proxy.transport: http
       caddy_115.reverse_proxy.transport.tls: ""
       caddy_115.reverse_proxy.transport.tls_insecure_skip_verify: ""
       caddy_115.reverse_proxy: 192.168.0.111:8006
+
+      caddy_116: proxmox-frigate.lacny.me
+      caddy_116.reverse_proxy.transport: http
+      caddy_116.reverse_proxy.transport.tls: ""
+      caddy_116.reverse_proxy.transport.tls_insecure_skip_verify: ""
+      caddy_116.reverse_proxy: 192.168.0.234:8006
       
+      caddy_117: proxmox-media.lacny.me
+      caddy_117.reverse_proxy.transport: http
+      caddy_117.reverse_proxy.transport.tls: ""
+      caddy_117.reverse_proxy.transport.tls_insecure_skip_verify: ""
+      caddy_117.reverse_proxy: 192.168.0.199:8006
+
+      caddy_118: truenas.lacny.me
+      caddy_118.reverse_proxy: 192.168.0.201
+
+      caddy_119: adguard.lacny.me
+      caddy_119.reverse_proxy: 192.168.0.121
+
+      caddy_120: adguard2.lacny.me
+      caddy_120.reverse_proxy: 192.168.0.122
+
+      caddy_121: homeassistant.lacny.me
+      caddy_121.reverse_proxy: 192.168.0.100:8123
+
+      caddy_122: plug-na-1.lacny.me
+      caddy_122.reverse_proxy: 192.168.100.151
+
+      caddy_123: plug-na-2.lacny.me
+      caddy_123.reverse_proxy: 192.168.100.152
+
+      caddy_124: plug-na-3.lacny.me
+      caddy_124.reverse_proxy: 192.168.100.153
+
+      caddy_125: plug-na-4.lacny.me
+      caddy_125.reverse_proxy: 192.168.100.154
+
+      caddy_126: plug-na-5.lacny.me
+      caddy_126.reverse_proxy: 192.168.100.155
+
+      caddy_127: plug-na-6.lacny.me
+      caddy_127.reverse_proxy: 192.168.100.156
 
       caddy_01: http://*.lan
       caddy_01.reverse_proxy: "192.168.0.22:80"
