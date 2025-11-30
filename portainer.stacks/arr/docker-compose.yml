@@ -92,7 +92,7 @@ services:
       caddy_0.reverse_proxy: "{{upstreams 5055}}"
       dockflare.enable: true
       dockflare.hostname: requests.notavailable.uk
-      dockflare.service: requests.lacny.me
+      dockflare.service: https://requests.lacny.me
       dockflare.httpHostHeader: requests.lacny.me
     networks:
       - default
