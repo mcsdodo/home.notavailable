@@ -24,6 +24,24 @@ services:
         ipv4_address: 192.168.0.21
       
     labels:
+      
+
+      autoheal: true
+      
+
+  caddy-agent:
+    container_name: caddy-agent
+    image: mcsdodo/caddy-agent:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - SNIPPET_API_PORT=8567
+      - LOG_LEVEL=INFO
+      - CONFIG_PUSH_ENABLED=false
+    ports:
+      - "8567:8567"
+    labels:
       #### Global Settings ####
       caddy_0.email: "${EMAIL}"
       caddy_0.auto_https: prefer_wildcard
@@ -42,9 +60,9 @@ services:
 
       # Skip TLS verify for backend with self-signed HTTPS
       caddy_3: (https)
-      caddy_3.transport: http
-      caddy_3.transport.tls: ""
-      caddy_3.transport.tls_insecure_skip_verify: ""
+      caddy_3.reverse_proxy.transport: http
+      caddy_3.reverse_proxy.transport.tls: ""
+      caddy_3.reverse_proxy.transport.tls_insecure_skip_verify: ""
 
       ## Setup wildcard sites
       caddy_10: "*.lacny.me"
@@ -65,23 +83,32 @@ services:
       caddy_114: http://nvo.lan
       caddy_114.reverse_proxy: 192.168.0.15
 
+      caddy_115: proxmox.lacny.me
+      # caddy_115.import: https # -> this doesn't work with docker-proxy (cannot merge transport with reverse_proxy properly)
+      caddy_115.reverse_proxy.transport: http
+      caddy_115.reverse_proxy.transport.tls: ""
+      caddy_115.reverse_proxy.transport.tls_insecure_skip_verify: ""
+      caddy_115.reverse_proxy: 192.168.0.111:8006
+      
+
       caddy_01: http://*.lan
       caddy_01.reverse_proxy: "192.168.0.22:80"
 
-      autoheal: true
-      
-  caddy-agent:
-    container_name: caddy-agent
-    image: mcsdodo/caddy-agent:latest
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+  webserver:
+    container_name: webserver
+    image: hashicorp/http-echo
     environment:
-      - SNIPPET_API_PORT=8567
-      - LOG_LEVEL=INFO
-      - CONFIG_PUSH_ENABLED=false
-    ports:
-      - "8567:8567"
+      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
+    command: [
+      "-listen=:80",
+      "-text=${ECHO_TEXT}"
+    ]      
+    labels: 
+      caddy_0: ${WEBSERVER_DOMAIN:-http://webserver.lan}, app.lacny.me
+      caddy_0.reverse_proxy: "{{upstreams 80}}"
+    networks:
+      - caddy
+
 
 networks:
   caddy:
