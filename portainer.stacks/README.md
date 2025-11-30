@@ -1,9 +1,10 @@
 # Portainer docker run
 With automated reverse proxy configuration for Caddy.
+
 ```
-docker run --network=caddy -l caddy=http://portainer.lan -l caddy.reverse_proxy="{{upstreams 9000}}" \
+docker run --network=caddy -l caddy="http://portainer.lan, portainer.lacny.me" -l caddy.reverse_proxy="{{upstreams 9000}}" \
 -d -p 9000:9000 --name portainer --restart=always \
--v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest --trusted-origins=portainer.lan
+-v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest --trusted-origins=portainer.lan,portainer.lacny.me
 ```
 
 # Proxmox mounts
