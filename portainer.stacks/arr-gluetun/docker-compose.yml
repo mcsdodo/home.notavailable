@@ -17,7 +17,6 @@ services:
       - 9696:9696 #Prowlarr UI
       - 6767:6767 #Bazarr UI
     networks:
-      caddy:
       arr_default:
         aliases: # aliases so we can access deluge & prowlarr from within other containers by name
           - deluge
@@ -40,13 +39,13 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy_0: http://qbittorrent.lan
+      caddy_0: http://qbittorrent.lan, qbittorrent.lacny.me
       caddy_0.reverse_proxy: "{{upstreams 8085}}"
-      caddy_1: http://bazarr.lan, http://subtitles.lan
+      caddy_1: http://bazarr.lan, http://subtitles.lan, subtitles.lacny.me
       caddy_1.reverse_proxy: "{{upstreams 6767}}"
-      caddy_2: http://prowlarr.lan
+      caddy_2: http://prowlarr.lan, prowlarr.lacny.me
       caddy_2.reverse_proxy: "{{upstreams 9696}}"
-      caddy_3: http://deluge.lan
+      caddy_3: http://deluge.lan, deluge.lacny.me
       caddy_3.reverse_proxy: "{{upstreams 8112}}"
       
   prowlarr:
@@ -146,8 +145,6 @@ services:
       retries: 1
 
 networks:
-  caddy:
-    external: true
   arr_default:
     external: true
       

@@ -11,14 +11,9 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://comics.lan, http://komga.lan
+      caddy: http://comics.lan, http://komga.lan, comics.lacny.me, komga.lacny.me
       caddy.reverse_proxy: "{{upstreams 25600}}"
       dockflare.enable: true
       dockflare.hostname: comics.notavailable.uk
-      dockflare.service: http://comics.lan
-      dockflare.httpHostHeader: comics.lan
-    networks:
-      - caddy
-networks:
-  caddy:
-    external: true
+      dockflare.service: comics.lacny.me
+      dockflare.httpHostHeader: comics.lacny.me
