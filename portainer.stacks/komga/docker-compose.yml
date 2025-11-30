@@ -15,5 +15,5 @@ services:
       caddy.reverse_proxy: "{{upstreams 25600}}"
       dockflare.enable: true
       dockflare.hostname: comics.notavailable.uk
-      dockflare.service: comics.lacny.me
+      dockflare.service: https://comics.lacny.me
       dockflare.httpHostHeader: comics.lacny.me

@@ -32,7 +32,7 @@ services:
       caddy.reverse_proxy.header_up: -X-Forwarded-For
       dockflare.enable: true
       dockflare.hostname: plex.notavailable.uk
-      dockflare.service: plex.lacny.me
+      dockflare.service: https://plex.lacny.me
       dockflare.httpHostHeader: plex.lacny.me      
     networks:
       - arr_default

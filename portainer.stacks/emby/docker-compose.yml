@@ -22,7 +22,7 @@ services:
       caddy.reverse_proxy: "{{upstreams 8096}}"
       dockflare.enable: true
       dockflare.hostname: emby.notavailable.uk
-      dockflare.service: emby.lacny.me
+      dockflare.service: https://emby.lacny.me
       dockflare.httpHostHeader: emby.lacny.me
     networks:
       - arr_default
