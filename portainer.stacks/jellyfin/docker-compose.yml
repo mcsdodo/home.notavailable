@@ -5,8 +5,8 @@ services:
     ports:
       - 8096:8096/tcp
     volumes:
-      - /mnt/shared_configs/jellyfin/config:/config
-      - /mnt/shared_configs/jellyfin/cache:/cache
+      - /mnt/app_data/jellyfin/config:/config
+      - /mnt/app_data/jellyfin/cache:/cache
       - /mnt/media/movies:/movies:ro
       - /mnt/media/tvshows:/tvshows:ro
     restart: 'unless-stopped'
