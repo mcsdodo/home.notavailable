@@ -7,7 +7,7 @@ services:
     volumes:
       - /mnt/media/audiobooks:/audiobooks
       - /mnt/shared_configs/audiobookshelf/config:/config
-      - /mnt/shared_configs/audiobookshelf/metadata:/metadata
+      - /mnt/app_data/audiobookshelf/metadata:/metadata
     environment:
       - TZ=Europe/Bratislava
     restart: unless-stopped

@@ -3,7 +3,7 @@ services:
     image: docker.io/library/redis:7
     restart: unless-stopped
     volumes:
-      - /mnt/shared_configs/paperless/redisdata:/data
+      - /mnt/app_data/paperless/redisdata:/data
     labels:
       kuma.__docker: ""
       
@@ -11,7 +11,7 @@ services:
     image: docker.io/library/postgres:17
     restart: unless-stopped
     volumes:
-      - /mnt/shared_configs/paperless/pgdata:/var/lib/postgresql/data
+      - /mnt/app_data/paperless/pgdata:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
@@ -28,7 +28,7 @@ services:
     ports:
       - "8010:8000"
     volumes:
-      - /mnt/shared_configs/paperless/data:/usr/src/paperless/data
+      - /mnt/app_data/paperless/data:/usr/src/paperless/data
       - /mnt/media/paperless/media:/usr/src/paperless/media
       - /mnt/media/paperless/export:/usr/src/paperless/export
       - /mnt/media/paperless/consume:/usr/src/paperless/consume
