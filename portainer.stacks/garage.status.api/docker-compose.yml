@@ -1,8 +1,0 @@
-services:
-  garage.status.api:
-    image: mcsdodo/garage.status.api:latest
-    container_name: garage.status.api
-    ports:
-     - 8080:8080/tcp
-    network_mode: bridge
-    restart: always
