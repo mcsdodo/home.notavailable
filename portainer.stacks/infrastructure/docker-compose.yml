@@ -12,8 +12,12 @@ services:
       - /root/gotify/config.yml:/etc/gotify/config.yml
     labels:
       kuma.__docker: ""
-      caddy: http://gotify.lan
+      caddy: http://gotify.lan, gotify.lacny.me
       caddy.reverse_proxy: "{{upstreams 80}}"
+      dockflare.enable: true
+      dockflare.hostname: gotify.notavailable.uk
+      dockflare.service: https://gotify.lacny.me
+      dockflare.httpHostHeader: gotify.lacny.me
     networks:
       - caddy  
       
@@ -36,7 +40,7 @@ services:
       start_period: 40s
     labels:
       kuma.__docker: ""
-      caddy: http://dashy.lan
+      caddy: http://dashy.lan, dashy.lacny.me
       caddy.reverse_proxy: "{{upstreams 8080}}"
     networks:
       - caddy
