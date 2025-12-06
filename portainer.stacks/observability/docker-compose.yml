@@ -1,63 +1,49 @@
 services:
-  # autokuma:
-  #   container_name: autokuma
-  #   image: ghcr.io/bigboot/autokuma:latest
-  #   restart: unless-stopped
-  #   environment:
-  #     AUTOKUMA__KUMA__URL: http://uptime-kuma:3001
-  #     AUTOKUMA__KUMA__USERNAME: ${AUTOKUMA__KUMA__USERNAME}
-  #     AUTOKUMA__KUMA__PASSWORD: ${AUTOKUMA__KUMA__PASSWORD}
-  #     AUTOKUMA__DOCKER__TLS__VERIFY: "false"
-
-  #     AUTOKUMA__SNIPPETS__WEB: |- 
-  #        {{container_name}}_http.http.name: {{container_name}} HTTP
-  #        {{container_name}}_http.http.url: {{ args[0] }}
-  #        {{container_name}}_http.http.ignore_tls: true
-         
-  #     AUTOKUMA__SNIPPETS__DOCKER: |- 
-  #        {{container_name}}_docker.docker.name: {{container_name}} Docker
-  #        {{container_name}}_docker.docker.docker_container: {{container_name}}
-         
-  #     AUTOKUMA__DOCKER__HOSTS: ${AUTOKUMA__DOCKER__HOSTS}
-  #     AUTOKUMA__DOCKER__LABEL_PREFIX: kuma
-      
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   depends_on:
-  #     - 'uptime-kuma'
-      
-  # uptime-kuma:
-  #   container_name: uptime-kuma
-  #   image: louislam/uptime-kuma:1
-  #   volumes:
-  #     - /root/kuma:/app/data
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   ports:
-  #     - 3101:3001
-  #   restart: unless-stopped
-      
   loki:
     container_name: loki
     image: grafana/loki:latest
     restart: unless-stopped
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - /mnt/shared_configs/grafana/loki-config.yml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/tmp/loki
     networks:
-      - loki
       - caddy
+      - default
     labels:
       kuma.__docker: ""
-      caddy: http://loki.lan
-      caddy.reverse_proxy: "{{upstreams 3100}}" 
+      caddy: loki.lacny.me
+      caddy.reverse_proxy: "{{upstreams 3100}}"
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-remote-write-receiver'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - /mnt/shared_configs/grafana/prometheus-config.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - caddy
+      - default
+    labels:
+      kuma.__docker: ""
+      caddy: prometheus.lacny.me
+      caddy.reverse_proxy: "{{upstreams 9090}}" 
 
   grafana:
     restart: unless-stopped
     container_name: grafana
     labels:
       kuma.__docker: ""
-      caddy: http://grafana.lan
-      caddy.reverse_proxy: "{{upstreams 3000}}"      
+      caddy: grafana.lacny.me
+      caddy.reverse_proxy: "{{upstreams 3000}}"
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
@@ -72,23 +58,35 @@ services:
         datasources:
         - name: Loki
           type: loki
-          access: proxy 
+          access: proxy
           orgId: 1
           url: http://loki:3100
           basicAuth: false
           isDefault: true
           version: 1
           editable: false
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          orgId: 1
+          url: http://prometheus:9090
+          basicAuth: false
+          isDefault: false
+          version: 1
+          editable: false
+          jsonData:
+            timeInterval: 30s
         EOF
         /run.sh
     image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
     networks:
-      - loki
       - caddy
+      - default
 
 networks:
-  loki:
   caddy:
-    external: true  
+    external: true
+
+volumes:
+  loki-data:
+  prometheus-data:  
