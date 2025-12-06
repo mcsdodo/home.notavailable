@@ -8,42 +8,39 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+      - "2019:2019"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+      - caddy_config:/config
     environment:
       - TZ=Europe/Bratislava
       - CADDY_INGRESS_NETWORKS=caddy
+      - CLOUDFLARE_ZONE_TOKEN=${CF_API_TOKEN}
+      - CF_ZONE_ID_LACNY_ME=${CF_ZONE_ID_LACNY_ME}
     networks:
       caddy:
       macvlan0:
         ipv4_address: 192.168.0.21
       
     labels:
-      caddy: "http://*.lan"
-      caddy.reverse_proxy: "192.168.0.22:80" #213 in big-media
+      
+
       autoheal: true
       
-  webserver:
-    container_name: webserver
-    image: hashicorp/http-echo
+
+  caddy-agent:
+    container_name: caddy-agent
+    image: mcsdodo/caddy-agent:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
-    command: [
-      "-listen=:80",
-      "-text=${ECHO_TEXT}"
-    ]      
-    labels: 
-      caddy: ${WEBSERVER_DOMAIN:-http://webserver.lan}
-      caddy.reverse_proxy: "{{upstreams 80}}"
-    networks:
-      - caddy
-      
-  caddy-config:
-    container_name: caddy-config
-    image: traefik/whoami:latest
-    networks:
-      - caddy
-    restart: always
+      - SNIPPET_API_PORT=8567
+      - LOG_LEVEL=INFO
+      - CONFIG_PUSH_ENABLED=false
+    ports:
+      - "8567:8567"
     labels:
       #### Global Settings ####
       caddy_0.email: "${EMAIL}"
@@ -55,35 +52,105 @@ services:
       caddy_1.tls.dns: "cloudflare ${CF_API_TOKEN}"
       caddy_1.tls.resolvers: 1.1.1.1 1.0.0.1
       caddy_1.handle.abort: ""
+      # caddy_1.tls.ca: https://acme-staging-v02.api.letsencrypt.org/directory
 
-      # Secure a site with Authelia
-      # caddy_2: (authelia)
-      # caddy_2.forward_auth: "{$$AUTH_HOST_INTERNAL}"
-      # caddy_2.forward_auth.uri: /api/verify?rd=https://{$$AUTH_HOST_EXTERNAL}
-      # caddy_2.forward_auth.copy_headers : Remote-User Remote-Groups Remote-Name Remote-Email
+      caddy_2: ":2020"
+      caddy_2.reverse_proxy: "localhost:2019"
+      caddy_2.reverse_proxy.header_up: "Host localhost:2019"
 
       # Skip TLS verify for backend with self-signed HTTPS
       caddy_3: (https)
-      caddy_3.transport: http
-      caddy_3.transport.tls: ""
-      caddy_3.transport.tls_insecure_skip_verify: ""
-
-      # Secure a site with Authentik
-      caddy_4: (authentik)
-      caddy_4.forward_auth: "authentik.lan"
-      caddy_4.forward_auth.uri: /outpost.goauthentik.io/auth/caddy
-      caddy_4.forward_auth.copy_headers : X-Authentik-Username X-Authentik-Groups X-Authentik-Entitlements X-Authentik-Email X-Authentik-Name X-Authentik-Uid X-Authentik-Jwt X-Authentik-Meta-Jwks X-Authentik-Meta-Outpost X-Authentik-Meta-Provider X-Authentik-Meta-App X-Authentik-Meta-Version
-      caddy_4.forward_auth.trusted_proxies: private_ranges
+      caddy_3.reverse_proxy.transport: http
+      caddy_3.reverse_proxy.transport.tls: ""
+      caddy_3.reverse_proxy.transport.tls_insecure_skip_verify: ""
 
       ## Setup wildcard sites
-      caddy_10: "*.${DOMAIN}"   #👈 Change to your domain
+      caddy_10: "*.lacny.me"
       caddy_10.import: wildcard
+      
+      caddy_11: "*.notavailable.uk"
+      caddy_11.import: wildcard
 
-      # Add our first site, which this container itself
-      caddy_99: "whoami.${DOMAIN}"                       #👈 Subdomain using wildcard cert
-      caddy_99.reverse_proxy: "{{upstreams 80}}"         #👈 Container port
-      # caddy_99.import: auth                              #👈 Enable protection by Authelia
-  
+      caddy_111: http://zigbee2mqtt.lan, zigbee2mqtt.lacny.me
+      caddy_111.reverse_proxy: 192.168.0.114:8080
+
+      caddy_112: http://zwave-js-ui.lan, zwave-js-ui.lacny.me
+      caddy_112.reverse_proxy: 192.168.0.237:8091
+
+      caddy_113: http://nvr.lan, nvr.lacny.me
+      caddy_113.reverse_proxy: 192.168.0.10
+
+      caddy_114: http://nvo.lan
+      caddy_114.reverse_proxy: 192.168.0.15
+
+      caddy_115: proxmox-small.lacny.me
+      # caddy_115.import: https # -> this doesn't work with docker-proxy (cannot merge transport with reverse_proxy properly)
+      caddy_115.reverse_proxy.transport: http
+      caddy_115.reverse_proxy.transport.tls: ""
+      caddy_115.reverse_proxy.transport.tls_insecure_skip_verify: ""
+      caddy_115.reverse_proxy: 192.168.0.111:8006
+
+      caddy_116: proxmox-frigate.lacny.me
+      caddy_116.reverse_proxy.transport: http
+      caddy_116.reverse_proxy.transport.tls: ""
+      caddy_116.reverse_proxy.transport.tls_insecure_skip_verify: ""
+      caddy_116.reverse_proxy: 192.168.0.234:8006
+      
+      caddy_117: proxmox-media.lacny.me
+      caddy_117.reverse_proxy.transport: http
+      caddy_117.reverse_proxy.transport.tls: ""
+      caddy_117.reverse_proxy.transport.tls_insecure_skip_verify: ""
+      caddy_117.reverse_proxy: 192.168.0.199:8006
+
+      caddy_118: truenas.lacny.me
+      caddy_118.reverse_proxy: 192.168.0.201
+
+      caddy_119: adguard.lacny.me
+      caddy_119.reverse_proxy: 192.168.0.121
+
+      caddy_120: adguard2.lacny.me
+      caddy_120.reverse_proxy: 192.168.0.122
+
+      caddy_121: homeassistant.lacny.me
+      caddy_121.reverse_proxy: 192.168.0.100:8123
+
+      caddy_122: plug-na-1.lacny.me
+      caddy_122.reverse_proxy: 192.168.100.151
+
+      caddy_123: plug-na-2.lacny.me
+      caddy_123.reverse_proxy: 192.168.100.152
+
+      caddy_124: plug-na-3.lacny.me
+      caddy_124.reverse_proxy: 192.168.100.153
+
+      caddy_125: plug-na-4.lacny.me
+      caddy_125.reverse_proxy: 192.168.100.154
+
+      caddy_126: plug-na-5.lacny.me
+      caddy_126.reverse_proxy: 192.168.100.155
+
+      caddy_127: plug-na-6.lacny.me
+      caddy_127.reverse_proxy: 192.168.100.156
+
+      caddy_01: http://*.lan
+      caddy_01.reverse_proxy: "192.168.0.22:80"
+
+  webserver:
+    container_name: webserver
+    image: hashicorp/http-echo
+    environment:
+      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
+    command: [
+      "-listen=:80",
+      "-text=${ECHO_TEXT}"
+    ]      
+    labels: 
+      caddy_0: ${WEBSERVER_DOMAIN:-http://webserver.lan}, app.lacny.me
+      caddy_0.reverse_proxy: "{{upstreams 80}}"
+    networks:
+      - caddy
+
+
 networks:
   caddy:
     name: caddy
@@ -96,3 +163,6 @@ networks:
       config:
         - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
           gateway: ${MACVLAN_GATEWAY:-192.168.0.1}
+volumes:
+  caddy_data:
+  caddy_config:

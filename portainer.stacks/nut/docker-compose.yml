@@ -36,12 +36,7 @@ services:
       - /mnt/shared_configs/nut:/config
     environment:
       - WEB_PORT=8080
-    networks:
-      - caddy
     labels:
-      caddy: http://peanut.lan
+      caddy: http://peanut.lan, peanut.lacny.me
       caddy.reverse_proxy: "{{upstreams 8080}}"
     
-networks:
-  caddy:
-    external: true

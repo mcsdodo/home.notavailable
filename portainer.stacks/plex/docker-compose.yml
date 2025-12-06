@@ -27,15 +27,16 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://plex.lan
+      caddy: http://plex.lan, plex.lacny.me
       caddy.reverse_proxy: "{{upstreams 32400}}"
       caddy.reverse_proxy.header_up: -X-Forwarded-For
+      dockflare.enable: true
+      dockflare.hostname: plex.notavailable.uk
+      dockflare.service: https://plex.lacny.me
+      dockflare.httpHostHeader: plex.lacny.me      
     networks:
       - arr_default
-      - caddy
       
 networks:
   arr_default:
     external: true
-  caddy:
-    external: true       

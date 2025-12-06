@@ -1,0 +1,56 @@
+services:
+  frigate:
+    container_name: surveillance-frigate-testing
+    privileged: true # this may not be necessary for all setups
+    restart: unless-stopped
+    image: ghcr.io/blakeblackshear/frigate:0.16.1-tensorrt
+    shm_size: "580mb" # update for your cameras based on calculation above
+    devices:
+      - /dev/bus/usb:/dev/bus/usb  # Passes the USB Coral, needs to be modified for other versions
+      - /dev/dri
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # Or 'all'
+              capabilities: [gpu]
+    volumes:
+      # - /etc/localtime:/etc/localtime:ro
+      - /root/frigate:/config # config.yml location
+      - /mnt/media/frigate/_testing:/media/frigate # NAS - remote
+      - /mnt/media/frigate/exports:/prod/exports
+      - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    environment:
+      - FRIGATE_RTSP_CREDENTIALS=${FRIGATE_RTSP_CREDENTIALS}
+      - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER}
+      - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD}
+      - TZ=Europe/Bratislava
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+    labels:
+      autoheal: true
+      caddy: http://frigate-gpu.lan, frigate-gpu.lacny.me
+      caddy.reverse_proxy: "{{ upstreams 5000 }}"
+    ports:
+      - "8554:8554" # RTSP feeds
+      - "8555:8555/tcp" # WebRTC over tcp
+      - "8555:8555/udp" # WebRTC over udp
+      - "8971:8971" # New restricted access port in >= v14.0     
+      - "5012:5000"
+      - "1984:1984"
+      
+  caddy-agent:
+    image: mcsdodo/caddy-agent
+    container_name: caddy-agent
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CADDY_URL=http://192.168.0.21:2020
+      - AGENT_ID=big-ai
+      - DOCKER_LABEL_PREFIX=caddy
+      - HOST_IP=192.168.0.115

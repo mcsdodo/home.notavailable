@@ -1,0 +1,150 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun:v3.40
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "8888:8888/tcp"                         # Gluetun Local Network HTTP proxy
+      - "8388:8388/tcp"                         # Gluetun Local Network Shadowsocks
+      - "8388:8388/udp"                         # Gluetun Local Network Shadowsocks
+      - 8112:8112   # WebUI Portal: deluge
+      - 8085:8085   # WebUI qBittorrent
+      - "6881:6881/tcp"        # Transmission Torrent Port TCP
+      - "6881:6881/udp"        # Transmission Torrent Port UDP
+      - 9696:9696 #Prowlarr UI
+      - 6767:6767 #Bazarr UI
+    networks:
+      arr_default:
+        aliases: # aliases so we can access deluge & prowlarr from within other containers by name
+          - deluge
+          - prowlarr
+          - qbittorrent
+          - bazarr
+    volumes:
+      - /mnt/shared_configs/gluetun:/gluetun
+    environment:
+      - PUID=${PUID:?err}
+      - PGID=${PGID:?err}
+      - TZ=${TZ:?err}
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:?err}
+      - VPN_TYPE=${VPN_TYPE:?err}
+      - SERVER_REGIONS=${SERVER_REGIONS:?err}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      # this will use docker DNS for containers running within gluetun (container IN gluetun network will be able to access others outside). \
+      # It also potentionally leaks all DNS queries to ISP! Possible workaround: https://github.com/qdm12/gluetun/issues/281 - didn't work for me.
+      - DNS_KEEP_NAMESERVER=on 
+    labels:
+      kuma.__docker: ""
+      autoheal: true
+      caddy_0: http://qbittorrent.lan, qbittorrent.lacny.me
+      caddy_0.reverse_proxy: "{{upstreams 8085}}"
+      caddy_1: http://bazarr.lan, http://subtitles.lan, subtitles.lacny.me
+      caddy_1.reverse_proxy: "{{upstreams 6767}}"
+      caddy_2: http://prowlarr.lan, prowlarr.lacny.me
+      caddy_2.reverse_proxy: "{{upstreams 9696}}"
+      caddy_3: http://deluge.lan, deluge.lacny.me
+      caddy_3.reverse_proxy: "{{upstreams 8112}}"
+      
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /mnt/shared_configs/prowlarr:/config
+    restart: always
+    network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+    depends_on:                     #comment/remove if you are not using the VPN
+      - gluetun                     #comment/remove if you are not using the VPN
+    labels:
+      kuma.__docker: ""
+      autoheal: true
+    healthcheck:
+      test: "curl -sf https://example.com  || exit 1"
+      interval: 1m
+      timeout: 10s
+      retries: 1
+      
+  bazarr:
+    image: 'linuxserver/bazarr:latest'
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /mnt/shared_configs/bazarr:/config
+      - /mnt/media/movies:/movies
+      - /mnt/media/tvshows:/tvshows
+    network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+    depends_on:                     #comment/remove if you are not using the VPN
+      - gluetun                     #comment/remove if you are not using the VPN            
+    labels:
+      kuma.__docker: ""
+      autoheal: true
+    healthcheck:
+      test: "curl -sf https://example.com  || exit 1"
+      interval: 1m
+      timeout: 10s
+      retries: 1
+
+  # deluge:
+  #   image: lscr.io/linuxserver/deluge:latest
+  #   environment:
+  #     - PUID=0
+  #     - PGID=0
+  #     - TZ=Europe/Bratislava
+  #     - DELUGE_LOGLEVEL=error #optional
+  #   volumes:
+  #     - /mnt/shared_configs/deluge/config:/config
+  #     - /mnt/media/downloads:/downloads
+  #     - /mnt/media/movies:/movies
+  #     - /mnt/media/tvshows:/tvshows
+  #   network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+  #   depends_on:                     #comment/remove if you are not using the VPN
+  #     - gluetun                     #comment/remove if you are not using the VPN
+  #   restart: unless-stopped
+  #   labels:
+  #     kuma.__docker: ""
+  #     autoheal: true
+  #   healthcheck:
+  #     test: "curl -sf https://example.com  || exit 1"
+  #     interval: 1m
+  #     timeout: 10s
+  #     retries: 1
+    
+
+  qbittorrent:
+    # image: lscr.io/linuxserver/qbittorrent:latest
+    image: lscr.io/linuxserver/qbittorrent:libtorrentv1
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Bratislava
+      - WEBUI_PORT=8085
+    volumes:
+      - /mnt/shared_configs/qbittorrent:/config
+      - /mnt/media/downloads:/downloads
+      - /mnt/media/movies:/movies
+      - /mnt/media/tvshows:/tvshows
+    restart: always
+    labels:
+      kuma.__docker: ""
+      autoheal: true
+    network_mode: 'service:gluetun' #comment/remove if you are not using the VPN
+    depends_on:                     #comment/remove if you are not using the VPN
+      - gluetun                     #comment/remove if you are not using the VPN
+    healthcheck:
+      test: "curl -sf https://example.com  || exit 1"
+      interval: 1m
+      timeout: 10s
+      retries: 1
+
+networks:
+  arr_default:
+    external: true
+      

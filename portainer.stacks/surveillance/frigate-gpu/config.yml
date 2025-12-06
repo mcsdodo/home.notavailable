@@ -1,0 +1,138 @@
+detectors:
+  onnx:
+    type: onnx
+# model:
+#   model_type: yolo-generic
+#   width: 320 # <--- should match the imgsize set during model export
+#   height: 320 # <--- should match the imgsize set during model export
+#   input_tensor: nchw
+#   input_dtype: float
+#   path: /config/model_cache/yolov9-t.onnx
+  # https://docs.frigate.video/configuration/object_detectors/#downloading-yolo-models
+
+# model:
+#   model_type: yolo-generic
+#   width: 640 # <--- should match the imgsize set during model export
+#   height: 640 # <--- should match the imgsize set during model export
+#   input_tensor: nchw
+#   input_dtype: float
+#   path: /config/model_cache/yolov9-s-640.onnx
+
+model:
+  model_type: yolo-generic
+  width: 320 # <--- should match the imgsize set during model export
+  height: 320 # <--- should match the imgsize set during model export
+  input_tensor: nchw
+  input_dtype: float
+  path: /config/model_cache/yolov9-s-320.onnx
+
+face_recognition:
+  enabled: true
+  model_size: large
+  recognition_threshold: 0.95
+
+# ffmpeg:
+#   hwaccel_args: preset-vaapi
+#   output_args:
+#     record: preset-record-generic-audio-aac
+
+mqtt:
+  host: mqtt.lan # tailscale DNS
+  port: 1883
+  user: '{FRIGATE_MQTT_USER}'
+  password: '{FRIGATE_MQTT_PASSWORD}'
+  stats_interval: 60
+  topic_prefix: frigate_gpu
+  client_id: frigate_gpu
+
+snapshots:
+  enabled: true
+  bounding_box: true
+  crop: false
+  quality: 100
+
+record:
+  enabled: false
+  retain:
+    days: 1
+    mode: motion
+  alerts:
+    pre_capture: 10
+    post_capture: 15
+    retain:
+      days: 1
+      mode: motion
+  detections:
+    pre_capture: 10
+    post_capture: 15
+    retain:
+      days: 1
+      mode: motion
+  
+detect:
+  fps: 5
+  enabled: true
+
+objects:
+  track:
+    - person
+
+go2rtc:
+  streams:
+    vratnik_gpu:
+      - rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.10:554/cam/realmonitor?channel=5&subtype=1
+      - "vratnik_gpu:back#video=h264#audio=aac#hardware"
+  webrtc:
+    candidates:
+      - 192.168.0.115:8555
+      - stun:8555
+    filters:
+      candidates: []      
+
+cameras:
+  vratnik_gpu:
+    mqtt:
+      quality: 100
+      height: 500
+      crop: true
+    ffmpeg:
+      inputs:
+        - path: 
+            rtsp://{FRIGATE_RTSP_CREDENTIALS}@192.168.0.10:554/cam/realmonitor?channel=5&subtype=1
+          roles:
+            - detect
+    motion:
+      mask:
+        - 0.286,0.915,0.001,0.919,0,1,0.285,1
+        - 0.317,0,0.343,0.368,1,0.331,1,0
+      threshold: 30
+      contour_area: 30
+      improve_contrast: true
+    objects:
+      mask:
+        - 0.342,0.636,0.649,0.708,0.966,1,1,1,1,0.331,0.343,0.368
+        - 0.04,0.321,0.038,0.692,0.219,0.64,0.219,0.348
+    zones:
+      vratnik_gpu_required_zone:
+        coordinates: 0,0.395,1,0.385,0.999,0.998,0.002,0.998
+        inertia: 3
+        loitering_time: 0
+        objects: person
+      vratnik_gpu_alert_zone:
+        coordinates: 0,1,0.001,0.648,0.417,0.749,0.745,0.814,0.949,0.997
+        inertia: 3
+        loitering_time: 0
+    review:
+      detections:
+        required_zones: vratnik_gpu_required_zone
+      alerts:
+        required_zones: vratnik_gpu_alert_zone
+
+
+version: 0.16-0
+semantic_search:
+  enabled: true
+  model_size: large
+classification:
+  bird:
+    enabled: false

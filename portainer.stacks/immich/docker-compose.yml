@@ -18,10 +18,9 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://photos.lan
+      caddy: http://photos.lan, photos.lacny.me
       caddy.reverse_proxy: "{{upstreams 2283}}"
     networks:
-      - caddy
       - default
     deploy:
       resources:
@@ -83,8 +82,4 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      
-
-networks:
-  caddy:
-    external: true
+    
