@@ -114,6 +114,24 @@ services:
       caddy_0.reverse_proxy: "{{upstreams 5055}}"    
     ports:
       - 5056:5055
+
+  decluttarr:
+    image: ghcr.io/manimatter/decluttarr:latest
+    container_name: decluttarr
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - QBITTORRENT_PASSWORD=${QBITTORRENT_PASSWORD}
+    volumes:
+      - /mnt/shared_configs/decluttarr/config.yaml:/app/config/config.yaml
+      - /mnt/media/movies:/movies # movies folder
+      - /mnt/media/tvshows:/tvshows # series folder  
+    networks:
+      - default
       
   # scheduled-restarts:
   #   image: docker:cli
