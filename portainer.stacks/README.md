@@ -84,3 +84,16 @@ upsd
 upsdrvctl start
 
 upsc ups@localhost
+
+
+# Storage
+
+### big-server
+- `/mnt/app_data` for dbs (mount from host `/mnt/pve/nvme1/app_data` which is local NVME disk)
+- `/mnt/shared_configs` for configs (mount from host `/mnt/pve/shared_configs` which is a NFS drive)
+
+
+### Frigate
+- config is local to the LXC
+- `/mnt/frigate-local` for recordings (mount from host `/mnt/pve/hdd/frigate-local` HDD disk)
+- `/mnt/shared_configs` for configs (mount from host `/mnt/pve/shared_configs` which is a NFS drive)
