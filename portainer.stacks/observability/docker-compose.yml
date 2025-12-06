@@ -1,94 +1,49 @@
 services:
-  # autokuma:
-  #   container_name: autokuma
-  #   image: ghcr.io/bigboot/autokuma:latest
-  #   restart: unless-stopped
-  #   environment:
-  #     AUTOKUMA__KUMA__URL: http://uptime-kuma:3001
-  #     AUTOKUMA__KUMA__USERNAME: ${AUTOKUMA__KUMA__USERNAME}
-  #     AUTOKUMA__KUMA__PASSWORD: ${AUTOKUMA__KUMA__PASSWORD}
-  #     AUTOKUMA__DOCKER__TLS__VERIFY: "false"
-
-  #     AUTOKUMA__SNIPPETS__WEB: |- 
-  #        {{container_name}}_http.http.name: {{container_name}} HTTP
-  #        {{container_name}}_http.http.url: {{ args[0] }}
-  #        {{container_name}}_http.http.ignore_tls: true
-         
-  #     AUTOKUMA__SNIPPETS__DOCKER: |- 
-  #        {{container_name}}_docker.docker.name: {{container_name}} Docker
-  #        {{container_name}}_docker.docker.docker_container: {{container_name}}
-         
-  #     AUTOKUMA__DOCKER__HOSTS: ${AUTOKUMA__DOCKER__HOSTS}
-  #     AUTOKUMA__DOCKER__LABEL_PREFIX: kuma
-      
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   depends_on:
-  #     - 'uptime-kuma'
-      
-  # uptime-kuma:
-  #   container_name: uptime-kuma
-  #   image: louislam/uptime-kuma:1
-  #   volumes:
-  #     - /root/kuma:/app/data
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   ports:
-  #     - 3101:3001
-  #   restart: unless-stopped
-      
-  loki:
-    container_name: loki
-    image: grafana/loki:latest
+  alloy:
     restart: unless-stopped
+    container_name: alloy
+    image: grafana/alloy:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/shared_configs/grafana/config.alloy:/etc/alloy/config.alloy
     ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - loki
-      - caddy
-    labels:
-      kuma.__docker: ""
-      caddy: http://loki.lan
-      caddy.reverse_proxy: "{{upstreams 3100}}" 
-
-  grafana:
-    restart: unless-stopped
-    container_name: grafana
-    labels:
-      kuma.__docker: ""
-      caddy: http://grafana.lan
-      caddy.reverse_proxy: "{{upstreams 3000}}"      
+      - "12345:12345"
     environment:
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-    entrypoint:
-      - sh
-      - -euc
-      - |
-        mkdir -p /etc/grafana/provisioning/datasources
-        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-        apiVersion: 1
-        datasources:
-        - name: Loki
-          type: loki
-          access: proxy 
-          orgId: 1
-          url: http://loki:3100
-          basicAuth: false
-          isDefault: true
-          version: 1
-          editable: false
-        EOF
-        /run.sh
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
+      - LOKI_URL=${LOKI_URL:-http://loki:3100}
+      - PROMETHEUS_URL=${PROMETHEUS_URL:-http://prometheus:9090}
+      - HOSTNAME=${ALLOY_HOSTNAME:-docker-host}
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    labels:
+      caddy: alloy.lacny.me
+      caddy.reverse_proxy: "{{upstreams 12345}}"
     networks:
-      - loki
       - caddy
+      - default
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    environment:
+      WATCHTOWER_CLEANUP: "true" 
+      WATCHTOWER_POLL_INTERVAL: 30
+      WATCHTOWER_NOTIFICATIONS: "shoutrrr"
+      WATCHTOWER_NOTIFICATION_URL: "telegram://${WATCHTOWER_CHAT_TOKEN}@telegram?chats=${WATCHTOWER_CHAT_ID}"
+
+  autoheal:
+    container_name: autoheal
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_START_PERIOD: 30
+    image: willfarrell/autoheal:latest
+    network_mode: none
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
-  loki:
   caddy:
-    external: true  
+    external: true
