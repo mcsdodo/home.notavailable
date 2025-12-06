@@ -18,8 +18,8 @@ services:
       - ADVERTISE_IP=${PLEX_ADVERTISE_IPS}
     hostname: plex.lan
     volumes:
-      - /mnt/shared_configs/plex/database:/config
-      - /mnt/shared_configs/plex/transcode/temp:/transcode
+      - /mnt/app_data/plex/database:/config
+      - /mnt/app_data/plex/transcode/temp:/transcode
       # - /mnt/oldmedia:/oldmedia
       - /mnt/media:/media
       - /mnt/media/movies:/movies

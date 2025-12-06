@@ -37,7 +37,7 @@ services:
     container_name: immich_machine_learning
     image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
     volumes:
-      - /mnt/shared_configs/immich/model-cache:/cache
+      - /mnt/app_data/immich/model-cache:/cache
     env_file:
       - stack.env
     restart: always

@@ -9,7 +9,7 @@ services:
       - POSTGRES_PASSWORD=${postgres_password}
       - POSTGRES_DB=${postgres_db}
     volumes:
-      - /mnt/shared_configs/compreface/postgres-data:/var/lib/postgresql/data
+      - /mnt/app_data/compreface/postgres-data:/var/lib/postgresql/data
     labels:
       kuma.__docker: ""
       autoheal: true
