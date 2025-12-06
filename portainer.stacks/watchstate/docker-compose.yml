@@ -11,14 +11,11 @@ services:
       - /mnt/shared_configs/watchstate:/config:rw # mount current directory to container /config directory.
     networks:
       - arr_default
-      - caddy
     labels:
       autoheal: true
-      caddy: http://watchstate.lan
+      caddy: http://watchstate.lan, watchstate.lacny.me
       caddy.reverse_proxy: "{{upstreams 8080}}"
         
 networks:
   arr_default:
     external: true       
-  caddy:
-    external: true

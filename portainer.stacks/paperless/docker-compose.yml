@@ -57,19 +57,14 @@ services:
 # The default language to use for OCR. Set this to the language most of your
 # documents are written in.
       #PAPERLESS_OCR_LANGUAGE: eng
-      PAPERLESS_URL: https://documents.lan
+      PAPERLESS_URL: https://documents.lacny.me
       PAPERLESS_CONSUMER_POLLING: 10
       PAPERLESS_TASK_WORKERS: 2
       PAPERLESS_THREADS_PER_WORKER: 3
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://documents.lan
+      caddy: http://documents.lan, documents.lacny.me
       caddy.reverse_proxy: "{{upstreams 8000}}"
     networks:
-      - caddy
       - default
-      
-networks:
-  caddy:
-    external: true

@@ -11,13 +11,12 @@ services:
     environment:
       - TZ=Europe/Bratislava
     restart: unless-stopped
-    networks:
-      - caddy     
     labels:
       autoheal: true
-      caddy: http://audiobooks.lan
+      caddy: http://audiobooks.lan, audiobooks.lacny.me
       caddy.reverse_proxy: "{{upstreams 80}}"
+      dockflare.enable: true
+      dockflare.hostname: audiobooks.notavailable.uk
+      dockflare.service: audiobooks.lacny.me
+      dockflare.httpHostHeader: audiobooks.lacny.me
       
-networks:
-  caddy:
-    external: true      

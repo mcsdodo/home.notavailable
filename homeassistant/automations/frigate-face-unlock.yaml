@@ -1,0 +1,42 @@
+alias: Frigate - Face unlock - Event correlation
+description: ""
+triggers:
+# Zone ENTRY only (triggers once)
+  - topic: frigate_gpu/events
+    trigger: mqtt
+    id: zone_event
+    value_template: >-
+      {{ 'vratnik_gpu_alert_zone' not in value_json.before.current_zones and
+         'vratnik_gpu_alert_zone' in value_json.after.current_zones }}
+# Face recognized (handles "already in zone" case)
+  - topic: frigate_gpu/tracked_object_update
+    trigger: mqtt
+    id: face_event
+    value_template: "{{ value_json.type == 'face' and value_json.name in ['Dodo', 'Zuz'] }}"
+    payload: "True"
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: face_event
+        sequence:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.frigate_face_id
+            data:
+              value: "{{ trigger.payload_json.id }}"
+      - conditions:
+          - condition: trigger
+            id: zone_event
+        sequence:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.frigate_zone_id
+            data:
+              value: "{{ trigger.payload_json.after.id }}"
+  - condition: template
+    value_template: |-
+      {{ states('input_text.frigate_face_id') != '' and
+         states('input_text.frigate_face_id') == states('input_text.frigate_zone_id') }}
+  - action: script.unlock_door_face_recognition
+mode: parallel

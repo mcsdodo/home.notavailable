@@ -1,0 +1,63 @@
+services:
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    hostname: cloudflare-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    healthcheck:
+      test: ["CMD", "cloudflared", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  dockflare:
+    image: alplat/dockflare:stable
+    container_name: dockflare
+    restart: unless-stopped
+    volumes:
+      - dockflare_data:/app/data
+      - //var/run/docker.sock:/var/run/docker.sock:ro
+    user: "0:0"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_DB_INDEX=0  # Optional: specify Redis database index (0-15) for isolation from other containers
+      - LOG_LEVEL=ERROR
+      - USE_EXTERNAL_CLOUDFLARED=true
+      - EXTERNAL_TUNNEL_ID=${EXTERNAL_TUNNEL_ID}
+      - CF_API_TOKEN=${CF_API_TOKEN}
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_ZONE_ID=${CF_ZONE_ID}
+    depends_on:
+      redis:
+        condition: service_started
+      cloudflare-tunnel:
+        condition: service_started       
+    labels:
+      kuma.__docker: ""
+      autoheal: true
+      caddy_0: http://dockflare-media.lan
+      caddy_0.reverse_proxy: "{{upstreams 5000}}"
+    networks:
+      - caddy
+      - default
+      
+  redis:
+    image: redis:7-alpine
+    container_name: dockflare-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    volumes:
+      - dockflare_redis:/data
+
+volumes:
+  dockflare_data:
+  dockflare_redis:
+
+
+networks:
+  caddy:
+    external: true

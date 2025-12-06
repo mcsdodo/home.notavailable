@@ -1,0 +1,28 @@
+services:
+  frigate-test:
+    container_name: frigate-test
+    image: ghcr.io/blakeblackshear/frigate:stable
+    restart: unless-stopped
+    ports:
+      - "5011:5000"  # Frigate UI
+      - "8554:8554"  # RTSP feeds
+      - "8555:8555/tcp"  # WebRTC over tcp
+      - "8555:8555/udp"  # WebRTC over udp
+      - "1984:1984"  # go2rtc API
+      - "8971:8971"
+    environment:
+      - FRIGATE_RTSP_CREDENTIALS=${FRIGATE_RTSP_CREDENTIALS}
+      - TZ=Europe/Bratislava
+    volumes:
+      # Windows: Relative path works with Docker Desktop
+      - ./config:/config
+      # Optional: media volume for debugging (not required for testing)
+      - frigate-test-media:/media/frigate
+    tmpfs:
+      - /tmp/cache
+    shm_size: "128mb"
+    env_file:
+      - ./.env
+
+volumes:
+  frigate-test-media:

@@ -1,0 +1,23 @@
+# Frigate generated files
+config/*.db*
+config/*.log
+
+# Docker volumes
+media/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+.exports
+.timeline
+.vacuum
+.jwt_secret
+model_cache/

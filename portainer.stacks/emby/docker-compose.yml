@@ -18,11 +18,14 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy: http://emby.lan
+      caddy: http://emby.lan, emby.lacny.me
       caddy.reverse_proxy: "{{upstreams 8096}}"
+      dockflare.enable: true
+      dockflare.hostname: emby.notavailable.uk
+      dockflare.service: https://emby.lacny.me
+      dockflare.httpHostHeader: emby.lacny.me
     networks:
       - arr_default
-      - caddy
     # runtime: nvidia
     # deploy:
     #   resources:
@@ -49,5 +52,3 @@ services:
 networks:
   arr_default:
     external: true      
-  caddy:
-    external: true
