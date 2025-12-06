@@ -8,10 +8,17 @@ services:
       - /mnt/shared_configs/grafana/config.alloy:/etc/alloy/config.alloy
     ports:
       - "12345:12345"
-    command:  run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    environment:
+      - LOKI_URL=${LOKI_URL:-http://loki:3100}
+      - PROMETHEUS_URL=${PROMETHEUS_URL:-http://prometheus:9090}
+      - HOSTNAME=${ALLOY_HOSTNAME:-docker-host}
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
     labels:
-      caddy: http://alloy.lan
+      caddy: alloy.lacny.me
       caddy.reverse_proxy: "{{upstreams 12345}}"
+    networks:
+      - caddy
+      - default
 
   watchtower:
     image: containrrr/watchtower
@@ -36,3 +43,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  caddy:
+    external: true

@@ -1,0 +1,99 @@
+// Grafana Alloy Configuration
+// Collects logs and metrics from all Docker containers
+// Sends logs to Loki and metrics to Prometheus
+
+// ============================================================================
+// LOGGING PIPELINE (Docker Logs → Loki)
+// ============================================================================
+
+// Discover all Docker containers
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+// Extract Docker Compose metadata during discovery
+discovery.relabel "add_metadata" {
+  targets = []
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label = "service_name"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label = "compose_project"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex = "/(.*)"
+    target_label = "container_name"
+  }
+}
+
+// Collect logs from Docker containers with relabeled metadata
+loki.source.docker "docker_logs" {
+  host = "unix:///var/run/docker.sock"
+  targets = discovery.docker.containers.targets
+  relabel_rules = discovery.relabel.add_metadata.rules
+  forward_to = [loki.process.add_hostname.receiver]
+}
+
+// Add hostname label
+loki.process "add_hostname" {
+  // Add hostname label from environment variable
+  stage.static_labels {
+    values = {
+      hostname = env("HOSTNAME"),
+    }
+  }
+
+  forward_to = [loki.write.loki_endpoint.receiver]
+}
+
+// Write logs to Loki
+loki.write "loki_endpoint" {
+  endpoint {
+    url = env("LOKI_URL") + "/loki/api/v1/push"
+
+    // No authentication required for local Loki
+  }
+}
+
+// ============================================================================
+// METRICS PIPELINE (Docker Stats → Prometheus)
+// ============================================================================
+
+// Collect container metrics via cAdvisor integration
+prometheus.exporter.cadvisor "containers" {
+  docker_host = "unix:///var/run/docker.sock"
+  storage_duration = "2m"
+}
+
+// Scrape metrics from cAdvisor exporter
+prometheus.scrape "container_metrics" {
+  targets = prometheus.exporter.cadvisor.containers.targets
+  forward_to = [prometheus.relabel.add_hostname.receiver]
+  scrape_interval = "30s"
+}
+
+// Add hostname label to metrics
+prometheus.relabel "add_hostname" {
+  rule {
+    target_label = "hostname"
+    replacement = env("HOSTNAME")
+  }
+
+  forward_to = [prometheus.remote_write.prometheus_endpoint.receiver]
+}
+
+// Write metrics to Prometheus
+prometheus.remote_write "prometheus_endpoint" {
+  endpoint {
+    url = env("PROMETHEUS_URL") + "/api/v1/write"
+
+    // No authentication required for local Prometheus
+  }
+}
