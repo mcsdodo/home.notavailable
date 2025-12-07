@@ -135,25 +135,6 @@ services:
       caddy_128: wd.lacny.me
       caddy_128.reverse_proxy: 192.168.0.79
 
-      caddy_01: http://*.lan
-      caddy_01.reverse_proxy: "192.168.0.22:80"
-
-  webserver:
-    container_name: webserver
-    image: hashicorp/http-echo
-    environment:
-      - ECHO_TEXT=${WEBSERVER_DOMAIN:-http://webserver.lan}
-    command: [
-      "-listen=:80",
-      "-text=${ECHO_TEXT}"
-    ]      
-    labels: 
-      caddy_0: ${WEBSERVER_DOMAIN:-http://webserver.lan}, app.lacny.me
-      caddy_0.reverse_proxy: "{{upstreams 80}}"
-    networks:
-      - caddy
-
-
 networks:
   caddy:
     name: caddy
