@@ -83,7 +83,7 @@ services:
       caddy_114: http://nvo.lan
       caddy_114.reverse_proxy: 192.168.0.15
 
-      caddy_115: proxmox-small.lacny.me
+      caddy_115: proxmox-small.lacny.me, proxmox.lacny.me
       # caddy_115.import: https # -> this doesn't work with docker-proxy (cannot merge transport with reverse_proxy properly)
       caddy_115.reverse_proxy.transport: http
       caddy_115.reverse_proxy.transport.tls: ""
@@ -131,6 +131,9 @@ services:
 
       caddy_127: plug-na-6.lacny.me
       caddy_127.reverse_proxy: 192.168.100.156
+
+      caddy_128: wd.lacny.me
+      caddy_128.reverse_proxy: 192.168.0.79
 
       caddy_01: http://*.lan
       caddy_01.reverse_proxy: "192.168.0.22:80"

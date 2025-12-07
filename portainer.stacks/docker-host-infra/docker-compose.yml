@@ -44,6 +44,21 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
 
+  dockflare-agent:
+     user: "0:0"
+     image: alplat/dockflare-agent:latest
+     container_name: dockflare-agent
+     restart: unless-stopped
+     volumes:
+       - /var/run/docker.sock:/var/run/docker.sock:ro
+       - dockflare_agent_data:/app/data
+     environment:
+       - DOCKFLARE_MASTER_URL=https://dockflare.lacny.me
+       - DOCKFLARE_API_KEY=${DOCKFLARE_API_KEY}
+       - LOG_LEVEL=${LOG_LEVEL:-info}      
+volumes:
+   dockflare_agent_data:  
+
 networks:
   caddy:
     external: true

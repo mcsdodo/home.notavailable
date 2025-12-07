@@ -13,6 +13,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    networks:
+      macvlan0:
+        ipv4_address: 192.168.0.23
 
   dockflare:
     image: alplat/dockflare:stable
@@ -35,11 +38,13 @@ services:
       redis:
         condition: service_started
       cloudflare-tunnel:
-        condition: service_started       
+        condition: service_started   
+    ports:
+      - "5000:5000"    
     labels:
       kuma.__docker: ""
       autoheal: true
-      caddy_0: http://dockflare-media.lan
+      caddy_0: dockflare.lacny.me
       caddy_0.reverse_proxy: "{{upstreams 5000}}"
     networks:
       - caddy
@@ -61,3 +66,5 @@ volumes:
 networks:
   caddy:
     external: true
+  macvlan0:
+    external: true    
