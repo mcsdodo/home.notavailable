@@ -17,7 +17,7 @@ services:
               capabilities: [gpu]
     volumes:
       # - /etc/localtime:/etc/localtime:ro
-      - /root/frigate:/config # config.yml location
+      - /mnt/app_data/frigate:/config # config.yml location
       - /mnt/media/frigate/_testing:/media/frigate # NAS - remote
       - /mnt/media/frigate/exports:/prod/exports
       - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
