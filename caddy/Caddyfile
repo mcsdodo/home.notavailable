@@ -31,106 +31,6 @@
     }
 }
 
-homeassistant.lan {
-    reverse_proxy 192.168.0.100:8123
-    tls internal
-}
-
-wd.lan {
-    reverse_proxy 192.168.0.101
-    tls internal
-}
-
-proxmox.lan {
-    reverse_proxy {
-        to 192.168.0.111:8006
-        transport http {
-            tls_insecure_skip_verify
-        }
-    }
-    tls internal
-}
-
-portainer.lan {
-    reverse_proxy 192.168.0.112:9000
-    tls internal
-}
-
-plug-na-1.lan {
-    reverse_proxy 192.168.100.151
-    tls internal
-}
-
-plug-na-2.lan {
-    reverse_proxy 192.168.100.152
-    tls internal
-}
-
-plug-na-3.lan {
-    reverse_proxy 192.168.100.153
-    tls internal
-}
-
-plug-na-4.lan {
-    reverse_proxy 192.168.100.154
-    tls internal
-}
-
-plug-na-5.lan {
-    reverse_proxy 192.168.100.155
-    tls internal
-}
-
-plug-na-6.lan {
-    reverse_proxy 192.168.100.156
-    tls internal
-}
-
-adguard.lan {
-    reverse_proxy 192.168.0.121
-    tls internal
-}
-
-adguard2.lan {
-    reverse_proxy 192.168.0.122
-    tls internal
-}
-
-homeassistant-dev.lan {
-    reverse_proxy 192.168.0.123:8123
-    tls internal
-}
-
-proxmox2.lan {
-    reverse_proxy {
-        to 192.168.0.200:8006
-        transport http {
-            tls_insecure_skip_verify
-        }
-    }
-    tls internal
-}
-
-truenas.lan {
-    reverse_proxy 192.168.0.201
-    tls internal
-}
-
-ubuntu.lan {
-    reverse_proxy 192.168.0.205
-    tls internal
-}
-
-zigbee2mqtt.lan {
-    reverse_proxy 192.168.0.114:8080
-    tls internal
-}
-
-garage-status.lan {
-    reverse_proxy 192.168.0.112:8080
-    tls internal
-}
-
 # Docker small server caddy
 http://*.lan {
     reverse_proxy 192.168.0.21:80
@@ -139,11 +39,6 @@ http://*.lan {
 *.lan {
     tls internal
     reverse_proxy 192.168.0.21:80
-}
-
-http://*.testlan {
-#  tls internal
-  reverse_proxy 192.168.0.113:80
 }
 
 # HTTP (port 80) requests for lacny.me - redirect or proxy to small caddy
