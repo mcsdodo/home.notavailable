@@ -4,7 +4,7 @@ services:
     volumes:
       - /mnt/media/comics:/data
       - /mnt/media/downloads/komga:/downloads
-      - /mnt/shared_configs/komga:/config
+      - /mnt/app_data/komga:/config
     ports:
       - 5002:25600
     restart: unless-stopped
