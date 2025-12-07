@@ -9,16 +9,10 @@ services:
     ports:
       - "12345:12345"
     environment:
-      - LOKI_URL=${LOKI_URL:-http://loki:3100}
-      - PROMETHEUS_URL=${PROMETHEUS_URL:-http://prometheus:9090}
+      - LOKI_URL=${LOKI_URL:-https://loki.lacny.me}
+      - PROMETHEUS_URL=${PROMETHEUS_URL:-https://prometheus.lacny.me}
       - HOSTNAME=${ALLOY_HOSTNAME:-docker-host}
     command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
-    labels:
-      caddy: alloy.lacny.me
-      caddy.reverse_proxy: "{{upstreams 12345}}"
-    networks:
-      - caddy
-      - default
 
   watchtower:
     image: containrrr/watchtower
@@ -43,22 +37,3 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
-
-  dockflare-agent:
-     user: "0:0"
-     image: alplat/dockflare-agent:latest
-     container_name: dockflare-agent
-     restart: unless-stopped
-     volumes:
-       - /var/run/docker.sock:/var/run/docker.sock:ro
-       - dockflare_agent_data:/app/data
-     environment:
-       - DOCKFLARE_MASTER_URL=https://dockflare.lacny.me
-       - DOCKFLARE_API_KEY=${DOCKFLARE_API_KEY}
-       - LOG_LEVEL=${LOG_LEVEL:-info}      
-volumes:
-   dockflare_agent_data:  
-
-networks:
-  caddy:
-    external: true
