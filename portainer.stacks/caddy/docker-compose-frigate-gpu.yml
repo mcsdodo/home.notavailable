@@ -1,5 +1,5 @@
 services:
-   caddy-agent:
+  caddy-agent:
     image: mcsdodo/caddy-agent
     container_name: caddy-agent
     restart: unless-stopped
@@ -7,6 +7,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - CADDY_URL=http://${CADDY_SERVER_IP}:2020
-      - AGENT_ID=big-media
+      - AGENT_ID=big-ai
       - DOCKER_LABEL_PREFIX=caddy
-      - HOST_IP=${MEDIA_GPU_IP}
+      - HOST_IP=${FRIGATE_GPU_IP}

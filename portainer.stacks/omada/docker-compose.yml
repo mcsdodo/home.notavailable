@@ -40,24 +40,6 @@ services:
       - "29810:29810/udp"
     labels:
       autoheal: true
-      
-  caddy-agent:
-    image: mcsdodo/caddy-agent
-    container_name: caddy-agent
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - CADDY_URL=http://192.168.0.21:2020
-      - AGENT_ID=omada
-      - DOCKER_LABEL_PREFIX=caddy
-      - HOST_IP=192.168.0.238   
-      - LOG_LEVEL=debug
-      - SNIPPET_SOURCES=http://192.168.0.112:8567
-    labels:
       caddy_0: omada.lacny.me, http://omada.lan
       caddy_0.import: https
-      # caddy.reverse_proxy: "{{ upstreams 8043}}"
-      caddy_0.reverse_proxy: 192.168.0.238:8043
-
-   
+      caddy_0.reverse_proxy: "{{ upstreams 8043 }}"

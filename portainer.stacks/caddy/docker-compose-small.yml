@@ -14,14 +14,14 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     environment:
-      - TZ=Europe/Bratislava
+      - TZ=${TZ}
       - CADDY_INGRESS_NETWORKS=caddy
       - CLOUDFLARE_ZONE_TOKEN=${CF_API_TOKEN}
       - CF_ZONE_ID_LACNY_ME=${CF_ZONE_ID_LACNY_ME}
     networks:
       caddy:
       macvlan0:
-        ipv4_address: 192.168.0.21
+        ipv4_address: ${CADDY_SERVER_IP}
       
     labels:
       
@@ -145,8 +145,8 @@ networks:
       parent: eth0
     ipam:
       config:
-        - subnet: ${MACVLAN_SUBNET:-192.168.0.0/24}
-          gateway: ${MACVLAN_GATEWAY:-192.168.0.1}
+        - subnet: 192.168.0.0/24
+          gateway: 192.168.0.1
 volumes:
   caddy_data:
   caddy_config:

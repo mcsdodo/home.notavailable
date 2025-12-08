@@ -15,7 +15,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Bratislava
+      - TZ=${TZ}
     volumes:
       - /mnt/app_data/mylar3:/config
       - /mnt/media/comics:/comics

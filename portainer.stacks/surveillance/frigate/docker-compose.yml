@@ -73,15 +73,3 @@ services:
   #   environment:
   #     - SOURCE_URL=file:///recordings/2025-03-24/14/garaz-von/30.09.mp4 
 
-  caddy-agent:
-    image: mcsdodo/caddy-agent
-    container_name: caddy-agent
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - CADDY_URL=http://192.168.0.21:2020
-      - AGENT_ID=frigate
-      - DOCKER_LABEL_PREFIX=caddy
-      - HOST_IP=192.168.0.235
-      - LOG_LEVEL=debug
