@@ -40,7 +40,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /mnt/shared_configs/sonarr:/config # config Folder
+      - /mnt/app_data/sonarr:/config # config Folder
       - /mnt/media/tvshows:/tvshows #data Folder  
       - /mnt/media/downloads:/downloads # download folder
     ports:
@@ -62,7 +62,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /mnt/shared_configs/radarr:/config # config files
+      - /mnt/app_data/radarr:/config # config files
       - /mnt/media/movies:/movies # movies folder
       - /mnt/media/downloads:/downloads # download folder
     ports:
