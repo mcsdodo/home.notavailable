@@ -9,9 +9,10 @@
 # =============================================================================
 
 # =============================================================================
-# Global Variables
+# Global Variables (non-sensitive, visible in UI, synced via ResourceSync)
 # =============================================================================
 
+# Server IPs
 [[variable]]
 name = "CADDY_SERVER_IP"
 value = "192.168.0.21"
@@ -35,6 +36,80 @@ value = "192.168.0.235"
 [[variable]]
 name = "OMADA_IP"
 value = "192.168.0.238"
+
+# Global config
+[[variable]]
+name = "TZ"
+value = "Europe/Bratislava"
+
+[[variable]]
+name = "PUID"
+value = "0"
+
+[[variable]]
+name = "PGID"
+value = "0"
+
+# Observability URLs
+[[variable]]
+name = "LOKI_URL"
+value = "https://loki.lacny.me"
+
+[[variable]]
+name = "PROMETHEUS_URL"
+value = "https://prometheus.lacny.me"
+
+# Cloudflare IDs (not secrets - just identifiers)
+[[variable]]
+name = "CF_ACCOUNT_ID"
+value = "bb6e8b792b8d7368b5f5952db3ab8157"
+
+[[variable]]
+name = "CF_ZONE_ID"
+value = "7041901e877a5002678a7db3678ec3d7"
+
+[[variable]]
+name = "CF_ZONE_ID_LACNY_ME"
+value = "77e2ac28cf937e13ac966711fb95f0b4"
+
+[[variable]]
+name = "EXTERNAL_TUNNEL_ID"
+value = "58deaea3-745a-4374-b1e7-75d21d63fa0c"
+
+# VPN config (provider/region are not secrets)
+[[variable]]
+name = "VPN_SERVICE_PROVIDER"
+value = "nordvpn"
+
+[[variable]]
+name = "VPN_TYPE"
+value = "wireguard"
+
+[[variable]]
+name = "SERVER_REGIONS"
+value = "Netherlands"
+
+# Service URLs
+[[variable]]
+name = "PLEX_ADVERTISE_IP"
+value = "http://192.168.0.212:32400,https://plex.notavailable.uk,http://plex:32400"
+
+[[variable]]
+name = "JELLYFIN_PUBLISHED_SERVER_URL"
+value = "https://jellyfin.notavailable.uk"
+
+# Immich config (non-secret parts)
+[[variable]]
+name = "IMMICH_VERSION"
+value = "v1.135.3"
+
+[[variable]]
+name = "IMMICH_DB_NAME"
+value = "immich"
+
+[[variable]]
+name = "IMMICH_DB_DATA_LOCATION"
+value = "./postgres"
 
 # =============================================================================
 # Server Definitions
