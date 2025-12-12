@@ -98,18 +98,9 @@ value = "http://192.168.0.212:32400,https://plex.notavailable.uk,http://plex:324
 name = "JELLYFIN_PUBLISHED_SERVER_URL"
 value = "https://jellyfin.notavailable.uk"
 
-# Immich config (non-secret parts)
 [[variable]]
 name = "IMMICH_VERSION"
 value = "v1.135.3"
-
-[[variable]]
-name = "IMMICH_DB_NAME"
-value = "immich"
-
-[[variable]]
-name = "IMMICH_DB_DATA_LOCATION"
-value = "./postgres"
 
 # =============================================================================
 # Server Definitions
@@ -444,10 +435,9 @@ branch = "feature/komodo"
 run_directory = "portainer.stacks/immich"
 file_paths = ["docker-compose.yml"]
 environment = """
-DB_PASSWORD=[[IMMICH_DB_PASSWORD]]
 DB_USERNAME=[[IMMICH_DB_USERNAME]]
-DB_DATABASE_NAME=[[IMMICH_DB_NAME]]
-DB_DATA_LOCATION=[[IMMICH_DB_DATA_LOCATION]]
+DB_PASSWORD=[[IMMICH_DB_PASSWORD]]
+IMMICH_VERSION=[[IMMICH_VERSION]]
 """
 
 [[stack]]

@@ -7,6 +7,12 @@ services:
     volumes:
       - /mnt/immich:/usr/src/app/upload
       - /mnt/media/photos:/mnt/photos:ro
+    environment:
+      DB_HOSTNAME: immich_postgres
+      DB_USERNAME: ${DB_USERNAME}
+      DB_DATABASE_NAME: immich
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOSTNAME: immich_redis
     ports:
       - 2283:2283
     depends_on:
@@ -32,17 +38,21 @@ services:
                 - gpu
                 - compute
                 - video
-      
+
   immich-machine-learning:
     container_name: immich_machine_learning
     image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
     volumes:
       - /mnt/app_data/immich/model-cache:/cache
-    env_file:
-      - stack.env
+    environment:
+      DB_HOSTNAME: immich_postgres
+      DB_USERNAME: ${DB_USERNAME}
+      DB_DATABASE_NAME: immich
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOSTNAME: immich_redis
     restart: always
     healthcheck:
-      disable: false    
+      disable: false
     labels:
       kuma.__docker: ""
       autoheal: true
@@ -64,20 +74,17 @@ services:
     labels:
       kuma.__docker: ""
       autoheal: true
-      
+
   database:
     container_name: immich_postgres
     image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
-    env_file:
-      - stack.env
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_DB: ${DB_DATABASE_NAME}
+      POSTGRES_DB: immich
       POSTGRES_INITDB_ARGS: '--data-checksums'
-
     volumes:
-      -  ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+      - ./postgres:/var/lib/postgresql/data
     restart: always
     labels:
       kuma.__docker: ""
