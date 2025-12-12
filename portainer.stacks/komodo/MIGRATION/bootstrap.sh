@@ -34,15 +34,17 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # ResourceSync phases definition
-# Format: "name|tags|description"
+# Format: "name|match_tags|exclude_tags|include_variables|description"
+# exclude_tags: use "-" for none
+# include_variables: true/false (only phase1 should sync variables)
 PHASES=(
-    "phase1-core-infra|core|Core infrastructure: alloy, watchtower, autoheal"
-    "phase2-caddy-agents|caddy|Caddy reverse proxy agents"
-    "phase3-infra-services|infra|Infra server: observability, cloudflare, chatgpt"
-    "phase4-media-gpu|media-gpu|Media server: arr, plex, jellyfin, immich"
-    "phase5-frigate-gpu|frigate-gpu|Frigate testing with GPU"
-    "phase6-frigate|frigate|Frigate production with Coral"
-    "phase7-omada|omada|Omada network controller"
+    "phase1-core-infra|core|-|true|Core infrastructure: alloy, watchtower, autoheal"
+    "phase2-caddy-agents|caddy|core|false|Caddy reverse proxy agents"
+    "phase3-infra-services|infra|core,caddy|false|Infra server: observability, cloudflare, chatgpt"
+    "phase4-media-gpu|media-gpu|core,caddy|false|Media server: arr, plex, jellyfin, immich"
+    "phase5-frigate-gpu|frigate-gpu|core,caddy|false|Frigate testing with GPU"
+    "phase6-frigate|frigate|core,caddy|false|Frigate production with Coral"
+    "phase7-omada|omada|core,caddy|false|Omada network controller"
 )
 
 usage() {
@@ -96,15 +98,30 @@ komodo_api() {
 # Create a ResourceSync
 create_resource_sync() {
     local name=$1
-    local tags=$2
-    local description=$3
+    local match_tags=$2
+    local exclude_tags=$3
+    local include_vars=$4
+    local description=$5
 
     echo -e "${CYAN}Creating ResourceSync: $name${NC}"
-    echo "  Tags: $tags"
+    echo "  Match tags: $match_tags"
+    [[ "$exclude_tags" != "-" ]] && echo "  Exclude tags: $exclude_tags"
+    echo "  Include variables: $include_vars"
     echo "  Description: $description"
 
-    # Build tags JSON array
-    local tags_json="[\"$tags\"]"
+    # Build match_tags JSON array
+    local match_json="[\"$match_tags\"]"
+
+    # Build exclude_tags JSON array (or empty if "-")
+    local exclude_json="[]"
+    if [[ "$exclude_tags" != "-" ]]; then
+        # Convert comma-separated to JSON array
+        exclude_json="[$(echo "$exclude_tags" | sed 's/,/","/g' | sed 's/^/"/;s/$/"/')]"
+    fi
+
+    # Build include_variables boolean
+    local include_vars_json="false"
+    [[ "$include_vars" == "true" ]] && include_vars_json="true"
 
     local payload=$(cat <<EOF
 {
@@ -115,7 +132,10 @@ create_resource_sync() {
         "resource_path": ["$RESOURCE_PATH"],
         "git_provider": "$GIT_PROVIDER",
         "git_account": "$GIT_ACCOUNT",
-        "match_tags": $tags_json
+        "match_tags": $match_json,
+        "exclude_tags": $exclude_json,
+        "include_variables": $include_vars_json,
+        "include_resources": true
     },
     "description": "$description"
 }
@@ -143,9 +163,11 @@ list_syncs() {
     echo ""
     local i=1
     for phase in "${PHASES[@]}"; do
-        IFS='|' read -r name tags desc <<< "$phase"
+        IFS='|' read -r name match_tags exclude_tags include_vars desc <<< "$phase"
         echo "Phase $i: $name"
-        echo "  Tags: $tags"
+        echo "  Match tags: $match_tags"
+        [[ "$exclude_tags" != "-" ]] && echo "  Exclude tags: $exclude_tags"
+        echo "  Include variables: $include_vars"
         echo "  Description: $desc"
         echo ""
         ((i++))
@@ -157,7 +179,7 @@ delete_syncs() {
     echo -e "${YELLOW}Deleting migration ResourceSyncs...${NC}"
 
     for phase in "${PHASES[@]}"; do
-        IFS='|' read -r name tags desc <<< "$phase"
+        IFS='|' read -r name match_tags exclude_tags include_vars desc <<< "$phase"
         echo -e "${CYAN}Deleting: $name${NC}"
 
         if [[ "$DRY_RUN" == "true" ]]; then
@@ -165,12 +187,21 @@ delete_syncs() {
             continue
         fi
 
-        local response=$(komodo_api "POST" "write/DeleteResourceSync" "{\"name\": \"$name\"}")
+        # First get the ID
+        local list_response=$(komodo_api "POST" "read/ListResourceSyncs" "{}")
+        local sync_id=$(echo "$list_response" | grep -o "\"id\":\"[^\"]*\",\"type\":\"ResourceSync\",\"name\":\"$name\"" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
 
-        if echo "$response" | grep -q '"ok"'; then
+        if [[ -z "$sync_id" ]]; then
+            echo -e "${YELLOW}  - Not found (already deleted?)${NC}"
+            continue
+        fi
+
+        local response=$(komodo_api "POST" "write/DeleteResourceSync" "{\"id\": \"$sync_id\"}")
+
+        if echo "$response" | grep -q '"_id"'; then
             echo -e "${GREEN}  ✓ Deleted${NC}"
         else
-            echo -e "${RED}  ✗ Failed or not found: $response${NC}"
+            echo -e "${RED}  ✗ Failed: $response${NC}"
         fi
     done
 }
@@ -241,15 +272,15 @@ case $ACTION in
                 echo -e "${RED}Invalid phase: $PHASE_FILTER (must be 1-${#PHASES[@]})${NC}"
                 exit 1
             fi
-            IFS='|' read -r name tags desc <<< "${PHASES[$idx]}"
-            create_resource_sync "$name" "$tags" "$desc"
+            IFS='|' read -r name match_tags exclude_tags include_vars desc <<< "${PHASES[$idx]}"
+            create_resource_sync "$name" "$match_tags" "$exclude_tags" "$include_vars" "$desc"
         else
             # Create all phases
             echo "Creating ${#PHASES[@]} ResourceSyncs..."
             echo ""
             for phase in "${PHASES[@]}"; do
-                IFS='|' read -r name tags desc <<< "$phase"
-                create_resource_sync "$name" "$tags" "$desc"
+                IFS='|' read -r name match_tags exclude_tags include_vars desc <<< "$phase"
+                create_resource_sync "$name" "$match_tags" "$exclude_tags" "$include_vars" "$desc"
                 echo ""
             done
         fi
