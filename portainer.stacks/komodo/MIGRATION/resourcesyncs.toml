@@ -1,0 +1,176 @@
+# Komodo ResourceSync Definitions
+#
+# This file defines 7 phased ResourceSyncs for incremental migration
+# from Portainer to Komodo.
+#
+# Each sync uses tag filtering to control which stacks are included.
+# Stacks in komodo.toml must have matching tags to be picked up.
+#
+# Usage:
+#   1. Run bootstrap.sh to create these syncs via API
+#   2. Or manually create in Komodo UI
+#
+# Tag Strategy:
+#   - "core" = docker-host-infra stacks (alloy, watchtower, autoheal)
+#   - "caddy" = caddy reverse proxy agents
+#   - "infra" = services on infra server (observability, cloudflare, etc)
+#   - "media-gpu" = media services on media-gpu server
+#   - "frigate-gpu" = surveillance testing with GPU
+#   - "frigate" = production surveillance with Coral
+#   - "omada" = omada network controller
+
+# ============================================
+# Phase 1: Core Infrastructure (all servers)
+# ============================================
+# Deploy first - provides monitoring and auto-healing
+[[resource_sync]]
+name = "phase1-core-infra"
+description = "Core infrastructure: alloy, watchtower, autoheal"
+
+[resource_sync.config]
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+resource_path = ["portainer.stacks/komodo.toml"]
+git_provider = "github.com"
+git_account = "mcsdodo"
+match_tags = ["core"]
+
+# Stacks included:
+# - docker-host-infra-infra
+# - docker-host-infra-media-gpu
+# - docker-host-infra-frigate-gpu
+# - docker-host-infra-frigate
+# - docker-host-infra-omada
+
+# ============================================
+# Phase 2: Caddy Agents (all servers)
+# ============================================
+# Deploy second - enables reverse proxy for all services
+[[resource_sync]]
+name = "phase2-caddy-agents"
+description = "Caddy reverse proxy agents"
+
+[resource_sync.config]
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+resource_path = ["portainer.stacks/komodo.toml"]
+git_provider = "github.com"
+git_account = "mcsdodo"
+match_tags = ["caddy"]
+
+# Stacks included:
+# - caddy-infra (main caddy + caddy-agent)
+# - caddy-media-gpu (caddy-agent only)
+# - caddy-frigate-gpu (caddy-agent only)
+# - caddy-frigate (caddy-agent only)
+# - caddy-omada (caddy-agent only)
+
+# ============================================
+# Phase 3: Infra Services
+# ============================================
+# Observability, cloudflare tunnel, chatgpt
+[[resource_sync]]
+name = "phase3-infra-services"
+description = "Infra server: observability, cloudflare, chatgpt"
+
+[resource_sync.config]
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+resource_path = ["portainer.stacks/komodo.toml"]
+git_provider = "github.com"
+git_account = "mcsdodo"
+match_tags = ["infra"]
+
+# Stacks included:
+# - observability (loki, prometheus, grafana)
+# - infrastructure (dashy, gotify, adguardhome-sync)
+# - cloudflare (tunnel, dockflare)
+# - chatgpt (openwebui)
+
+# ============================================
+# Phase 4: Media GPU Services
+# ============================================
+# All media services on media-gpu server
+[[resource_sync]]
+name = "phase4-media-gpu"
+description = "Media server: arr, plex, jellyfin, immich"
+
+[resource_sync.config]
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+resource_path = ["portainer.stacks/komodo.toml"]
+git_provider = "github.com"
+git_account = "mcsdodo"
+match_tags = ["media-gpu"]
+
+# Stacks included:
+# - arr (sonarr, radarr, overseerr, sabnzbd, mylar3, decluttarr, jellyseerr)
+# - arr-gluetun (gluetun, prowlarr, bazarr, qbittorrent)
+# - plex
+# - jellyfin
+# - emby
+# - immich
+# - audiobookshelf
+# - komga
+# - paperless
+# - watchstate
+# - stirling-pdf
+# - nut
+# - cloudflare-agent
+
+# ============================================
+# Phase 5: Frigate GPU (testing)
+# ============================================
+# Frigate with NVIDIA GPU for testing
+[[resource_sync]]
+name = "phase5-frigate-gpu"
+description = "Frigate testing with GPU"
+
+[resource_sync.config]
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+resource_path = ["portainer.stacks/komodo.toml"]
+git_provider = "github.com"
+git_account = "mcsdodo"
+match_tags = ["frigate-gpu"]
+
+# Stacks included:
+# - surveillance-testing
+
+# ============================================
+# Phase 6: Frigate Production
+# ============================================
+# Frigate with Coral USB TPU
+[[resource_sync]]
+name = "phase6-frigate"
+description = "Frigate production with Coral"
+
+[resource_sync.config]
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+resource_path = ["portainer.stacks/komodo.toml"]
+git_provider = "github.com"
+git_account = "mcsdodo"
+match_tags = ["frigate"]
+
+# Stacks included:
+# - surveillance
+
+# ============================================
+# Phase 7: Omada Controller
+# ============================================
+# Network controller - migrate last
+[[resource_sync]]
+name = "phase7-omada"
+description = "Omada network controller"
+
+[resource_sync.config]
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+resource_path = ["portainer.stacks/komodo.toml"]
+git_provider = "github.com"
+git_account = "mcsdodo"
+match_tags = ["omada"]
+
+# Stacks included:
+# - omada

@@ -154,3 +154,5 @@ local.test.http
 **/secrets.ini
 .env
 caddy-agent.tar.gz
+core.config.toml
+extracted-secrets.env
