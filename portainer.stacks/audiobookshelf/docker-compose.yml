@@ -17,6 +17,6 @@ services:
       caddy.reverse_proxy: "{{upstreams 80}}"
       dockflare.enable: true
       dockflare.hostname: audiobooks.notavailable.uk
-      dockflare.service: audiobooks.lacny.me
+      dockflare.service: https://audiobooks.lacny.me
       dockflare.httpHostHeader: audiobooks.lacny.me
       
