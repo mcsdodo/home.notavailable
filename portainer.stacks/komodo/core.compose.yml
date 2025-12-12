@@ -1,0 +1,89 @@
+# Komodo Core
+# Deploy this on the main infrastructure server (infra - 192.168.0.112)
+#
+# Usage:
+#   1. Copy compose.env.example to compose.env and fill in values
+#   2. docker compose -f core.compose.yml --env-file compose.env up -d
+#   3. Access UI at http://192.168.0.112:9120 (or via Caddy reverse proxy)
+#
+# After first login, create an API key for automation scripts.
+
+services:
+  # MongoDB database for Komodo
+  mongo:
+    image: mongo:7
+    container_name: komodo-mongo
+    restart: unless-stopped
+    volumes:
+      - komodo-mongo-data:/data/db
+      - komodo-mongo-config:/data/configdb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${KOMODO_DB_USER:-komodo}
+      - MONGO_INITDB_ROOT_PASSWORD=${KOMODO_DB_PASS:?KOMODO_DB_PASS is required}
+    # Not exposed externally - only accessible to core via Docker network
+    networks:
+      - komodo-internal
+
+  # Komodo Core server
+  core:
+    image: ghcr.io/moghtech/komodo-core:latest
+    container_name: komodo-core
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "9120:9120"
+    volumes:
+      - /mnt/shared_configs/komodo/core.config.toml:/config/config.toml:ro
+    environment:
+      # Database connection
+      - KOMODO_DATABASE_URI=mongodb://${KOMODO_DB_USER:-komodo}:${KOMODO_DB_PASS}@mongo:27017
+      # Host and port
+      - KOMODO_HOST=0.0.0.0
+      - KOMODO_PORT=9120
+      # JWT secret for auth tokens (generate with: openssl rand -hex 32)
+      - KOMODO_JWT_SECRET=${KOMODO_JWT_SECRET:?KOMODO_JWT_SECRET is required}
+      # Optional: Passkey that periphery agents must provide
+      # - KOMODO_PASSKEY=your-secure-passkey
+      # Optional: Webhook secret for GitHub/GitLab webhooks
+      # - KOMODO_WEBHOOK_SECRET=${KOMODO_WEBHOOK_SECRET}
+      # Logging
+      - KOMODO_LOGGING_LEVEL=info
+      # Enable local username/password auth
+      - KOMODO_LOCAL_AUTH=true
+    labels:
+      # Caddy reverse proxy labels
+      caddy: komodo.lacny.me
+      caddy.reverse_proxy: "{{upstreams 9120}}"
+    networks:
+      - komodo-internal
+      - caddy
+
+  # Periphery agent for local Docker management (Core server also needs one)
+  periphery:
+    image: ghcr.io/moghtech/komodo-periphery:latest
+    container_name: komodo-periphery
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/komodo/stacks:/stacks
+      - /opt/komodo/repos:/repos
+    environment:
+      - PERIPHERY_LOGGING_LEVEL=info
+      # Optional: Must match KOMODO_PASSKEY if set
+      # - PERIPHERY_PASSKEY=your-secure-passkey
+    networks:
+      - komodo-internal
+    # Expose for Core to connect (can use Docker network instead)
+    ports:
+      - "8120:8120"
+
+volumes:
+  komodo-mongo-data:
+  komodo-mongo-config:
+
+networks:
+  komodo-internal:
+    driver: bridge
+  caddy:
+    external: true

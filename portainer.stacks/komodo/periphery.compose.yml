@@ -1,0 +1,30 @@
+# Komodo Periphery Agent
+# Deploy this on each server that Komodo Core will manage
+#
+# Usage:
+#   docker compose -f periphery.compose.yml up -d
+#
+# The periphery agent allows Komodo Core to manage Docker on this host.
+# Port 8120 must be accessible from Komodo Core.
+
+services:
+  periphery:
+    image: ghcr.io/moghtech/komodo-periphery:latest
+    container_name: komodo-periphery
+    restart: unless-stopped
+    ports:
+      - "8120:8120"
+    volumes:
+      # Required: Docker socket for container management
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Optional: Custom config file
+      # - ./periphery.config.toml:/app/periphery.config.toml
+      # Optional: Stack directory for compose files (if using file-based stacks)
+      - /opt/komodo/stacks:/stacks
+      # Optional: Repo directory for git repos
+      - /opt/komodo/repos:/repos
+    environment:
+      # Logging level: trace, debug, info, warn, error
+      - PERIPHERY_LOGGING_LEVEL=info
+      # Optional: Passkey for Core authentication (set same value in Core config)
+      # - PERIPHERY_PASSKEY=your-secure-passkey

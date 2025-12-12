@@ -1,0 +1,644 @@
+# =============================================================================
+# Komodo Resource Sync Configuration
+# =============================================================================
+# This file is loaded via ResourceSync to manage all infrastructure.
+# Docs: https://github.com/moghtech/komodo/blob/main/docsite/docs/resources/sync-resources.md
+#
+# After initial setup, configure a ResourceSync in Komodo UI pointing to this
+# file in the git repo for automatic sync on push.
+# =============================================================================
+
+# =============================================================================
+# Global Variables
+# =============================================================================
+
+[[variable]]
+name = "CADDY_SERVER_IP"
+value = "192.168.0.21"
+
+[[variable]]
+name = "INFRA_IP"
+value = "192.168.0.112"
+
+[[variable]]
+name = "MEDIA_GPU_IP"
+value = "192.168.0.212"
+
+[[variable]]
+name = "FRIGATE_GPU_IP"
+value = "192.168.0.115"
+
+[[variable]]
+name = "FRIGATE_IP"
+value = "192.168.0.235"
+
+[[variable]]
+name = "OMADA_IP"
+value = "192.168.0.238"
+
+# =============================================================================
+# Server Definitions
+# =============================================================================
+
+[[server]]
+name = "infra"
+description = "Main infrastructure server - Caddy, observability, networking"
+tags = ["core", "caddy", "observability"]
+[server.config]
+address = "https://192.168.0.112:8120"
+enabled = true
+
+[[server]]
+name = "media-gpu"
+description = "Media server with NVIDIA GPU - Plex, Jellyfin, Immich, Arr stack"
+tags = ["gpu", "media-mounts", "arr"]
+[server.config]
+address = "https://192.168.0.212:8120"
+enabled = true
+
+[[server]]
+name = "frigate-gpu"
+description = "Frigate testing with NVIDIA GPU"
+tags = ["gpu", "nvidia", "frigate"]
+[server.config]
+address = "https://192.168.0.115:8120"
+enabled = true
+
+[[server]]
+name = "frigate"
+description = "Frigate production with Coral USB TPU"
+tags = ["coral", "frigate"]
+[server.config]
+address = "https://192.168.0.235:8120"
+enabled = true
+
+[[server]]
+name = "omada"
+description = "TP-Link Omada network controller"
+tags = ["omada"]
+[server.config]
+address = "https://192.168.0.238:8120"
+enabled = true
+
+# =============================================================================
+# infra (192.168.0.112) - 6 stacks, 16 containers
+# =============================================================================
+
+[[stack]]
+name = "docker-host-infra-infra"
+description = "Core infrastructure: alloy, autoheal, watchtower"
+tags = ["infra", "core"]
+deploy = true
+[stack.config]
+server_id = "infra"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/docker-host-infra"
+file_paths = ["docker-compose.yml"]
+environment = """
+ALLOY_HOSTNAME=docker-host
+LOKI_URL=http://loki:3100
+PROMETHEUS_URL=http://prometheus:9090
+WATCHTOWER_NOTIFICATION_URL=[[WATCHTOWER_NOTIFICATION_URL]]
+"""
+
+[[stack]]
+name = "caddy-infra"
+description = "Caddy reverse proxy with macvlan"
+tags = ["infra", "caddy"]
+deploy = true
+after = ["docker-host-infra-infra"]
+[stack.config]
+server_id = "infra"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/caddy"
+file_paths = ["docker-compose-small.yml"]
+environment = """
+TZ=[[TZ]]
+CF_API_TOKEN=[[CF_API_TOKEN]]
+CF_ZONE_ID_LACNY_ME=[[CF_ZONE_ID_LACNY_ME]]
+CADDY_SERVER_IP=[[CADDY_SERVER_IP]]
+EMAIL=[[EMAIL]]
+"""
+
+[[stack]]
+name = "observability"
+description = "Loki, Prometheus, Grafana"
+tags = ["infra", "observability"]
+deploy = true
+after = ["caddy-infra"]
+[stack.config]
+server_id = "infra"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/observability"
+file_paths = ["docker-compose.yml"]
+
+[[stack]]
+name = "infrastructure"
+description = "Dashy, Gotify, AdGuardHome-sync"
+tags = ["infra"]
+deploy = true
+after = ["caddy-infra"]
+[stack.config]
+server_id = "infra"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/infrastructure"
+file_paths = ["docker-compose.yml"]
+environment = """
+ORIGIN_USERNAME=[[ADGUARD_ORIGIN_USERNAME]]
+ORIGIN_PASSWORD=[[ADGUARD_ORIGIN_PASSWORD]]
+"""
+
+[[stack]]
+name = "cloudflare"
+description = "Cloudflare tunnel, Dockflare, Dockflare-redis"
+tags = ["infra", "networking"]
+deploy = true
+after = ["caddy-infra"]
+[stack.config]
+server_id = "infra"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/cloudflare"
+file_paths = ["docker-compose.yml"]
+environment = """
+TUNNEL_TOKEN=[[TUNNEL_TOKEN]]
+EXTERNAL_TUNNEL_ID=[[EXTERNAL_TUNNEL_ID]]
+CF_API_TOKEN=[[DOCKFLARE_CF_API_TOKEN]]
+CF_ACCOUNT_ID=[[CF_ACCOUNT_ID]]
+CF_ZONE_ID=[[CF_ZONE_ID]]
+"""
+
+[[stack]]
+name = "chatgpt"
+description = "OpenWebUI"
+tags = ["infra"]
+deploy = true
+[stack.config]
+server_id = "infra"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/chatgpt"
+file_paths = ["docker-compose.yaml"]
+environment = """
+OPENAI_API_KEY=[[OPENAI_API_KEY]]
+"""
+
+# =============================================================================
+# media-gpu (192.168.0.212) - 15 stacks, 34 containers
+# =============================================================================
+
+[[stack]]
+name = "docker-host-infra-media-gpu"
+description = "Core infrastructure: alloy, autoheal, watchtower"
+tags = ["media-gpu", "core"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/docker-host-infra"
+file_paths = ["docker-compose.yml"]
+environment = """
+ALLOY_HOSTNAME=media-host
+LOKI_URL=https://loki.lacny.me
+PROMETHEUS_URL=https://prometheus.lacny.me
+WATCHTOWER_NOTIFICATION_URL=[[WATCHTOWER_NOTIFICATION_URL]]
+"""
+
+[[stack]]
+name = "cloudflare-agent"
+description = "Dockflare agent"
+tags = ["media-gpu", "networking"]
+deploy = true
+after = ["caddy-media-gpu"]
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/cloudflare-agent"
+file_paths = ["docker-compose.yml"]
+environment = """
+DOCKFLARE_API_KEY=[[DOCKFLARE_API_KEY]]
+"""
+
+[[stack]]
+name = "caddy-media-gpu"
+description = "Caddy agent"
+tags = ["media-gpu", "caddy"]
+deploy = true
+after = ["arr", "arr-gluetun"]
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/caddy"
+file_paths = ["docker-compose-big-media.yml"]
+environment = """
+CADDY_SERVER_IP=[[CADDY_SERVER_IP]]
+MEDIA_GPU_IP=[[MEDIA_GPU_IP]]
+"""
+
+[[stack]]
+name = "arr"
+description = "Sonarr, Radarr, Overseerr, Sabnzbd, Mylar3, Decluttarr, Jellyseerr"
+tags = ["media-gpu", "arr"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/arr"
+file_paths = ["docker-compose.yml"]
+environment = """
+PUID=[[PUID]]
+PGID=[[PGID]]
+TZ=[[TZ]]
+SONARR_API_KEY=[[SONARR_API_KEY]]
+RADARR_API_KEY=[[RADARR_API_KEY]]
+QBITTORRENT_PASSWORD=[[QBITTORRENT_PASSWORD]]
+"""
+
+[[stack]]
+name = "arr-gluetun"
+description = "Gluetun VPN, Prowlarr, Bazarr, qBittorrent"
+tags = ["media-gpu", "arr", "vpn"]
+deploy = true
+after = ["arr"]
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/arr-gluetun"
+file_paths = ["docker-compose.yml"]
+environment = """
+PUID=[[PUID]]
+PGID=[[PGID]]
+TZ=[[TZ]]
+VPN_SERVICE_PROVIDER=[[VPN_SERVICE_PROVIDER]]
+VPN_TYPE=[[VPN_TYPE]]
+SERVER_REGIONS=[[SERVER_REGIONS]]
+WIREGUARD_PRIVATE_KEY=[[WIREGUARD_PRIVATE_KEY]]
+"""
+
+[[stack]]
+name = "plex"
+description = "Plex Media Server"
+tags = ["media-gpu", "media"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/plex"
+file_paths = ["docker-compose.yml"]
+environment = """
+PLEX_CLAIM=[[PLEX_CLAIM]]
+PLEX_ADVERTISE_IPS=[[PLEX_ADVERTISE_IP]]
+"""
+
+[[stack]]
+name = "jellyfin"
+description = "Jellyfin, scheduled restarts"
+tags = ["media-gpu", "media"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/jellyfin"
+file_paths = ["docker-compose.yml"]
+environment = """
+JELLYFIN_PublishedServerUrl=[[JELLYFIN_PUBLISHED_SERVER_URL]]
+"""
+
+[[stack]]
+name = "emby"
+description = "Emby Server, scheduled restarts"
+tags = ["media-gpu", "media"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/emby"
+file_paths = ["docker-compose.yml"]
+
+[[stack]]
+name = "immich"
+description = "Immich server (GPU), ML (GPU), Postgres, Redis"
+tags = ["media-gpu", "media", "gpu"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/immich"
+file_paths = ["docker-compose.yml"]
+environment = """
+DB_PASSWORD=[[IMMICH_DB_PASSWORD]]
+DB_USERNAME=[[IMMICH_DB_USERNAME]]
+DB_DATABASE_NAME=[[IMMICH_DB_NAME]]
+DB_DATA_LOCATION=[[IMMICH_DB_DATA_LOCATION]]
+"""
+
+[[stack]]
+name = "audiobookshelf"
+description = "Audiobookshelf"
+tags = ["media-gpu", "media"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/audiobookshelf"
+file_paths = ["docker-compose.yml"]
+
+[[stack]]
+name = "komga"
+description = "Komga comics server"
+tags = ["media-gpu", "media"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/komga"
+file_paths = ["docker-compose.yml"]
+
+[[stack]]
+name = "paperless"
+description = "Paperless-ngx: webserver, db, broker"
+tags = ["media-gpu"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/paperless"
+file_paths = ["docker-compose.yml"]
+
+[[stack]]
+name = "nut"
+description = "PeaNUT UPS monitoring"
+tags = ["media-gpu"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/nut"
+file_paths = ["docker-compose.yml"]
+
+[[stack]]
+name = "stirling-pdf"
+description = "Stirling PDF tools"
+tags = ["media-gpu"]
+deploy = true
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/stirling-pdf"
+file_paths = ["docker-compose.yml"]
+
+[[stack]]
+name = "watchstate"
+description = "Watchstate media sync"
+tags = ["media-gpu", "media"]
+deploy = true
+after = ["arr"]
+[stack.config]
+server_id = "media-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/watchstate"
+file_paths = ["docker-compose.yml"]
+
+# =============================================================================
+# frigate-gpu (192.168.0.115) - 3 stacks, 6 containers
+# =============================================================================
+
+[[stack]]
+name = "docker-host-infra-frigate-gpu"
+description = "Core infrastructure: alloy, watchtower, autoheal"
+tags = ["frigate-gpu", "core"]
+deploy = true
+[stack.config]
+server_id = "frigate-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/docker-host-infra"
+file_paths = ["docker-compose.yml"]
+environment = """
+ALLOY_HOSTNAME=frigate-gpu-host
+LOKI_URL=https://loki.lacny.me
+PROMETHEUS_URL=https://prometheus.lacny.me
+WATCHTOWER_NOTIFICATION_URL=[[WATCHTOWER_NOTIFICATION_URL]]
+"""
+
+[[stack]]
+name = "caddy-frigate-gpu"
+description = "Caddy agent"
+tags = ["frigate-gpu", "caddy"]
+deploy = true
+after = ["surveillance-testing"]
+[stack.config]
+server_id = "frigate-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/caddy"
+file_paths = ["docker-compose-frigate-gpu.yml"]
+environment = """
+CADDY_SERVER_IP=[[CADDY_SERVER_IP]]
+FRIGATE_GPU_IP=[[FRIGATE_GPU_IP]]
+"""
+
+[[stack]]
+name = "surveillance-testing"
+description = "Frigate testing with NVIDIA GPU"
+tags = ["frigate-gpu", "surveillance", "gpu"]
+deploy = true
+[stack.config]
+server_id = "frigate-gpu"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/surveillance/frigate-gpu"
+file_paths = ["docker-compose.yml"]
+environment = """
+FRIGATE_RTSP_CREDENTIALS=[[FRIGATE_RTSP_CREDENTIALS]]
+FRIGATE_MQTT_USER=[[FRIGATE_MQTT_USER]]
+FRIGATE_MQTT_PASSWORD=[[FRIGATE_MQTT_PASSWORD]]
+"""
+
+# =============================================================================
+# frigate (192.168.0.235) - 3 stacks, 8 containers
+# =============================================================================
+
+[[stack]]
+name = "docker-host-infra-frigate"
+description = "Core infrastructure: alloy, autoheal, dockwatch, watchtower"
+tags = ["frigate", "core"]
+deploy = true
+[stack.config]
+server_id = "frigate"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/docker-host-infra"
+file_paths = ["docker-compose.yml"]
+environment = """
+ALLOY_HOSTNAME=frigate-host
+LOKI_URL=https://loki.lacny.me
+PROMETHEUS_URL=https://prometheus.lacny.me
+WATCHTOWER_NOTIFICATION_URL=[[WATCHTOWER_NOTIFICATION_URL]]
+"""
+
+[[stack]]
+name = "caddy-frigate"
+description = "Caddy agent"
+tags = ["frigate", "caddy"]
+deploy = true
+after = ["surveillance"]
+[stack.config]
+server_id = "frigate"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/caddy"
+file_paths = ["docker-compose-frigate.yml"]
+environment = """
+CADDY_SERVER_IP=[[CADDY_SERVER_IP]]
+FRIGATE_IP=[[FRIGATE_IP]]
+"""
+
+[[stack]]
+name = "surveillance"
+description = "Frigate production with Coral USB, scheduled restarts"
+tags = ["frigate", "surveillance"]
+deploy = true
+[stack.config]
+server_id = "frigate"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/surveillance/frigate"
+file_paths = ["docker-compose.yml"]
+environment = """
+FRIGATE_GEMINI_API_KEY=[[FRIGATE_GEMINI_API_KEY]]
+FRIGATE_RTSP_CREDENTIALS=[[FRIGATE_RTSP_CREDENTIALS]]
+FRIGATE_MQTT_USER=[[FRIGATE_MQTT_USER]]
+FRIGATE_MQTT_PASSWORD=[[FRIGATE_MQTT_PASSWORD]]
+"""
+
+# =============================================================================
+# omada (192.168.0.238) - 3 stacks, 6 containers
+# =============================================================================
+
+[[stack]]
+name = "docker-host-infra-omada"
+description = "Core infrastructure: alloy, autoheal, watchtower"
+tags = ["omada", "core"]
+deploy = true
+[stack.config]
+server_id = "omada"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/docker-host-infra"
+file_paths = ["docker-compose.yml"]
+environment = """
+ALLOY_HOSTNAME=omada-host
+LOKI_URL=https://loki.lacny.me
+PROMETHEUS_URL=https://prometheus.lacny.me
+WATCHTOWER_NOTIFICATION_URL=[[WATCHTOWER_NOTIFICATION_URL]]
+"""
+
+[[stack]]
+name = "caddy-omada"
+description = "Caddy agent"
+tags = ["omada", "caddy"]
+deploy = true
+after = ["omada"]
+[stack.config]
+server_id = "omada"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/caddy"
+file_paths = ["docker-compose-omada.yml"]
+environment = """
+CADDY_SERVER_IP=[[CADDY_SERVER_IP]]
+OMADA_IP=[[OMADA_IP]]
+INFRA_IP=[[INFRA_IP]]
+"""
+
+[[stack]]
+name = "omada"
+description = "TP-Link Omada Controller"
+tags = ["omada"]
+deploy = true
+[stack.config]
+server_id = "omada"
+git_provider = "github.com"
+git_account = "mcsdodo"
+repo = "mcsdodo/home.notavailable"
+branch = "feature/komodo"
+run_directory = "portainer.stacks/omada"
+file_paths = ["docker-compose.yml"]
