@@ -37,14 +37,21 @@ NC='\033[0m' # No Color
 # Format: "name|match_tags|exclude_tags|include_variables|description"
 # exclude_tags: use "-" for none
 # include_variables: true/false (only phase1 should sync variables)
+#
+# Deployment order:
+#   1. foundation (caddy-infra → observability) - loki/prometheus must exist first
+#   2. core (docker-host-infra-*) - all servers can now reach loki
+#   3. caddy-agents - remaining caddy proxies
+#   4-8. per-server application services
 PHASES=(
-    "phase1-core-infra|core|-|true|Core infrastructure: alloy, watchtower, autoheal"
-    "phase2-caddy-agents|caddy|core|false|Caddy reverse proxy agents"
-    "phase3-infra-services|infra|core,caddy|false|Infra server: observability, cloudflare, chatgpt"
-    "phase4-media-gpu|media-gpu|core,caddy|false|Media server: arr, plex, jellyfin, immich"
-    "phase5-frigate-gpu|frigate-gpu|core,caddy|false|Frigate testing with GPU"
-    "phase6-frigate|frigate|core,caddy|false|Frigate production with Coral"
-    "phase7-omada|omada|core,caddy|false|Omada network controller"
+    "phase1-foundation|foundation|-|true|Foundation: caddy-infra, observability (loki must exist first)"
+    "phase2-core-infra|core|-|false|Core infrastructure: alloy, watchtower, autoheal on all servers"
+    "phase3-caddy-agents|caddy|foundation|false|Caddy reverse proxy agents (excluding caddy-infra)"
+    "phase4-infra-services|infra|core,caddy,foundation,observability|false|Infra server: infrastructure, cloudflare, chatgpt"
+    "phase5-media-gpu|media-gpu|core,caddy|false|Media server: arr, plex, jellyfin, immich"
+    "phase6-frigate-gpu|frigate-gpu|core,caddy|false|Frigate testing with GPU"
+    "phase7-frigate|frigate|core,caddy|false|Frigate production with Coral"
+    "phase8-omada|omada|core,caddy|false|Omada network controller"
 )
 
 usage() {

@@ -164,6 +164,7 @@ name = "docker-host-infra-infra"
 description = "Core infrastructure: alloy, autoheal, watchtower"
 tags = ["infra", "core"]
 deploy = true
+after = ["observability"]
 [stack.config]
 server_id = "infra"
 git_provider = "github.com"
@@ -182,9 +183,8 @@ WATCHTOWER_NOTIFICATION_URL=[[WATCHTOWER_NOTIFICATION_URL]]
 [[stack]]
 name = "caddy-infra"
 description = "Caddy reverse proxy with macvlan"
-tags = ["infra", "caddy"]
+tags = ["infra", "caddy", "foundation"]
 deploy = true
-after = ["docker-host-infra-infra"]
 [stack.config]
 server_id = "infra"
 git_provider = "github.com"
@@ -204,7 +204,7 @@ EMAIL=[[EMAIL]]
 [[stack]]
 name = "observability"
 description = "Loki, Prometheus, Grafana"
-tags = ["infra", "observability"]
+tags = ["infra", "observability", "foundation"]
 deploy = true
 after = ["caddy-infra"]
 [stack.config]
