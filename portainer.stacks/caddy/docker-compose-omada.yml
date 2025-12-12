@@ -12,5 +12,3 @@ services:
       - HOST_IP=${OMADA_IP}
       - LOG_LEVEL=debug
       - SNIPPET_SOURCES=http://${INFRA_IP}:8567
-    labels:
-
