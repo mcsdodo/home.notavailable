@@ -2,7 +2,7 @@ services:
   caddy:
     container_name: caddy
     # image: lucaslorentz/caddy-docker-proxy:latest
-    image: dodo/caddy:cloudflare_w_docker_proxy
+    image: mcsdodo/caddy:cloudflare_w_docker_proxy
     restart: unless-stopped
     ports:
       - "80:80"
