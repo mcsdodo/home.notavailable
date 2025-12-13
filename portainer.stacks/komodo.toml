@@ -197,7 +197,6 @@ name = "observability"
 description = "Loki, Prometheus, Grafana"
 tags = ["infra", "observability", "foundation"]
 deploy = true
-after = ["caddy-infra"]
 [stack.config]
 server_id = "infra"
 git_provider = "github.com"
@@ -212,7 +211,6 @@ name = "infrastructure"
 description = "Dashy, Gotify, AdGuardHome-sync"
 tags = ["infra"]
 deploy = true
-after = ["caddy-infra"]
 [stack.config]
 server_id = "infra"
 git_provider = "github.com"
@@ -274,6 +272,7 @@ name = "docker-host-infra-media-gpu"
 description = "Core infrastructure: alloy, autoheal, watchtower"
 tags = ["media-gpu", "core"]
 deploy = true
+after = ["observability"]
 [stack.config]
 server_id = "media-gpu"
 git_provider = "github.com"
@@ -312,7 +311,7 @@ name = "caddy-media-gpu"
 description = "Caddy agent"
 tags = ["media-gpu", "caddy"]
 deploy = true
-after = ["arr", "arr-gluetun"]
+after = ["caddy-infra"]
 [stack.config]
 server_id = "media-gpu"
 git_provider = "github.com"
@@ -353,7 +352,6 @@ name = "arr-gluetun"
 description = "Gluetun VPN, Prowlarr, Bazarr, qBittorrent"
 tags = ["media-gpu", "arr", "vpn"]
 deploy = true
-after = ["arr"]
 [stack.config]
 server_id = "media-gpu"
 git_provider = "github.com"
@@ -534,6 +532,7 @@ name = "docker-host-infra-frigate-gpu"
 description = "Core infrastructure: alloy, watchtower, autoheal"
 tags = ["frigate-gpu", "core"]
 deploy = true
+after = ["observability"]
 [stack.config]
 server_id = "frigate-gpu"
 git_provider = "github.com"
@@ -554,7 +553,7 @@ name = "caddy-frigate-gpu"
 description = "Caddy agent"
 tags = ["frigate-gpu", "caddy"]
 deploy = true
-after = ["surveillance-testing"]
+after = ["caddy-infra"]
 [stack.config]
 server_id = "frigate-gpu"
 git_provider = "github.com"
@@ -596,6 +595,7 @@ name = "docker-host-infra-frigate"
 description = "Core infrastructure: alloy, autoheal, dockwatch, watchtower"
 tags = ["frigate", "core"]
 deploy = true
+after = ["observability"]
 [stack.config]
 server_id = "frigate"
 git_provider = "github.com"
@@ -616,7 +616,7 @@ name = "caddy-frigate"
 description = "Caddy agent"
 tags = ["frigate", "caddy"]
 deploy = true
-after = ["surveillance"]
+after = ["caddy-infra"]
 [stack.config]
 server_id = "frigate"
 git_provider = "github.com"
@@ -659,6 +659,7 @@ name = "docker-host-infra-omada"
 description = "Core infrastructure: alloy, autoheal, watchtower"
 tags = ["omada", "core"]
 deploy = true
+after = ["observability"]
 [stack.config]
 server_id = "omada"
 git_provider = "github.com"
@@ -679,7 +680,7 @@ name = "caddy-omada"
 description = "Caddy agent"
 tags = ["omada", "caddy"]
 deploy = true
-after = ["omada"]
+after = ["caddy-infra"]
 [stack.config]
 server_id = "omada"
 git_provider = "github.com"
