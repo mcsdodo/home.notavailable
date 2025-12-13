@@ -1,0 +1,1 @@
+core.config.toml is mounted in /mnt/shared_configs/komodo/core.config.toml
