@@ -135,6 +135,9 @@ services:
       caddy_128: wd.lacny.me
       caddy_128.reverse_proxy: 192.168.0.79
 
+      caddy_129: komodo.lacny.media
+      caddy_129.reverse_proxy: 192.168.0.112:9120
+
 networks:
   caddy:
     name: caddy
